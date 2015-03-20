@@ -25,14 +25,6 @@
 
 #include "flash.h"
 
-/**
- * The Flash Flooding protocol exploits the capture effect observed in radio
- * reception, which allows some packets to be received correctly despite
- * concurrent transmissions on the same channel. This Flash Flood
- * implementation (Flash I) immediately re-transmits when a packet is received by the
- * CC2420 radio. 
-*/
-
 #ifndef FLASH_STACKSIZE
 #define FLASH_STACKSIZE 128
 #endif
@@ -81,7 +73,10 @@ void flash_nw_task()
 	int8_t n;
 	uint32_t mask;
 	// wait until flash has been initialized	
-	while(!flash_started) nrk_wait_until_next_period();
+	nrk_kprintf(PSTR("flash nw task waiting until flash starts\r\n"));
+	while(!flash_started) 
+		nrk_wait_until_next_period();
+	nrk_kprintf(PSTR("flash started\r\n"));
 	while(1){
 		if (nrk_signal_register(packetRxSignal) != NRK_OK)
 			nrk_kprintf( PSTR("failed to register packet rx signal"));
@@ -105,6 +100,8 @@ void flash_nw_task()
 			{
 				nrk_kprintf( PSTR("received message with incorrect checksum or CRC"));
 			}
+			if (auto_ReTx){
+
 		}
 		else if ((mask & SIG(packetTxSignal)) > 0){
 			//transmit packet
@@ -112,12 +109,13 @@ void flash_nw_task()
 			flash_rfTxInfo.pPayload = flash_buf;
 			//get this right
 			flash_rfTxInfo.length = flash_message_len;
-			rf_data_mode();
-			rf_rx_off();
+			
+			rf_rx_on();
 			rf_tx_packet(&flash_rfTxInfo);
 			rf_rx_off();
 			nrk_event_signal(flash_tx_pkt_done_signal);
 		}
+		nrk_kprintf(PSTR("finished cycle of flash nw task\r\n"));
 	}
 }
 
@@ -150,7 +148,6 @@ uint32_t flash_err_count_get()
 
 void flash_tx_pkt(uint8_t *buf, uint8_t len)
 {
-	uint32_t mask;
 	memcpy(flash_buf, buf, len);
 	flash_message_len = len;
 	nrk_signal_register (flash_tx_pkt_done_signal);

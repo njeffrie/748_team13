@@ -20,8 +20,16 @@
 *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 *  Contributing Authors (specific to this file):
-*  Anthony Rowe
+*  Nat Jeffries
 *******************************************************************************/
+
+/**
+ * The Flash Flooding protocol exploits the capture effect observed in radio
+ * reception, which allows some packets to be received correctly despite
+ * concurrent transmissions on the same channel. This Flash Flood
+ * implementation (Flash I) immediately re-transmits when a packet is received by the
+ * CC2420 radio. 
+*/
 
 
 #ifndef _FLASH_H

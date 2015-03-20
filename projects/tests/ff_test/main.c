@@ -34,6 +34,12 @@
 #include <string.h>
 #include <flash.h>
 
+NRK_STK flood_stack[NRK_APP_STACKSIZE];
+nrk_task_type floodTask;
+void flood_task (void);
+
+void nrk_create_taskset();
+
 int main()
 {
 	nrk_setup_ports();
@@ -46,12 +52,18 @@ int main()
 	nrk_led_clr(RED_LED);
 
 	nrk_time_set(0,0);
-	//nrk_start();
 
 	printf("initializing flash\r\n");
 	flash_init(13);
 	printf("configuring flash task\r\n");
 	flash_task_config();
+	nrk_create_taskset();
+	nrk_start();
+	return 1;
+}
+
+void flood_task()
+{
 	flash_enable();
 	printf("flash error count after init = %d\r\n", (int)flash_err_count_get());
 	printf("currnent packet size = %d\r\n", (int)flash_msg_len_get());
@@ -63,8 +75,29 @@ int main()
 	printf("flash disabled\r\n");
 	
 	char *buf = "this is a buffer";
-	printf("transmitting packet [%s]\r\n", buf);
-	flash_tx_pkt(buf, strlen(buf));
-	printf("success...maybe!\r\n");
-	return 1;
+	while (1){
+		printf("transmitting packet [%s]\r\n", buf);
+		flash_tx_pkt((uint8_t *)buf, (uint8_t)strlen(buf));
+		printf("success...maybe!\r\n");
+		nrk_wait_until_next_period();
+	}
+}
+
+
+void
+nrk_create_taskset()
+{
+  nrk_task_set_entry_function( &floodTask, flood_task);
+  nrk_task_set_stk( &floodTask, flood_stack, NRK_APP_STACKSIZE);
+  floodTask.prio = 1;
+  floodTask.FirstActivation = TRUE;
+  floodTask.Type = BASIC_TASK;
+  floodTask.SchType = PREEMPTIVE;
+  floodTask.period.secs = 5;
+  floodTask.period.nano_secs = 0;
+  floodTask.cpu_reserve.secs = 0;
+  floodTask.cpu_reserve.nano_secs = 0;
+  floodTask.offset.secs = 0;
+  floodTask.offset.nano_secs= 0;
+  nrk_activate_task (&floodTask);
 }

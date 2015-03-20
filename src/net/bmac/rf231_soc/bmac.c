@@ -545,7 +545,6 @@ rf_rx_off ();
 return 1;
 }
 
-
 uint16_t bmac_rx_failure_count_get ()
 {
 	return rx_failure_cnt;
