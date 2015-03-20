@@ -27,28 +27,44 @@
 #include <stdio.h>
 #include <avr/sleep.h>
 #include <hal.h>
-#include <flash.h>
 #include <nrk_error.h>
+#include <nrk_time.h>
 #include <avr/eeprom.h>
 #include <nrk_eeprom.h>
 #include <string.h>
+#include <flash.h>
 
 int main()
 {
-	printf("starting init...\n");
+	nrk_setup_ports();
+	nrk_setup_uart(UART_BAUDRATE_115K2);
+
 	nrk_init();
-	printf("initializing flash\n");
+	nrk_led_clr(ORANGE_LED);
+	nrk_led_clr(BLUE_LED);
+	nrk_led_clr(GREEN_LED);
+	nrk_led_clr(RED_LED);
+
+	nrk_time_set(0,0);
+	//nrk_start();
+
+	printf("initializing flash\r\n");
 	flash_init(13);
-	printf("configuring flash task\n");
+	printf("configuring flash task\r\n");
 	flash_task_config();
 	flash_enable();
-	printf("flash error count after init = %d\n", (int)flash_err_count_get());
-	printf("currnent packet size = %d\n", (int)flash_msg_len_get());
+	printf("flash error count after init = %d\r\n", (int)flash_err_count_get());
+	printf("currnent packet size = %d\r\n", (int)flash_msg_len_get());
 	flash_disable();
+	printf("flash disabled\r\n");
 	flash_enable();
+	printf("flash enabled\r\n");
 	flash_disable();
+	printf("flash disabled\r\n");
+	
 	char *buf = "this is a buffer";
+	printf("transmitting packet [%s]\r\n", buf);
 	flash_tx_pkt(buf, strlen(buf));
-	printf("success...maybe!\n");
-	return 1; 
+	printf("success...maybe!\r\n");
+	return 1;
 }
