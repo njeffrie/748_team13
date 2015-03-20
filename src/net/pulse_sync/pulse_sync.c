@@ -1,3 +1,28 @@
+/******************************************************************************
+*  Nano-RK, a real-time operating system for sensor networks.
+*  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
+*  All rights reserved.
+*
+*  This is the Open Source Version of Nano-RK included as part of a Dual
+*  Licensing Model. If you are unsure which license to use please refer to:
+*  http://www.nanork.org/nano-RK/wiki/Licensing
+*
+*  This program is free software: you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation, version 2.0 of the License.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+*  Contributing Authors (specific to this file):
+*  Madhav Iyengar
+*******************************************************************************/
+
 /*
  * pulse_sync.c: PulseSync protocol implementation for Nano-RK
  * built on top of Flash network flooding protocol
@@ -13,11 +38,11 @@
 /*
  * function for initializing/reseting pulsesync
  */
-void psync_init(uint8_t high_prio, uint8_t root) {
+void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan) {
 	if (skew_lock != NULL)
 		nrk_sem_delete(skew_lock);
 	skew_lock = nrk_sem_create(1, high_prio);
-	//flash_init(); // instead require user to initialize flash?
+	flash_init(chan);
 	is_root = root;
 	loc_sum = 0;
 	loc_avg = 0;
@@ -155,9 +180,33 @@ void psync_get_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
 }
 
 /*
+ * function applied to received timestamps before forwarding
+ */
+void psync_edit_buf(uint8_t* buf, nrk_time_t* rcv_time) {
+	nrk_time_t time;
+	nrk_time_get(&time);
+	new_loc = get_full_time(rcv_time);
+	uint64_t diff = get_full_time(time) - new_loc + TX_DELAY;
+	uint64_t* buf64 = (uint64_t*)buf;
+	#ifdef COMPENSATED_FORWARDING
+	new_glob = buf64[1];
+	if (samples == MAX_SAMPLES) {
+		uint8_t ind = (curr_ind + 1) % MAX_SAMPLES;
+		buf64[1] += diff + lien_data[ind].skew_num * diff / line_data[ind].skew_den;
+	}
+	else
+		buf64[1] += diff;
+	#else
+	new_glob = buf64[0];
+	#endif
+	buf64[0] += diff;
+	edit = 1;
+}
+
+/*
  * function to initiate a pulsesync flood cycle 
  */
-void psync_flood_wait() {
+void psync_flood_wait(nrk_time_t* time) {
 	// buffer for holding data to send/receive with flash (in this case uint64_t with time data)
 	#ifdef COMPENSATED_FORWARDING
 	uint64_t buf[2];
@@ -165,38 +214,29 @@ void psync_flood_wait() {
 	uint64_t buf[1];
 	#endif
 	
-	nrk_time_t time;
-
 	// functionality to be executed if the node is set as the network global clock
 	if (is_root) {
 		nrk_time_get(&time);
-		buf[0] = get_full_time(time);
+		buf[0] = get_full_time(time) + TX_DELAY;
 		#ifdef COMPENSATED_FORWARDING
 		buf[1] = buf[0];
 		#endif
-		//flash_send((uint8_t*)buf);
+		flash_tx_pkt((uint8_t*)buf, PKT_SIZE);
 	}
 	// functionality to be executed if the node is synchronizing to an external global clock
 	else {
+		edit = 0;
+		nrk_time_t cur_time, time_after;
+		nrk_time_get(&cur_time);
+		nrk_time_add(&time_after, cur_time, *time);
 		nrk_sem_pend(skew_lock);
-		uint8_t length;
-		if ((length = /*flash_suspend(&buf, &time)*/0) <= 0) 
-			nrk_kprintf(PSTR("Failed to receive Flash message."));
-		else {
-			uint64_t diff = get_full_time(time);
-			nrk_time_get(&time);
-			diff = get_full_time(time) - diff + RX_TX_DELAY;
-			buf[0] = buf[0] + diff;
-			#ifdef COMPENSATED_FORWARDING
-			if (samples == MAX_SAMPLES) {
-				uint8_t ind = (curr_ind + 1) % MAX_SAMPLES;
-				buf[1] = buf[1] + diff + line_data[ind].skew_num * diff / line_data[ind].skew_den;
-			}
-			else
-				buf[1] = buf[1] + diff; 
-			#endif
+		flash_enable(time, psync_edit_buf);
+		while (!edit && (get_full_time(cur_time) < get_full_time(time_after)))
+			nrk_time_get(&cur_time);
+		nrk_sem_post(skew_lock);
+		if (edit) {
+			psync_add_point(new_loc, new_glob);
+			edit = 0;
 		}
-		nrk_sem_pend(skew_lock);
-		//flash_resume((uint8_t*)buf);
 	}
 }
