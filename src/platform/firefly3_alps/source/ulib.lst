@@ -1,0 +1,3104 @@
+   1               		.file	"ulib.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	putc1
+  13               	putc1:
+  14               	.LFB20:
+  15               		.file 1 "/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c"
+   1:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** /******************************************************************************
+   2:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  Nano-RK, a real-time operating system for sensor networks.
+   3:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
+   4:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  All rights reserved.
+   5:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *
+   6:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  This is the Open Source Version of Nano-RK included as part of a Dual
+   7:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  Licensing Model. If you are unsure which license to use please refer to:
+   8:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  http://www.nanork.org/nano-RK/wiki/Licensing
+   9:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *
+  10:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  This program is free software: you can redistribute it and/or modify
+  11:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  it under the terms of the GNU General Public License as published by
+  12:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  the Free Software Foundation, version 2.0 of the License.
+  13:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *
+  14:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  This program is distributed in the hope that it will be useful,
+  15:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  16:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  17:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  GNU General Public License for more details.
+  18:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *
+  19:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  You should have received a copy of the GNU General Public License
+  20:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  21:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *
+  22:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  Contributing Authors (specific to this file):
+  23:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  Anthony Rowe
+  24:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  Nuno Pereira
+  25:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *  Zane Starr
+  26:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** *******************************************************************************/
+  27:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  28:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <include.h>
+  29:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <ulib.h>
+  30:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <stdio.h>
+  31:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <hal.h>
+  32:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <hal_firefly3.h>
+  33:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <avr/interrupt.h>
+  34:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <nrk_pin_define.h>
+  35:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <nrk_error.h>
+  36:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <nrk_events.h>
+  37:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  38:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #ifdef NANORK
+  39:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <nrk_cfg.h>
+  40:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #endif
+  41:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  42:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #ifdef NRK_UART_BUF
+  43:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #include <nrk_events.h>
+  44:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  45:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #ifndef MAX_RX_UART_BUF
+  46:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #define MAX_RX_UART_BUF    16
+  47:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #endif
+  48:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  49:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  50:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** static uint16_t uart_rx_buf_start,uart_rx_buf_end;
+  51:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** static char uart_rx_buf[MAX_RX_UART_BUF];
+  52:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** static nrk_sig_t uart_rx_signal;
+  53:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  54:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** SIGNAL(USART0_RX_vect)
+  55:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+  56:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** char c;
+  57:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** uint8_t sig;
+  58:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // cli();
+  59:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** nrk_int_disable();
+  60:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //DISABLE_UART0_RX_INT(); //this will enable nrk int
+  61:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    UART0_WAIT_AND_RECEIVE(c);
+  62:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf[uart_rx_buf_end]=c;
+  63:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    //if(uart_rx_buf_end==uart_rx_buf_start) sig=1; else sig=0;
+  64:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_end++;
+  65:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_buf_end==MAX_RX_UART_BUF) {
+  66:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	   uart_rx_buf_end=0;
+  67:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 		   }
+  68:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    //if(uart_rx_buf_end==uart_rx_buf_start) nrk_kprintf(PSTR("Buf overflow!\r\n" ));
+  69:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    nrk_event_signal(uart_rx_signal);
+  70:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** CLEAR_UART0_RX_INT();
+  71:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //ENABLE_UART0_RX_INT();
+  72:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // sei();
+  73:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** nrk_int_enable();
+  74:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+  75:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  76:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** char getc0()
+  77:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+  78:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** char tmp;
+  79:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t v;
+  80:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  81:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_rx_buf_start==uart_rx_buf_end) { nrk_signal_register(uart_rx_signal); v=nrk_event_wait(SIG(
+  82:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(v==NRK_ERROR ) nrk_kprintf(PSTR("uart rx sig failed\r\n" ));
+  83:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    tmp=uart_rx_buf[uart_rx_buf_start];
+  84:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_start++;
+  85:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_buf_start>=MAX_RX_UART_BUF) { uart_rx_buf_start=0; }
+  86:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  87:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    return tmp;
+  88:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+  89:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+  90:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** uint8_t nrk_uart_data_ready(uint8_t uart_num)
+  91:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+  92:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_num==0)
+  93:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         {
+  94:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         //if( UCSR0A & BM(RXC0) ) return 1;
+  95:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	if(uart_rx_buf_start!=uart_rx_buf_end) return 1;
+  96:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         }
+  97:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_num==1)
+  98:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	{
+  99:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if( UCSR1A & BM(RXC1) ) return 1;
+ 100:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	//if(uart_rx_buf_start!=uart_rx_buf_end) return 1;
+ 101:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	}
+ 102:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return 0;
+ 103:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 104:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 105:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** nrk_sig_t nrk_uart_rx_signal_get()
+ 106:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 107:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_signal==NRK_ERROR) nrk_error_add(NRK_SIGNAL_CREATE_ERROR);
+ 108:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    return uart_rx_signal;
+ 109:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 110:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 111:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #else
+ 112:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 113:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** nrk_sig_t nrk_uart_rx_signal_get()
+ 114:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 115:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    return NRK_ERROR;
+ 116:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 117:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 118:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 119:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** uint8_t nrk_uart_data_ready(uint8_t uart_num)
+ 120:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 121:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_num==1)
+ 122:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         {
+ 123:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if( UCSR1A & BM(RXC1) ) return 1;
+ 124:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         }
+ 125:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_num==0)
+ 126:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         {
+ 127:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if( UCSR0A & BM(RXC0) ) return 1;
+ 128:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         }
+ 129:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return 0;
+ 130:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 131:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 132:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** char getc0(void){
+ 133:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         unsigned char tmp;
+ 134:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         UART0_WAIT_AND_RECEIVE(tmp);
+ 135:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return tmp;
+ 136:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 137:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 138:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #endif
+ 139:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 140:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void nrk_kprintf( const char *addr)
+ 141:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 142:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  char c;
+ 143:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    while((c=pgm_read_byte(addr++)))
+ 144:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         putchar(c);
+ 145:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 146:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 147:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void nrk_setup_ports()
+ 148:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 149:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** PORT_INIT();
+ 150:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //SPI_INIT();
+ 151:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 152:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 153:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //---------------------------------------------------------------------------------------------
+ 154:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // GPIO related definitions
+ 155:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //---------------------------------------------------------------------------------------------
+ 156:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // Define high-level nrk pins mappings to hardware pins and ports
+ 157:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // This is used for nrk_gpio_... functions.
+ 158:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // Raw GPIO mapping can be found in the nrk_pin_define.h file.
+ 159:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //---------------------------------------------------------------------------------------------
+ 160:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 161:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //-------------------------------
+ 162:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // Port A
+ 163:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTA_0);
+ 164:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTA_1);
+ 165:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTA_2);
+ 166:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTA_3);
+ 167:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTA_4);
+ 168:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTA_5);
+ 169:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTA_6);
+ 170:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTA_7);
+ 171:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(DEBUG_0);
+ 172:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(DEBUG_1);
+ 173:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(DEBUG_2);
+ 174:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(DEBUG_3);
+ 175:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 176:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //-------------------------------
+ 177:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // Port B
+ 178:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( SPI_SS,SPI_SS, NRK_PORTB )
+ 179:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( SCK,SCK, NRK_PORTB )
+ 180:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( MOSI,MOSI, NRK_PORTB )
+ 181:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( MISO,MISO, NRK_PORTB )
+ 182:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 183:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTB_0,PORTB_0, NRK_PORTB )
+ 184:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTB_1,PORTB_1, NRK_PORTB )
+ 185:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTB_2,PORTB_2, NRK_PORTB )
+ 186:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTB_3,PORTB_3, NRK_PORTB )
+ 187:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTB_4,PORTB_4, NRK_PORTB )
+ 188:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTB_5,PORTB_5, NRK_PORTB )
+ 189:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTB_6,PORTB_6, NRK_PORTB )
+ 190:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTB_7,PORTB_7, NRK_PORTB )
+ 191:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 192:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 193:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTC_0);
+ 194:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTC_1);
+ 195:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTC_2);
+ 196:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTC_3);
+ 197:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTC_4);
+ 198:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTC_5);
+ 199:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTC_6);
+ 200:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN(PORTC_7);
+ 201:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 202:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 203:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //-------------------------------
+ 204:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // Port D
+ 205:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 206:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTD_0,PORTD_0, NRK_PORTD )
+ 207:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTD_1,PORTD_1, NRK_PORTD )
+ 208:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTD_2,PORTD_2, NRK_PORTD )
+ 209:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTD_3,PORTD_3, NRK_PORTD )
+ 210:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTD_4,PORTD_4, NRK_PORTD )
+ 211:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTD_5,PORTD_5, NRK_PORTD )
+ 212:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTD_6,PORTD_6, NRK_PORTD )
+ 213:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTD_7,PORTD_7, NRK_PORTD )
+ 214:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 215:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 216:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( BUTTON,BUTTON, NRK_PORTD )
+ 217:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( UART1_RXD,UART1_RXD, NRK_PORTD )
+ 218:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( UART1_TXD,UART1_TXD, NRK_PORTD )
+ 219:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( LED_0,LED_0, NRK_PORTD )
+ 220:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( LED_1,LED_1, NRK_PORTD )
+ 221:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( LED_2,LED_2, NRK_PORTD )
+ 222:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( LED_3,LED_3, NRK_PORTD )
+ 223:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 224:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //-------------------------------
+ 225:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // Port E
+ 226:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTE_0,PORTE_0, NRK_PORTE )
+ 227:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTE_1,PORTE_1, NRK_PORTE )
+ 228:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTE_2,PORTE_2, NRK_PORTE )
+ 229:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTE_3,PORTE_3, NRK_PORTE )
+ 230:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTE_4,PORTE_4, NRK_PORTE )
+ 231:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTE_5,PORTE_5, NRK_PORTE )
+ 232:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTE_6,PORTE_6, NRK_PORTE )
+ 233:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTE_7,PORTE_7, NRK_PORTE )
+ 234:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 235:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( UART0_RXD,UART0_RXD, NRK_PORTE )
+ 236:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( UART0_TXD,UART0_TXD, NRK_PORTE )
+ 237:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 238:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN( ANT_0 )
+ 239:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_INVALID_PIN( ANT_1 )
+ 240:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 241:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTG_0,PORTG_0, NRK_PORTG )
+ 242:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTG_1,PORTG_1, NRK_PORTG )
+ 243:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTG_2,PORTG_2, NRK_PORTG )
+ 244:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTG_3,PORTG_3, NRK_PORTG )
+ 245:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTG_4,PORTG_4, NRK_PORTG )
+ 246:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTG_5,PORTG_5, NRK_PORTG )
+ 247:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 248:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //-------------------------------
+ 249:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // Port F
+ 250:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTF_0, PORTF_0, NRK_PORTF )
+ 251:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTF_1, PORTF_1, NRK_PORTF )
+ 252:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTF_2, PORTF_2, NRK_PORTF )
+ 253:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTF_3, PORTF_3, NRK_PORTF )
+ 254:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTF_4, PORTF_4, NRK_PORTF )
+ 255:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTF_5, PORTF_5, NRK_PORTF )
+ 256:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTF_6, PORTF_6, NRK_PORTF )
+ 257:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( PORTF_7, PORTF_7, NRK_PORTF )
+ 258:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( ADC_INPUT_0, ADC_INPUT_0, NRK_PORTF )
+ 259:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( ADC_INPUT_1, ADC_INPUT_1, NRK_PORTF )
+ 260:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( ADC_INPUT_2, ADC_INPUT_2, NRK_PORTF )
+ 261:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( ADC_INPUT_3, ADC_INPUT_3, NRK_PORTF )
+ 262:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( ADC_INPUT_4, ADC_INPUT_4, NRK_PORTF )
+ 263:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( ADC_INPUT_5, ADC_INPUT_5, NRK_PORTF )
+ 264:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( ADC_INPUT_6, ADC_INPUT_6, NRK_PORTF )
+ 265:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** NRK_PIN( ADC_INPUT_7, ADC_INPUT_7, NRK_PORTF )
+ 266:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 267:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void PORT_INIT(void) 
+ 268:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 269:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	// Pull-up disable
+ 270:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //        MCUCR |= BM(PUD); 
+ 271:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 272:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #ifdef SPI_SS_PULLUP
+ 273:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         DDRB  = BM(MOSI) | BM(SCK) | BM(SPI_SS);  
+ 274:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         PORTB = BM(MOSI) | BM(SCK) | BM(SPI_SS); 
+ 275:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #else
+ 276:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         DDRB  = BM(MOSI) | BM(SCK);  
+ 277:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         PORTB = BM(MOSI) | BM(SCK); 
+ 278:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #endif
+ 279:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         DDRD  = BM(LED_0) | BM(LED_1) | BM(LED_2) | BM(LED_3) |  BM(UART1_TXD) ; 
+ 280:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	PORTD = BM(LED_0)|BM(LED_1)|BM(LED_2)|BM(LED_3);
+ 281:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         DDRE = BM(UART0_TXD); 
+ 282:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** } 
+ 283:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 284:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 285:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 286:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //-------------------------------
+ 287:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** // GPIO handling functions
+ 288:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 289:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_gpio_set(uint8_t pin)
+ 290:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 291:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 292:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         switch (pin & 0x07) {
+ 293:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTA:
+ 294:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTA |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 295:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTB:
+ 296:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTB |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 297:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTC:
+ 298:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTC |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 299:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTD:
+ 300:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTD |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 301:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTE:
+ 302:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTE |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 303:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTF:
+ 304:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTF |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 305:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTG:
+ 306:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTG |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 307:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 default: return -1;
+ 308:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         }
+ 309:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 310:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 311:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 312:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_gpio_clr(uint8_t pin)
+ 313:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 314:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 315:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         switch (pin & 0x07) {
+ 316:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTA:
+ 317:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTA &= ~BM((pin & 0xF8) >> 3); } while(0); break;
+ 318:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTB:
+ 319:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTB &= ~BM((pin & 0xF8) >> 3); } while(0); break;
+ 320:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTC:
+ 321:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTC &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 322:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTD:
+ 323:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTD &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 324:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTE:
+ 325:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTE &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 326:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTF:
+ 327:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTF &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 328:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTG:
+ 329:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTF &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 330:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 default: return -1;
+ 331:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         }
+ 332:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 333:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 334:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 335:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_gpio_get(uint8_t pin)
+ 336:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 337:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****     if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 338:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         switch (pin & 0x07) {
+ 339:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTA:
+ 340:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINA & BM((pin & 0xF8) >> 3));
+ 341:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTB:
+ 342:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINB & BM((pin & 0xF8) >> 3));
+ 343:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTC:
+ 344:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINC & BM((pin & 0xF8) >> 3));
+ 345:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTD:
+ 346:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PIND & BM((pin & 0xF8) >> 3));
+ 347:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTE:
+ 348:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINE & BM((pin & 0xF8) >> 3));
+ 349:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTF:
+ 350:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINF & BM((pin & 0xF8) >> 3));
+ 351:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTG:
+ 352:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PING & BM((pin & 0xF8) >> 3));
+ 353:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 default: return -1;
+ 354:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         }
+ 355:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 356:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 357:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 358:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_gpio_toggle(uint8_t pin)
+ 359:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 360:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****     if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 361:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         switch (pin & 0x07) {
+ 362:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTA:
+ 363:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINA & BM((pin & 0xF8) >> 3)) == 0) {
+ 364:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTA |= BM((pin & 0xF8) >> 3); } while(0);
+ 365:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         } else {
+ 366:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTA &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 367:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         }
+ 368:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         break;
+ 369:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTB:
+ 370:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINB & BM((pin & 0xF8) >> 3)) == 0) {
+ 371:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTB |= BM((pin & 0xF8) >> 3); } while(0);
+ 372:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         } else {
+ 373:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTB &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 374:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         }
+ 375:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         break;
+ 376:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTC:
+ 377:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINC & BM((pin & 0xF8) >> 3)) == 0) {
+ 378:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTC |= BM((pin & 0xF8) >> 3); } while(0);
+ 379:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         } else {
+ 380:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTC &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 381:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         }
+ 382:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         break;
+ 383:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTD:
+ 384:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PIND & BM((pin & 0xF8) >> 3)) == 0) {
+ 385:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTD |= BM((pin & 0xF8) >> 3); } while(0);
+ 386:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         } else {
+ 387:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTD &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 388:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         }
+ 389:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         break;
+ 390:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTE:
+ 391:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINE & BM((pin & 0xF8) >> 3)) == 0) {
+ 392:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTE |= BM((pin & 0xF8) >> 3); } while(0);
+ 393:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         } else {
+ 394:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTE &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 395:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         }
+ 396:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         break;
+ 397:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTF:
+ 398:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINF & BM((pin & 0xF8) >> 3)) == 0) {
+ 399:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTF |= BM((pin & 0xF8) >> 3); } while(0);
+ 400:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         } else {
+ 401:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTF &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 402:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         }
+ 403:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         break;
+ 404:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 case NRK_PORTG:
+ 405:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PING & BM((pin & 0xF8) >> 3)) == 0) {
+ 406:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTG |= BM((pin & 0xF8) >> 3); } while(0);
+ 407:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         } else {
+ 408:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTG &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 409:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         }
+ 410:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         break;
+ 411:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                  default: return -1;
+ 412:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         }
+ 413:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 414:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 415:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 416:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_gpio_direction(uint8_t pin, uint8_t pin_direction)
+ 417:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 418:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 419:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if (pin_direction == NRK_PIN_INPUT) {
+ 420:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 switch (pin & 0x07) {
+ 421:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTA:
+ 422:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRA &= ~BM((pin & 0xF8) >> 3); 
+ 423:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 //PORTA |= BM((pin & 0xF8) >> 3); 
+ 424:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 break;
+ 425:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTB:
+ 426:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRB &= ~BM((pin & 0xF8) >> 3); 
+ 427:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 //PORTB |= BM((pin & 0xF8) >> 3); 
+ 428:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 break;
+ 429:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTC:
+ 430:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRC &= ~BM((pin & 0xF8) >> 3); 
+ 431:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 //PORTC |= BM((pin & 0xF8) >> 3); 
+ 432:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 break;
+ 433:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTD:
+ 434:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRD &= ~BM((pin & 0xF8) >> 3); 
+ 435:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 //PORTD |= BM((pin & 0xF8) >> 3); 
+ 436:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 break;
+ 437:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTE:
+ 438:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRE &= ~BM((pin & 0xF8) >> 3); 
+ 439:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 //PORTE |= BM((pin & 0xF8) >> 3); 
+ 440:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 break;
+ 441:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTF:
+ 442:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRF &= ~BM((pin & 0xF8) >> 3);
+ 443:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 //PORTF |= BM((pin & 0xF8) >> 3); 
+ 444:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 break;
+ 445:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTG:
+ 446:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRG &= ~BM((pin & 0xF8) >> 3);
+ 447:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 //PORTG |= BM((pin & 0xF8) >> 3); 
+ 448:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 break;
+ 449:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         default: return -1;
+ 450:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 }
+ 451:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         } else {
+ 452:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 switch (pin & 0x07) {
+ 453:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTA:
+ 454:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRA |= BM((pin & 0xF8) >> 3); break;
+ 455:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTB:
+ 456:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRB |= BM((pin & 0xF8) >> 3); break;
+ 457:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTC:
+ 458:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRC |= BM((pin & 0xF8) >> 3); break;
+ 459:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTD:
+ 460:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRD |= BM((pin & 0xF8) >> 3); break;
+ 461:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTE:
+ 462:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRE |= BM((pin & 0xF8) >> 3); break;
+ 463:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTF:
+ 464:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRF |= BM((pin & 0xF8) >> 3); break;
+ 465:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         case NRK_PORTG:
+ 466:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRG |= BM((pin & 0xF8) >> 3); break;
+ 467:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         default: return -1;
+ 468:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 }
+ 469:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         }
+ 470:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 471:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 472:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 473:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_get_button(uint8_t b)
+ 474:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 475:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(b==0) {
+ 476:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	 return( !(PINA & BM(BUTTON))); 
+ 477:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	} 
+ 478:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return -1;
+ 479:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 480:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 481:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_led_toggle( int led )
+ 482:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 483:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_toggle(NRK_LED_0); return 1; }
+ 484:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_toggle(NRK_LED_1); return 1; }
+ 485:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_toggle(NRK_LED_2); return 1; }
+ 486:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_toggle(NRK_LED_3); return 1; }
+ 487:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return -1;
+ 488:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 489:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 490:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_led_clr( int led )
+ 491:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 492:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_set(NRK_LED_0); return 1; }
+ 493:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_set(NRK_LED_1); return 1; }
+ 494:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_set(NRK_LED_2); return 1; }
+ 495:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_set(NRK_LED_3); return 1; }
+ 496:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return -1;
+ 497:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 498:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 499:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_led_set( int led )
+ 500:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 501:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_clr(NRK_LED_0); return 1; }
+ 502:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_clr(NRK_LED_1); return 1; }
+ 503:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_clr(NRK_LED_2); return 1; }
+ 504:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_clr(NRK_LED_3); return 1; }
+ 505:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return -1;
+ 506:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 507:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 508:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** int8_t nrk_gpio_pullups(uint8_t enable)
+ 509:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 510:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(enable) MCUCR &= ~BM(PUD);
+ 511:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** else MCUCR |= BM(PUD);
+ 512:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return NRK_OK;
+ 513:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 514:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 515:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 516:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** /*
+ 517:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void IO_SET_E(uint8_t pin)
+ 518:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 519:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** PORTE |= BM(pin);
+ 520:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 521:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 522:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void IO_CLR_E(uint8_t pin)
+ 523:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 524:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** PORTE &= ~BM(pin);
+ 525:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 526:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 527:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void IO_SET_F(uint8_t pin)
+ 528:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 529:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** PORTF |= BM(pin);
+ 530:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 531:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 532:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void IO_CLR_F(uint8_t pin)
+ 533:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 534:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** PORTF &= ~BM(pin);
+ 535:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 536:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** */
+ 537:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 538:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void putc0(char x)
+ 539:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 540:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****      UART0_WAIT_AND_SEND(x);
+ 541:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 542:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 543:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void putc1(char x)
+ 544:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+  16               		.loc 1 544 0
+  17               		.cfi_startproc
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  22               	.LVL0:
+  23               	.L3:
+ 545:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****      UART1_WAIT_AND_SEND(x);
+  24               		.loc 1 545 0 discriminator 1
+  25 0000 9091 C800 		lds r25,200
+  26 0004 95FF      		sbrs r25,5
+  27 0006 00C0      		rjmp .L3
+  28               		.loc 1 545 0 is_stmt 0 discriminator 2
+  29 0008 8093 CE00 		sts 206,r24
+  30 000c 0895      		ret
+  31               		.cfi_endproc
+  32               	.LFE20:
+  34               	.global	getc1
+  36               	getc1:
+  37               	.LFB24:
+ 546:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 547:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 548:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void setup_uart0(uint16_t baudrate)
+ 549:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 550:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //INIT_UART1( UART_BAUDRATE_115K2, (UART_OPT_NO_PARITY|UART_OPT_8_BITS_PER_CHAR|UART_OPT_ONE_STOP_B
+ 551:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** INIT_UART0( baudrate, (UART_OPT_NO_PARITY|UART_OPT_8_BITS_PER_CHAR|UART_OPT_ONE_STOP_BIT));
+ 552:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** ENABLE_UART0();
+ 553:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 554:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 555:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void setup_uart1(uint16_t baudrate)
+ 556:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 557:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //INIT_UART1( UART_BAUDRATE_115K2, (UART_OPT_NO_PARITY|UART_OPT_8_BITS_PER_CHAR|UART_OPT_ONE_STOP_B
+ 558:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** INIT_UART1( baudrate, (UART_OPT_NO_PARITY|UART_OPT_8_BITS_PER_CHAR|UART_OPT_ONE_STOP_BIT));
+ 559:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** ENABLE_UART1();
+ 560:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 561:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 562:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 563:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 564:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 565:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 566:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** /**
+ 567:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  * nrk_setup_uart()
+ 568:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  *
+ 569:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  * Sets a default uart for a given platform and
+ 570:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  * direct stdin and stdout to that port.
+ 571:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  *
+ 572:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  * More advanced UART usage will require manually
+ 573:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  * setting parameters.
+ 574:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****  */
+ 575:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** void nrk_setup_uart(uint16_t baudrate)
+ 576:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 577:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 578:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //  setup_uart1(baudrate);
+ 579:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //  stdout = fdevopen( (void *)putc1, (void *)getc1);
+ 580:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //  stdin = fdevopen( (void *)putc1, (void *)getc1);
+ 581:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 582:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****   setup_uart1(baudrate);
+ 583:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 584:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****   stdout = fdevopen( (void *)putc1, (void *)getc1);
+ 585:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****   stdin = fdevopen( (void *)putc1, (void *)getc1);
+ 586:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 587:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #ifdef NRK_UART_BUF
+ 588:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_signal=nrk_signal_create();
+ 589:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_signal==NRK_ERROR) nrk_error_add(NRK_SIGNAL_CREATE_ERROR);
+ 590:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_start=0;
+ 591:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_end=0;
+ 592:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    ENABLE_UART1_RX_INT();
+ 593:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** #endif
+ 594:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 595:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 596:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 597:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 598:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 599:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** /* get one char from uart */
+ 600:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //char getc0(void){
+ 601:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //	unsigned char tmp;
+ 602:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //	UART0_WAIT_AND_RECEIVE(tmp);
+ 603:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //	return tmp;
+ 604:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** //}
+ 605:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 606:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** char getc1()
+ 607:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+  38               		.loc 1 607 0 is_stmt 1
+  39               		.cfi_startproc
+  40               	/* prologue: function */
+  41               	/* frame size = 0 */
+  42               	/* stack size = 0 */
+  43               	.L__stack_usage = 0
+  44               	.L7:
+ 608:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** char tmp;
+ 609:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 
+ 610:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** UART1_WAIT_AND_RECEIVE(tmp);
+  45               		.loc 1 610 0 discriminator 1
+  46 000e 8091 C800 		lds r24,200
+  47 0012 87FF      		sbrs r24,7
+  48 0014 00C0      		rjmp .L7
+  49               		.loc 1 610 0 is_stmt 0 discriminator 2
+  50 0016 8091 C800 		lds r24,200
+  51 001a 8F77      		andi r24,lo8(127)
+  52 001c 8093 C800 		sts 200,r24
+  53 0020 8091 CE00 		lds r24,206
+  54               	.LVL1:
+ 611:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return tmp;
+ 612:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+  55               		.loc 1 612 0 is_stmt 1 discriminator 2
+  56 0024 0895      		ret
+  57               		.cfi_endproc
+  58               	.LFE24:
+  60               	.global	__vector_25
+  62               	__vector_25:
+  63               	.LFB2:
+  55:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+  64               		.loc 1 55 0
+  65               		.cfi_startproc
+  66 0026 1F92      		push r1
+  67               	.LCFI0:
+  68               		.cfi_def_cfa_offset 4
+  69               		.cfi_offset 1, -3
+  70 0028 0F92      		push r0
+  71               	.LCFI1:
+  72               		.cfi_def_cfa_offset 5
+  73               		.cfi_offset 0, -4
+  74 002a 0FB6      		in r0,__SREG__
+  75 002c 0F92      		push r0
+  76 002e 1124      		clr __zero_reg__
+  77 0030 0BB6      		in r0,__RAMPZ__
+  78 0032 0F92      		push r0
+  79 0034 2F93      		push r18
+  80               	.LCFI2:
+  81               		.cfi_def_cfa_offset 6
+  82               		.cfi_offset 18, -5
+  83 0036 3F93      		push r19
+  84               	.LCFI3:
+  85               		.cfi_def_cfa_offset 7
+  86               		.cfi_offset 19, -6
+  87 0038 4F93      		push r20
+  88               	.LCFI4:
+  89               		.cfi_def_cfa_offset 8
+  90               		.cfi_offset 20, -7
+  91 003a 5F93      		push r21
+  92               	.LCFI5:
+  93               		.cfi_def_cfa_offset 9
+  94               		.cfi_offset 21, -8
+  95 003c 6F93      		push r22
+  96               	.LCFI6:
+  97               		.cfi_def_cfa_offset 10
+  98               		.cfi_offset 22, -9
+  99 003e 7F93      		push r23
+ 100               	.LCFI7:
+ 101               		.cfi_def_cfa_offset 11
+ 102               		.cfi_offset 23, -10
+ 103 0040 8F93      		push r24
+ 104               	.LCFI8:
+ 105               		.cfi_def_cfa_offset 12
+ 106               		.cfi_offset 24, -11
+ 107 0042 9F93      		push r25
+ 108               	.LCFI9:
+ 109               		.cfi_def_cfa_offset 13
+ 110               		.cfi_offset 25, -12
+ 111 0044 AF93      		push r26
+ 112               	.LCFI10:
+ 113               		.cfi_def_cfa_offset 14
+ 114               		.cfi_offset 26, -13
+ 115 0046 BF93      		push r27
+ 116               	.LCFI11:
+ 117               		.cfi_def_cfa_offset 15
+ 118               		.cfi_offset 27, -14
+ 119 0048 EF93      		push r30
+ 120               	.LCFI12:
+ 121               		.cfi_def_cfa_offset 16
+ 122               		.cfi_offset 30, -15
+ 123 004a FF93      		push r31
+ 124               	.LCFI13:
+ 125               		.cfi_def_cfa_offset 17
+ 126               		.cfi_offset 31, -16
+ 127               	/* prologue: Signal */
+ 128               	/* frame size = 0 */
+ 129               	/* stack size = 16 */
+ 130               	.L__stack_usage = 16
+  59:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** nrk_int_disable();
+ 131               		.loc 1 59 0
+ 132 004c 0E94 0000 		call nrk_int_disable
+ 133               	.LVL2:
+ 134               	.L10:
+  61:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    UART0_WAIT_AND_RECEIVE(c);
+ 135               		.loc 1 61 0 discriminator 1
+ 136 0050 8091 C000 		lds r24,192
+ 137 0054 87FF      		sbrs r24,7
+ 138 0056 00C0      		rjmp .L10
+  61:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    UART0_WAIT_AND_RECEIVE(c);
+ 139               		.loc 1 61 0 is_stmt 0 discriminator 2
+ 140 0058 8091 C000 		lds r24,192
+ 141 005c 8F77      		andi r24,lo8(127)
+ 142 005e 8093 C000 		sts 192,r24
+ 143 0062 2091 C600 		lds r18,198
+ 144               	.LVL3:
+  62:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf[uart_rx_buf_end]=c;
+ 145               		.loc 1 62 0 is_stmt 1 discriminator 2
+ 146 0066 8091 0000 		lds r24,uart_rx_buf_end
+ 147 006a 9091 0000 		lds r25,uart_rx_buf_end+1
+ 148 006e FC01      		movw r30,r24
+ 149 0070 E050      		subi r30,lo8(-(uart_rx_buf))
+ 150 0072 F040      		sbci r31,hi8(-(uart_rx_buf))
+ 151 0074 2083      		st Z,r18
+  64:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_end++;
+ 152               		.loc 1 64 0 discriminator 2
+ 153 0076 0196      		adiw r24,1
+  65:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_buf_end==MAX_RX_UART_BUF) {
+ 154               		.loc 1 65 0 discriminator 2
+ 155 0078 8031      		cpi r24,16
+ 156 007a 9105      		cpc r25,__zero_reg__
+ 157 007c 01F0      		breq .L11
+  64:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_end++;
+ 158               		.loc 1 64 0
+ 159 007e 9093 0000 		sts uart_rx_buf_end+1,r25
+ 160 0082 8093 0000 		sts uart_rx_buf_end,r24
+ 161 0086 00C0      		rjmp .L12
+ 162               	.L11:
+  66:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	   uart_rx_buf_end=0;
+ 163               		.loc 1 66 0
+ 164 0088 1092 0000 		sts uart_rx_buf_end+1,__zero_reg__
+ 165 008c 1092 0000 		sts uart_rx_buf_end,__zero_reg__
+ 166               	.L12:
+  69:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    nrk_event_signal(uart_rx_signal);
+ 167               		.loc 1 69 0
+ 168 0090 8091 0000 		lds r24,uart_rx_signal
+ 169 0094 0E94 0000 		call nrk_event_signal
+ 170               	.LVL4:
+  70:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** CLEAR_UART0_RX_INT();
+ 171               		.loc 1 70 0
+ 172 0098 8091 C000 		lds r24,192
+ 173 009c 8F77      		andi r24,lo8(127)
+ 174 009e 8093 C000 		sts 192,r24
+  73:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** nrk_int_enable();
+ 175               		.loc 1 73 0
+ 176 00a2 0E94 0000 		call nrk_int_enable
+ 177               	.LVL5:
+ 178               	/* epilogue start */
+  74:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 179               		.loc 1 74 0
+ 180 00a6 FF91      		pop r31
+ 181 00a8 EF91      		pop r30
+ 182 00aa BF91      		pop r27
+ 183 00ac AF91      		pop r26
+ 184 00ae 9F91      		pop r25
+ 185 00b0 8F91      		pop r24
+ 186 00b2 7F91      		pop r23
+ 187 00b4 6F91      		pop r22
+ 188 00b6 5F91      		pop r21
+ 189 00b8 4F91      		pop r20
+ 190 00ba 3F91      		pop r19
+ 191 00bc 2F91      		pop r18
+ 192 00be 0F90      		pop r0
+ 193 00c0 0BBE      		out __RAMPZ__,r0
+ 194 00c2 0F90      		pop r0
+ 195 00c4 0FBE      		out __SREG__,r0
+ 196 00c6 0F90      		pop r0
+ 197 00c8 1F90      		pop r1
+ 198 00ca 1895      		reti
+ 199               		.cfi_endproc
+ 200               	.LFE2:
+ 202               	.global	nrk_uart_data_ready
+ 204               	nrk_uart_data_ready:
+ 205               	.LFB4:
+  91:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 206               		.loc 1 91 0
+ 207               		.cfi_startproc
+ 208               	.LVL6:
+ 209               	/* prologue: function */
+ 210               	/* frame size = 0 */
+ 211               	/* stack size = 0 */
+ 212               	.L__stack_usage = 0
+  92:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_num==0)
+ 213               		.loc 1 92 0
+ 214 00cc 8111      		cpse r24,__zero_reg__
+ 215 00ce 00C0      		rjmp .L14
+  95:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	if(uart_rx_buf_start!=uart_rx_buf_end) return 1;
+ 216               		.loc 1 95 0
+ 217 00d0 2091 0000 		lds r18,uart_rx_buf_start
+ 218 00d4 3091 0000 		lds r19,uart_rx_buf_start+1
+ 219 00d8 8091 0000 		lds r24,uart_rx_buf_end
+ 220 00dc 9091 0000 		lds r25,uart_rx_buf_end+1
+ 221               	.LVL7:
+ 222 00e0 2817      		cp r18,r24
+ 223 00e2 3907      		cpc r19,r25
+ 224 00e4 01F4      		brne .L17
+ 225               	.L16:
+ 102:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return 0;
+ 226               		.loc 1 102 0
+ 227 00e6 80E0      		ldi r24,0
+ 228 00e8 0895      		ret
+ 229               	.LVL8:
+ 230               	.L14:
+  97:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_num==1)
+ 231               		.loc 1 97 0
+ 232 00ea 8130      		cpi r24,lo8(1)
+ 233 00ec 01F4      		brne .L16
+  99:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if( UCSR1A & BM(RXC1) ) return 1;
+ 234               		.loc 1 99 0
+ 235 00ee 8091 C800 		lds r24,200
+ 236               	.LVL9:
+ 237 00f2 87FF      		sbrs r24,7
+ 238 00f4 00C0      		rjmp .L16
+ 239               	.L17:
+  95:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	if(uart_rx_buf_start!=uart_rx_buf_end) return 1;
+ 240               		.loc 1 95 0
+ 241 00f6 81E0      		ldi r24,lo8(1)
+ 103:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 242               		.loc 1 103 0
+ 243 00f8 0895      		ret
+ 244               		.cfi_endproc
+ 245               	.LFE4:
+ 247               	.global	nrk_uart_rx_signal_get
+ 249               	nrk_uart_rx_signal_get:
+ 250               	.LFB5:
+ 106:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 251               		.loc 1 106 0
+ 252               		.cfi_startproc
+ 253               	/* prologue: function */
+ 254               	/* frame size = 0 */
+ 255               	/* stack size = 0 */
+ 256               	.L__stack_usage = 0
+ 107:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_signal==NRK_ERROR) nrk_error_add(NRK_SIGNAL_CREATE_ERROR);
+ 257               		.loc 1 107 0
+ 258 00fa 8091 0000 		lds r24,uart_rx_signal
+ 259 00fe 8F3F      		cpi r24,lo8(-1)
+ 260 0100 01F4      		brne .L19
+ 107:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_signal==NRK_ERROR) nrk_error_add(NRK_SIGNAL_CREATE_ERROR);
+ 261               		.loc 1 107 0 is_stmt 0 discriminator 1
+ 262 0102 8EE0      		ldi r24,lo8(14)
+ 263 0104 0E94 0000 		call nrk_error_add
+ 264               	.LVL10:
+ 265               	.L19:
+ 109:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 266               		.loc 1 109 0 is_stmt 1
+ 267 0108 8091 0000 		lds r24,uart_rx_signal
+ 268 010c 0895      		ret
+ 269               		.cfi_endproc
+ 270               	.LFE5:
+ 272               	.global	nrk_kprintf
+ 274               	nrk_kprintf:
+ 275               	.LFB6:
+ 141:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 276               		.loc 1 141 0
+ 277               		.cfi_startproc
+ 278               	.LVL11:
+ 279 010e CF93      		push r28
+ 280               	.LCFI14:
+ 281               		.cfi_def_cfa_offset 4
+ 282               		.cfi_offset 28, -3
+ 283 0110 DF93      		push r29
+ 284               	.LCFI15:
+ 285               		.cfi_def_cfa_offset 5
+ 286               		.cfi_offset 29, -4
+ 287               	/* prologue: function */
+ 288               	/* frame size = 0 */
+ 289               	/* stack size = 2 */
+ 290               	.L__stack_usage = 2
+ 291               	.L21:
+ 292               	.LVL12:
+ 293               	.LBB2:
+ 143:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    while((c=pgm_read_byte(addr++)))
+ 294               		.loc 1 143 0 discriminator 1
+ 295 0112 FC01      		movw r30,r24
+ 296               	/* #APP */
+ 297               	 ;  143 "/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c" 1
+ 298 0114 2491      		lpm r18, Z
+ 299               		
+ 300               	 ;  0 "" 2
+ 301               	.LVL13:
+ 302               	/* #NOAPP */
+ 303 0116 EC01      		movw r28,r24
+ 304 0118 2196      		adiw r28,1
+ 305               	.LVL14:
+ 306               	.LBE2:
+ 307 011a 2223      		tst r18
+ 308 011c 01F0      		breq .L23
+ 144:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         putchar(c);
+ 309               		.loc 1 144 0
+ 310 011e 6091 0000 		lds r22,__iob+2
+ 311 0122 7091 0000 		lds r23,__iob+2+1
+ 312 0126 822F      		mov r24,r18
+ 313               	.LVL15:
+ 314 0128 90E0      		ldi r25,0
+ 315 012a 0E94 0000 		call fputc
+ 316               	.LVL16:
+ 317 012e CE01      		movw r24,r28
+ 318 0130 00C0      		rjmp .L21
+ 319               	.LVL17:
+ 320               	.L23:
+ 321               	/* epilogue start */
+ 145:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 322               		.loc 1 145 0
+ 323 0132 DF91      		pop r29
+ 324 0134 CF91      		pop r28
+ 325               	.LVL18:
+ 326 0136 0895      		ret
+ 327               		.cfi_endproc
+ 328               	.LFE6:
+ 330               	.global	getc0
+ 332               	getc0:
+ 333               	.LFB3:
+  77:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 334               		.loc 1 77 0
+ 335               		.cfi_startproc
+ 336               	/* prologue: function */
+ 337               	/* frame size = 0 */
+ 338               	/* stack size = 0 */
+ 339               	.L__stack_usage = 0
+  81:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_rx_buf_start==uart_rx_buf_end) { nrk_signal_register(uart_rx_signal); v=nrk_event_wait(SIG(
+ 340               		.loc 1 81 0
+ 341 0138 2091 0000 		lds r18,uart_rx_buf_start
+ 342 013c 3091 0000 		lds r19,uart_rx_buf_start+1
+ 343 0140 8091 0000 		lds r24,uart_rx_buf_end
+ 344 0144 9091 0000 		lds r25,uart_rx_buf_end+1
+ 345 0148 2817      		cp r18,r24
+ 346 014a 3907      		cpc r19,r25
+ 347 014c 01F4      		brne .L25
+  81:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(uart_rx_buf_start==uart_rx_buf_end) { nrk_signal_register(uart_rx_signal); v=nrk_event_wait(SIG(
+ 348               		.loc 1 81 0 is_stmt 0 discriminator 1
+ 349 014e 8091 0000 		lds r24,uart_rx_signal
+ 350 0152 0E94 0000 		call nrk_signal_register
+ 351               	.LVL19:
+ 352 0156 61E0      		ldi r22,lo8(1)
+ 353 0158 70E0      		ldi r23,0
+ 354 015a 80E0      		ldi r24,0
+ 355 015c 90E0      		ldi r25,0
+ 356 015e 0090 0000 		lds r0,uart_rx_signal
+ 357 0162 00C0      		rjmp 2f
+ 358               		1:
+ 359 0164 660F      		lsl r22
+ 360 0166 771F      		rol r23
+ 361 0168 881F      		rol r24
+ 362 016a 991F      		rol r25
+ 363               		2:
+ 364 016c 0A94      		dec r0
+ 365 016e 02F4      		brpl 1b
+ 366 0170 0E94 0000 		call nrk_event_wait
+ 367               	.LVL20:
+ 368               	.L25:
+  82:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(v==NRK_ERROR ) nrk_kprintf(PSTR("uart rx sig failed\r\n" ));
+ 369               		.loc 1 82 0 is_stmt 1
+ 370 0174 6F3F      		cpi r22,lo8(-1)
+ 371 0176 01F4      		brne .L26
+  82:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(v==NRK_ERROR ) nrk_kprintf(PSTR("uart rx sig failed\r\n" ));
+ 372               		.loc 1 82 0 is_stmt 0 discriminator 1
+ 373 0178 80E0      		ldi r24,lo8(__c.2161)
+ 374 017a 90E0      		ldi r25,hi8(__c.2161)
+ 375 017c 0E94 0000 		call nrk_kprintf
+ 376               	.LVL21:
+ 377               	.L26:
+  83:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    tmp=uart_rx_buf[uart_rx_buf_start];
+ 378               		.loc 1 83 0 is_stmt 1
+ 379 0180 2091 0000 		lds r18,uart_rx_buf_start
+ 380 0184 3091 0000 		lds r19,uart_rx_buf_start+1
+ 381 0188 F901      		movw r30,r18
+ 382 018a E050      		subi r30,lo8(-(uart_rx_buf))
+ 383 018c F040      		sbci r31,hi8(-(uart_rx_buf))
+ 384 018e 8081      		ld r24,Z
+ 385               	.LVL22:
+  84:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_start++;
+ 386               		.loc 1 84 0
+ 387 0190 2F5F      		subi r18,-1
+ 388 0192 3F4F      		sbci r19,-1
+  85:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_buf_start>=MAX_RX_UART_BUF) { uart_rx_buf_start=0; }
+ 389               		.loc 1 85 0
+ 390 0194 2031      		cpi r18,16
+ 391 0196 3105      		cpc r19,__zero_reg__
+ 392 0198 00F4      		brsh .L27
+  84:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_start++;
+ 393               		.loc 1 84 0
+ 394 019a 3093 0000 		sts uart_rx_buf_start+1,r19
+ 395 019e 2093 0000 		sts uart_rx_buf_start,r18
+ 396 01a2 0895      		ret
+ 397               	.L27:
+  85:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_buf_start>=MAX_RX_UART_BUF) { uart_rx_buf_start=0; }
+ 398               		.loc 1 85 0 discriminator 1
+ 399 01a4 1092 0000 		sts uart_rx_buf_start+1,__zero_reg__
+ 400 01a8 1092 0000 		sts uart_rx_buf_start,__zero_reg__
+  88:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 401               		.loc 1 88 0 discriminator 1
+ 402 01ac 0895      		ret
+ 403               		.cfi_endproc
+ 404               	.LFE3:
+ 406               	.global	PORT_INIT
+ 408               	PORT_INIT:
+ 409               	.LFB8:
+ 268:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 410               		.loc 1 268 0
+ 411               		.cfi_startproc
+ 412               	/* prologue: function */
+ 413               	/* frame size = 0 */
+ 414               	/* stack size = 0 */
+ 415               	.L__stack_usage = 0
+ 276:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         DDRB  = BM(MOSI) | BM(SCK);  
+ 416               		.loc 1 276 0
+ 417 01ae 86E0      		ldi r24,lo8(6)
+ 418 01b0 84B9      		out 0x4,r24
+ 277:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         PORTB = BM(MOSI) | BM(SCK); 
+ 419               		.loc 1 277 0
+ 420 01b2 85B9      		out 0x5,r24
+ 279:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         DDRD  = BM(LED_0) | BM(LED_1) | BM(LED_2) | BM(LED_3) |  BM(UART1_TXD) ; 
+ 421               		.loc 1 279 0
+ 422 01b4 88EF      		ldi r24,lo8(-8)
+ 423 01b6 8AB9      		out 0xa,r24
+ 280:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	PORTD = BM(LED_0)|BM(LED_1)|BM(LED_2)|BM(LED_3);
+ 424               		.loc 1 280 0
+ 425 01b8 80EF      		ldi r24,lo8(-16)
+ 426 01ba 8BB9      		out 0xb,r24
+ 281:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         DDRE = BM(UART0_TXD); 
+ 427               		.loc 1 281 0
+ 428 01bc 82E0      		ldi r24,lo8(2)
+ 429 01be 8DB9      		out 0xd,r24
+ 430 01c0 0895      		ret
+ 431               		.cfi_endproc
+ 432               	.LFE8:
+ 434               	.global	nrk_setup_ports
+ 436               	nrk_setup_ports:
+ 437               	.LFB7:
+ 148:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 438               		.loc 1 148 0
+ 439               		.cfi_startproc
+ 440               	/* prologue: function */
+ 441               	/* frame size = 0 */
+ 442               	/* stack size = 0 */
+ 443               	.L__stack_usage = 0
+ 149:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** PORT_INIT();
+ 444               		.loc 1 149 0
+ 445 01c2 0C94 0000 		jmp PORT_INIT
+ 446               	.LVL23:
+ 447               		.cfi_endproc
+ 448               	.LFE7:
+ 450               	.global	nrk_gpio_set
+ 452               	nrk_gpio_set:
+ 453               	.LFB9:
+ 290:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 454               		.loc 1 290 0
+ 455               		.cfi_startproc
+ 456               	.LVL24:
+ 457               	/* prologue: function */
+ 458               	/* frame size = 0 */
+ 459               	/* stack size = 0 */
+ 460               	.L__stack_usage = 0
+ 291:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 461               		.loc 1 291 0
+ 462 01c6 8F3F      		cpi r24,lo8(-1)
+ 463 01c8 01F4      		brne .+2
+ 464 01ca 00C0      		rjmp .L42
+ 292:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         switch (pin & 0x07) {
+ 465               		.loc 1 292 0
+ 466 01cc 482F      		mov r20,r24
+ 467 01ce 4770      		andi r20,lo8(7)
+ 468 01d0 50E0      		ldi r21,0
+ 469 01d2 4730      		cpi r20,7
+ 470 01d4 5105      		cpc r21,__zero_reg__
+ 471 01d6 00F0      		brlo .+2
+ 472 01d8 00C0      		rjmp .L42
+ 473 01da FA01      		movw r30,r20
+ 474 01dc E050      		subi r30,lo8(-(gs(.L34)))
+ 475 01de F040      		sbci r31,hi8(-(gs(.L34)))
+ 476 01e0 8695      		lsr r24
+ 477 01e2 8695      		lsr r24
+ 478 01e4 8695      		lsr r24
+ 479               	.LVL25:
+ 480 01e6 0C94 0000 		jmp __tablejump2__
+ 481               		.section	.progmem.gcc_sw_table,"a",@progbits
+ 482               		.p2align	1
+ 483               	.L34:
+ 484 0000 0000      		.word gs(.L33)
+ 485 0002 0000      		.word gs(.L35)
+ 486 0004 0000      		.word gs(.L36)
+ 487 0006 0000      		.word gs(.L37)
+ 488 0008 0000      		.word gs(.L38)
+ 489 000a 0000      		.word gs(.L39)
+ 490 000c 0000      		.word gs(.L40)
+ 491               		.text
+ 492               	.L33:
+ 294:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTA |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 493               		.loc 1 294 0
+ 494 01ea 92B1      		in r25,0x2
+ 495 01ec 21E0      		ldi r18,lo8(1)
+ 496 01ee 30E0      		ldi r19,0
+ 497 01f0 082E      		mov r0,r24
+ 498 01f2 00C0      		rjmp 2f
+ 499               		1:
+ 500 01f4 220F      		lsl r18
+ 501               		2:
+ 502 01f6 0A94      		dec r0
+ 503 01f8 02F4      		brpl 1b
+ 504 01fa 922B      		or r25,r18
+ 505 01fc 92B9      		out 0x2,r25
+ 506 01fe 00C0      		rjmp .L43
+ 507               	.L35:
+ 296:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTB |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 508               		.loc 1 296 0
+ 509 0200 95B1      		in r25,0x5
+ 510 0202 21E0      		ldi r18,lo8(1)
+ 511 0204 30E0      		ldi r19,0
+ 512 0206 082E      		mov r0,r24
+ 513 0208 00C0      		rjmp 2f
+ 514               		1:
+ 515 020a 220F      		lsl r18
+ 516               		2:
+ 517 020c 0A94      		dec r0
+ 518 020e 02F4      		brpl 1b
+ 519 0210 922B      		or r25,r18
+ 520 0212 95B9      		out 0x5,r25
+ 521 0214 00C0      		rjmp .L43
+ 522               	.L36:
+ 298:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTC |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 523               		.loc 1 298 0
+ 524 0216 98B1      		in r25,0x8
+ 525 0218 21E0      		ldi r18,lo8(1)
+ 526 021a 30E0      		ldi r19,0
+ 527 021c 082E      		mov r0,r24
+ 528 021e 00C0      		rjmp 2f
+ 529               		1:
+ 530 0220 220F      		lsl r18
+ 531               		2:
+ 532 0222 0A94      		dec r0
+ 533 0224 02F4      		brpl 1b
+ 534 0226 922B      		or r25,r18
+ 535 0228 98B9      		out 0x8,r25
+ 536 022a 00C0      		rjmp .L43
+ 537               	.L37:
+ 300:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTD |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 538               		.loc 1 300 0
+ 539 022c 9BB1      		in r25,0xb
+ 540 022e 21E0      		ldi r18,lo8(1)
+ 541 0230 30E0      		ldi r19,0
+ 542 0232 082E      		mov r0,r24
+ 543 0234 00C0      		rjmp 2f
+ 544               		1:
+ 545 0236 220F      		lsl r18
+ 546               		2:
+ 547 0238 0A94      		dec r0
+ 548 023a 02F4      		brpl 1b
+ 549 023c 922B      		or r25,r18
+ 550 023e 9BB9      		out 0xb,r25
+ 551 0240 00C0      		rjmp .L43
+ 552               	.L38:
+ 302:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTE |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 553               		.loc 1 302 0
+ 554 0242 9EB1      		in r25,0xe
+ 555 0244 21E0      		ldi r18,lo8(1)
+ 556 0246 30E0      		ldi r19,0
+ 557 0248 082E      		mov r0,r24
+ 558 024a 00C0      		rjmp 2f
+ 559               		1:
+ 560 024c 220F      		lsl r18
+ 561               		2:
+ 562 024e 0A94      		dec r0
+ 563 0250 02F4      		brpl 1b
+ 564 0252 922B      		or r25,r18
+ 565 0254 9EB9      		out 0xe,r25
+ 566 0256 00C0      		rjmp .L43
+ 567               	.L39:
+ 304:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTF |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 568               		.loc 1 304 0
+ 569 0258 91B3      		in r25,0x11
+ 570 025a 21E0      		ldi r18,lo8(1)
+ 571 025c 30E0      		ldi r19,0
+ 572 025e 082E      		mov r0,r24
+ 573 0260 00C0      		rjmp 2f
+ 574               		1:
+ 575 0262 220F      		lsl r18
+ 576               		2:
+ 577 0264 0A94      		dec r0
+ 578 0266 02F4      		brpl 1b
+ 579 0268 922B      		or r25,r18
+ 580 026a 91BB      		out 0x11,r25
+ 581 026c 00C0      		rjmp .L43
+ 582               	.L40:
+ 306:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTG |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 583               		.loc 1 306 0
+ 584 026e 94B3      		in r25,0x14
+ 585 0270 21E0      		ldi r18,lo8(1)
+ 586 0272 30E0      		ldi r19,0
+ 587 0274 00C0      		rjmp 2f
+ 588               		1:
+ 589 0276 220F      		lsl r18
+ 590               		2:
+ 591 0278 8A95      		dec r24
+ 592 027a 02F4      		brpl 1b
+ 593 027c 922B      		or r25,r18
+ 594 027e 94BB      		out 0x14,r25
+ 595               	.L43:
+ 309:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 596               		.loc 1 309 0
+ 597 0280 81E0      		ldi r24,lo8(1)
+ 306:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTG |= BM((pin & 0xF8) >> 3); } while(0); break; 
+ 598               		.loc 1 306 0
+ 599 0282 0895      		ret
+ 600               	.LVL26:
+ 601               	.L42:
+ 307:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 default: return -1;
+ 602               		.loc 1 307 0
+ 603 0284 8FEF      		ldi r24,lo8(-1)
+ 604               	.LVL27:
+ 310:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 605               		.loc 1 310 0
+ 606 0286 0895      		ret
+ 607               		.cfi_endproc
+ 608               	.LFE9:
+ 610               	.global	nrk_gpio_clr
+ 612               	nrk_gpio_clr:
+ 613               	.LFB10:
+ 313:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 614               		.loc 1 313 0
+ 615               		.cfi_startproc
+ 616               	.LVL28:
+ 617               	/* prologue: function */
+ 618               	/* frame size = 0 */
+ 619               	/* stack size = 0 */
+ 620               	.L__stack_usage = 0
+ 314:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 621               		.loc 1 314 0
+ 622 0288 8F3F      		cpi r24,lo8(-1)
+ 623 028a 01F4      		brne .+2
+ 624 028c 00C0      		rjmp .L55
+ 315:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         switch (pin & 0x07) {
+ 625               		.loc 1 315 0
+ 626 028e 482F      		mov r20,r24
+ 627 0290 4770      		andi r20,lo8(7)
+ 628 0292 50E0      		ldi r21,0
+ 629 0294 4730      		cpi r20,7
+ 630 0296 5105      		cpc r21,__zero_reg__
+ 631 0298 00F0      		brlo .+2
+ 632 029a 00C0      		rjmp .L55
+ 633 029c FA01      		movw r30,r20
+ 634 029e E050      		subi r30,lo8(-(gs(.L47)))
+ 635 02a0 F040      		sbci r31,hi8(-(gs(.L47)))
+ 636 02a2 8695      		lsr r24
+ 637 02a4 8695      		lsr r24
+ 638 02a6 8695      		lsr r24
+ 639               	.LVL29:
+ 640 02a8 0C94 0000 		jmp __tablejump2__
+ 641               		.section	.progmem.gcc_sw_table,"a",@progbits
+ 642               		.p2align	1
+ 643               	.L47:
+ 644 000e 0000      		.word gs(.L46)
+ 645 0010 0000      		.word gs(.L48)
+ 646 0012 0000      		.word gs(.L49)
+ 647 0014 0000      		.word gs(.L50)
+ 648 0016 0000      		.word gs(.L51)
+ 649 0018 0000      		.word gs(.L53)
+ 650 001a 0000      		.word gs(.L53)
+ 651               		.text
+ 652               	.L46:
+ 317:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTA &= ~BM((pin & 0xF8) >> 3); } while(0); break;
+ 653               		.loc 1 317 0
+ 654 02ac 92B1      		in r25,0x2
+ 655 02ae 21E0      		ldi r18,lo8(1)
+ 656 02b0 30E0      		ldi r19,0
+ 657 02b2 082E      		mov r0,r24
+ 658 02b4 00C0      		rjmp 2f
+ 659               		1:
+ 660 02b6 220F      		lsl r18
+ 661               		2:
+ 662 02b8 0A94      		dec r0
+ 663 02ba 02F4      		brpl 1b
+ 664 02bc 2095      		com r18
+ 665 02be 2923      		and r18,r25
+ 666 02c0 22B9      		out 0x2,r18
+ 667 02c2 00C0      		rjmp .L56
+ 668               	.L48:
+ 319:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTB &= ~BM((pin & 0xF8) >> 3); } while(0); break;
+ 669               		.loc 1 319 0
+ 670 02c4 95B1      		in r25,0x5
+ 671 02c6 21E0      		ldi r18,lo8(1)
+ 672 02c8 30E0      		ldi r19,0
+ 673 02ca 082E      		mov r0,r24
+ 674 02cc 00C0      		rjmp 2f
+ 675               		1:
+ 676 02ce 220F      		lsl r18
+ 677               		2:
+ 678 02d0 0A94      		dec r0
+ 679 02d2 02F4      		brpl 1b
+ 680 02d4 2095      		com r18
+ 681 02d6 2923      		and r18,r25
+ 682 02d8 25B9      		out 0x5,r18
+ 683 02da 00C0      		rjmp .L56
+ 684               	.L49:
+ 321:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTC &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 685               		.loc 1 321 0
+ 686 02dc 98B1      		in r25,0x8
+ 687 02de 21E0      		ldi r18,lo8(1)
+ 688 02e0 30E0      		ldi r19,0
+ 689 02e2 082E      		mov r0,r24
+ 690 02e4 00C0      		rjmp 2f
+ 691               		1:
+ 692 02e6 220F      		lsl r18
+ 693               		2:
+ 694 02e8 0A94      		dec r0
+ 695 02ea 02F4      		brpl 1b
+ 696 02ec 2095      		com r18
+ 697 02ee 2923      		and r18,r25
+ 698 02f0 28B9      		out 0x8,r18
+ 699 02f2 00C0      		rjmp .L56
+ 700               	.L50:
+ 323:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTD &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 701               		.loc 1 323 0
+ 702 02f4 9BB1      		in r25,0xb
+ 703 02f6 21E0      		ldi r18,lo8(1)
+ 704 02f8 30E0      		ldi r19,0
+ 705 02fa 082E      		mov r0,r24
+ 706 02fc 00C0      		rjmp 2f
+ 707               		1:
+ 708 02fe 220F      		lsl r18
+ 709               		2:
+ 710 0300 0A94      		dec r0
+ 711 0302 02F4      		brpl 1b
+ 712 0304 2095      		com r18
+ 713 0306 2923      		and r18,r25
+ 714 0308 2BB9      		out 0xb,r18
+ 715 030a 00C0      		rjmp .L56
+ 716               	.L51:
+ 325:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTE &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 717               		.loc 1 325 0
+ 718 030c 9EB1      		in r25,0xe
+ 719 030e 21E0      		ldi r18,lo8(1)
+ 720 0310 30E0      		ldi r19,0
+ 721 0312 082E      		mov r0,r24
+ 722 0314 00C0      		rjmp 2f
+ 723               		1:
+ 724 0316 220F      		lsl r18
+ 725               		2:
+ 726 0318 0A94      		dec r0
+ 727 031a 02F4      		brpl 1b
+ 728 031c 2095      		com r18
+ 729 031e 2923      		and r18,r25
+ 730 0320 2EB9      		out 0xe,r18
+ 731 0322 00C0      		rjmp .L56
+ 732               	.L53:
+ 329:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTF &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 733               		.loc 1 329 0
+ 734 0324 91B3      		in r25,0x11
+ 735 0326 21E0      		ldi r18,lo8(1)
+ 736 0328 30E0      		ldi r19,0
+ 737 032a 00C0      		rjmp 2f
+ 738               		1:
+ 739 032c 220F      		lsl r18
+ 740               		2:
+ 741 032e 8A95      		dec r24
+ 742 0330 02F4      		brpl 1b
+ 743 0332 2095      		com r18
+ 744 0334 2923      		and r18,r25
+ 745 0336 21BB      		out 0x11,r18
+ 746               	.L56:
+ 332:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 747               		.loc 1 332 0
+ 748 0338 81E0      		ldi r24,lo8(1)
+ 329:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         do { PORTF &= ~BM((pin & 0xF8) >> 3); } while(0); break; 
+ 749               		.loc 1 329 0
+ 750 033a 0895      		ret
+ 751               	.LVL30:
+ 752               	.L55:
+ 330:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 default: return -1;
+ 753               		.loc 1 330 0
+ 754 033c 8FEF      		ldi r24,lo8(-1)
+ 755               	.LVL31:
+ 333:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 756               		.loc 1 333 0
+ 757 033e 0895      		ret
+ 758               		.cfi_endproc
+ 759               	.LFE10:
+ 761               	.global	nrk_gpio_get
+ 763               	nrk_gpio_get:
+ 764               	.LFB11:
+ 336:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 765               		.loc 1 336 0
+ 766               		.cfi_startproc
+ 767               	.LVL32:
+ 768               	/* prologue: function */
+ 769               	/* frame size = 0 */
+ 770               	/* stack size = 0 */
+ 771               	.L__stack_usage = 0
+ 337:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****     if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 772               		.loc 1 337 0
+ 773 0340 8F3F      		cpi r24,lo8(-1)
+ 774 0342 01F0      		breq .L68
+ 338:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         switch (pin & 0x07) {
+ 775               		.loc 1 338 0
+ 776 0344 482F      		mov r20,r24
+ 777 0346 4770      		andi r20,lo8(7)
+ 778 0348 50E0      		ldi r21,0
+ 779 034a 4730      		cpi r20,7
+ 780 034c 5105      		cpc r21,__zero_reg__
+ 781 034e 00F4      		brsh .L68
+ 782 0350 FA01      		movw r30,r20
+ 783 0352 E050      		subi r30,lo8(-(gs(.L60)))
+ 784 0354 F040      		sbci r31,hi8(-(gs(.L60)))
+ 785 0356 8695      		lsr r24
+ 786 0358 8695      		lsr r24
+ 787 035a 8695      		lsr r24
+ 788               	.LVL33:
+ 789 035c 0C94 0000 		jmp __tablejump2__
+ 790               		.section	.progmem.gcc_sw_table,"a",@progbits
+ 791               		.p2align	1
+ 792               	.L60:
+ 793 001c 0000      		.word gs(.L59)
+ 794 001e 0000      		.word gs(.L61)
+ 795 0020 0000      		.word gs(.L62)
+ 796 0022 0000      		.word gs(.L63)
+ 797 0024 0000      		.word gs(.L64)
+ 798 0026 0000      		.word gs(.L65)
+ 799 0028 0000      		.word gs(.L66)
+ 800               		.text
+ 801               	.L59:
+ 340:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINA & BM((pin & 0xF8) >> 3));
+ 802               		.loc 1 340 0
+ 803 0360 20B1      		in r18,0
+ 804 0362 00C0      		rjmp .L69
+ 805               	.L61:
+ 342:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINB & BM((pin & 0xF8) >> 3));
+ 806               		.loc 1 342 0
+ 807 0364 23B1      		in r18,0x3
+ 808 0366 00C0      		rjmp .L69
+ 809               	.L62:
+ 344:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINC & BM((pin & 0xF8) >> 3));
+ 810               		.loc 1 344 0
+ 811 0368 26B1      		in r18,0x6
+ 812 036a 00C0      		rjmp .L69
+ 813               	.L63:
+ 346:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PIND & BM((pin & 0xF8) >> 3));
+ 814               		.loc 1 346 0
+ 815 036c 29B1      		in r18,0x9
+ 816 036e 00C0      		rjmp .L69
+ 817               	.L64:
+ 348:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINE & BM((pin & 0xF8) >> 3));
+ 818               		.loc 1 348 0
+ 819 0370 2CB1      		in r18,0xc
+ 820 0372 00C0      		rjmp .L69
+ 821               	.L65:
+ 350:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PINF & BM((pin & 0xF8) >> 3));
+ 822               		.loc 1 350 0
+ 823 0374 2FB1      		in r18,0xf
+ 824 0376 00C0      		rjmp .L69
+ 825               	.L66:
+ 352:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         return !!(PING & BM((pin & 0xF8) >> 3));
+ 826               		.loc 1 352 0
+ 827 0378 22B3      		in r18,0x12
+ 828               	.L69:
+ 829 037a 30E0      		ldi r19,0
+ 830 037c 00C0      		rjmp 2f
+ 831               		1:
+ 832 037e 3595      		asr r19
+ 833 0380 2795      		ror r18
+ 834               		2:
+ 835 0382 8A95      		dec r24
+ 836 0384 02F4      		brpl 1b
+ 837 0386 822F      		mov r24,r18
+ 838 0388 8170      		andi r24,lo8(1)
+ 839 038a 0895      		ret
+ 840               	.LVL34:
+ 841               	.L68:
+ 353:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 default: return -1;
+ 842               		.loc 1 353 0
+ 843 038c 8FEF      		ldi r24,lo8(-1)
+ 844               	.LVL35:
+ 356:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 845               		.loc 1 356 0
+ 846 038e 0895      		ret
+ 847               		.cfi_endproc
+ 848               	.LFE11:
+ 850               	.global	nrk_gpio_toggle
+ 852               	nrk_gpio_toggle:
+ 853               	.LFB12:
+ 359:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 854               		.loc 1 359 0
+ 855               		.cfi_startproc
+ 856               	.LVL36:
+ 857               	/* prologue: function */
+ 858               	/* frame size = 0 */
+ 859               	/* stack size = 0 */
+ 860               	.L__stack_usage = 0
+ 360:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****     if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 861               		.loc 1 360 0
+ 862 0390 8F3F      		cpi r24,lo8(-1)
+ 863 0392 01F4      		brne .+2
+ 864 0394 00C0      		rjmp .L88
+ 361:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         switch (pin & 0x07) {
+ 865               		.loc 1 361 0
+ 866 0396 482F      		mov r20,r24
+ 867 0398 4770      		andi r20,lo8(7)
+ 868 039a 50E0      		ldi r21,0
+ 869 039c 4730      		cpi r20,7
+ 870 039e 5105      		cpc r21,__zero_reg__
+ 871 03a0 00F0      		brlo .+2
+ 872 03a2 00C0      		rjmp .L88
+ 873 03a4 FA01      		movw r30,r20
+ 874 03a6 E050      		subi r30,lo8(-(gs(.L73)))
+ 875 03a8 F040      		sbci r31,hi8(-(gs(.L73)))
+ 876 03aa 8695      		lsr r24
+ 877 03ac 8695      		lsr r24
+ 878 03ae 8695      		lsr r24
+ 879               	.LVL37:
+ 880 03b0 0C94 0000 		jmp __tablejump2__
+ 881               		.section	.progmem.gcc_sw_table,"a",@progbits
+ 882               		.p2align	1
+ 883               	.L73:
+ 884 002a 0000      		.word gs(.L72)
+ 885 002c 0000      		.word gs(.L74)
+ 886 002e 0000      		.word gs(.L75)
+ 887 0030 0000      		.word gs(.L76)
+ 888 0032 0000      		.word gs(.L77)
+ 889 0034 0000      		.word gs(.L78)
+ 890 0036 0000      		.word gs(.L79)
+ 891               		.text
+ 892               	.L72:
+ 363:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINA & BM((pin & 0xF8) >> 3)) == 0) {
+ 893               		.loc 1 363 0
+ 894 03b4 20B1      		in r18,0
+ 895 03b6 30E0      		ldi r19,0
+ 896 03b8 082E      		mov r0,r24
+ 897 03ba 00C0      		rjmp 2f
+ 898               		1:
+ 899 03bc 3595      		asr r19
+ 900 03be 2795      		ror r18
+ 901               		2:
+ 902 03c0 0A94      		dec r0
+ 903 03c2 02F4      		brpl 1b
+ 364:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTA |= BM((pin & 0xF8) >> 3); } while(0);
+ 904               		.loc 1 364 0
+ 905 03c4 92B1      		in r25,0x2
+ 363:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINA & BM((pin & 0xF8) >> 3)) == 0) {
+ 906               		.loc 1 363 0
+ 907 03c6 20FD      		sbrc r18,0
+ 908 03c8 00C0      		rjmp .L80
+ 364:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTA |= BM((pin & 0xF8) >> 3); } while(0);
+ 909               		.loc 1 364 0
+ 910 03ca 21E0      		ldi r18,lo8(1)
+ 911 03cc 30E0      		ldi r19,0
+ 912 03ce 082E      		mov r0,r24
+ 913 03d0 00C0      		rjmp 2f
+ 914               		1:
+ 915 03d2 220F      		lsl r18
+ 916               		2:
+ 917 03d4 0A94      		dec r0
+ 918 03d6 02F4      		brpl 1b
+ 919 03d8 922B      		or r25,r18
+ 920 03da 92B9      		out 0x2,r25
+ 921 03dc 00C0      		rjmp .L91
+ 922               	.L80:
+ 366:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTA &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 923               		.loc 1 366 0
+ 924 03de 21E0      		ldi r18,lo8(1)
+ 925 03e0 30E0      		ldi r19,0
+ 926 03e2 082E      		mov r0,r24
+ 927 03e4 00C0      		rjmp 2f
+ 928               		1:
+ 929 03e6 220F      		lsl r18
+ 930               		2:
+ 931 03e8 0A94      		dec r0
+ 932 03ea 02F4      		brpl 1b
+ 933 03ec 2095      		com r18
+ 934 03ee 2923      		and r18,r25
+ 935 03f0 22B9      		out 0x2,r18
+ 936 03f2 00C0      		rjmp .L91
+ 937               	.L74:
+ 370:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINB & BM((pin & 0xF8) >> 3)) == 0) {
+ 938               		.loc 1 370 0
+ 939 03f4 23B1      		in r18,0x3
+ 940 03f6 30E0      		ldi r19,0
+ 941 03f8 082E      		mov r0,r24
+ 942 03fa 00C0      		rjmp 2f
+ 943               		1:
+ 944 03fc 3595      		asr r19
+ 945 03fe 2795      		ror r18
+ 946               		2:
+ 947 0400 0A94      		dec r0
+ 948 0402 02F4      		brpl 1b
+ 371:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTB |= BM((pin & 0xF8) >> 3); } while(0);
+ 949               		.loc 1 371 0
+ 950 0404 95B1      		in r25,0x5
+ 370:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINB & BM((pin & 0xF8) >> 3)) == 0) {
+ 951               		.loc 1 370 0
+ 952 0406 20FD      		sbrc r18,0
+ 953 0408 00C0      		rjmp .L81
+ 371:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTB |= BM((pin & 0xF8) >> 3); } while(0);
+ 954               		.loc 1 371 0
+ 955 040a 21E0      		ldi r18,lo8(1)
+ 956 040c 30E0      		ldi r19,0
+ 957 040e 00C0      		rjmp 2f
+ 958               		1:
+ 959 0410 220F      		lsl r18
+ 960               		2:
+ 961 0412 8A95      		dec r24
+ 962 0414 02F4      		brpl 1b
+ 963 0416 922B      		or r25,r18
+ 964 0418 95B9      		out 0x5,r25
+ 965               	.L91:
+ 413:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 966               		.loc 1 413 0
+ 967 041a 81E0      		ldi r24,lo8(1)
+ 968 041c 0895      		ret
+ 969               	.L81:
+ 373:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTB &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 970               		.loc 1 373 0
+ 971 041e 21E0      		ldi r18,lo8(1)
+ 972 0420 30E0      		ldi r19,0
+ 973 0422 082E      		mov r0,r24
+ 974 0424 00C0      		rjmp 2f
+ 975               		1:
+ 976 0426 220F      		lsl r18
+ 977               		2:
+ 978 0428 0A94      		dec r0
+ 979 042a 02F4      		brpl 1b
+ 980 042c 2095      		com r18
+ 981 042e 2923      		and r18,r25
+ 982 0430 25B9      		out 0x5,r18
+ 983 0432 00C0      		rjmp .L91
+ 984               	.L75:
+ 377:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINC & BM((pin & 0xF8) >> 3)) == 0) {
+ 985               		.loc 1 377 0
+ 986 0434 26B1      		in r18,0x6
+ 987 0436 30E0      		ldi r19,0
+ 988 0438 082E      		mov r0,r24
+ 989 043a 00C0      		rjmp 2f
+ 990               		1:
+ 991 043c 3595      		asr r19
+ 992 043e 2795      		ror r18
+ 993               		2:
+ 994 0440 0A94      		dec r0
+ 995 0442 02F4      		brpl 1b
+ 378:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTC |= BM((pin & 0xF8) >> 3); } while(0);
+ 996               		.loc 1 378 0
+ 997 0444 98B1      		in r25,0x8
+ 377:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINC & BM((pin & 0xF8) >> 3)) == 0) {
+ 998               		.loc 1 377 0
+ 999 0446 20FD      		sbrc r18,0
+ 1000 0448 00C0      		rjmp .L82
+ 378:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTC |= BM((pin & 0xF8) >> 3); } while(0);
+ 1001               		.loc 1 378 0
+ 1002 044a 21E0      		ldi r18,lo8(1)
+ 1003 044c 30E0      		ldi r19,0
+ 1004 044e 082E      		mov r0,r24
+ 1005 0450 00C0      		rjmp 2f
+ 1006               		1:
+ 1007 0452 220F      		lsl r18
+ 1008               		2:
+ 1009 0454 0A94      		dec r0
+ 1010 0456 02F4      		brpl 1b
+ 1011 0458 922B      		or r25,r18
+ 1012 045a 98B9      		out 0x8,r25
+ 1013 045c 00C0      		rjmp .L91
+ 1014               	.L82:
+ 380:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTC &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 1015               		.loc 1 380 0
+ 1016 045e 21E0      		ldi r18,lo8(1)
+ 1017 0460 30E0      		ldi r19,0
+ 1018 0462 082E      		mov r0,r24
+ 1019 0464 00C0      		rjmp 2f
+ 1020               		1:
+ 1021 0466 220F      		lsl r18
+ 1022               		2:
+ 1023 0468 0A94      		dec r0
+ 1024 046a 02F4      		brpl 1b
+ 1025 046c 2095      		com r18
+ 1026 046e 2923      		and r18,r25
+ 1027 0470 28B9      		out 0x8,r18
+ 1028 0472 00C0      		rjmp .L91
+ 1029               	.L76:
+ 384:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PIND & BM((pin & 0xF8) >> 3)) == 0) {
+ 1030               		.loc 1 384 0
+ 1031 0474 29B1      		in r18,0x9
+ 1032 0476 30E0      		ldi r19,0
+ 1033 0478 082E      		mov r0,r24
+ 1034 047a 00C0      		rjmp 2f
+ 1035               		1:
+ 1036 047c 3595      		asr r19
+ 1037 047e 2795      		ror r18
+ 1038               		2:
+ 1039 0480 0A94      		dec r0
+ 1040 0482 02F4      		brpl 1b
+ 385:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTD |= BM((pin & 0xF8) >> 3); } while(0);
+ 1041               		.loc 1 385 0
+ 1042 0484 9BB1      		in r25,0xb
+ 384:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PIND & BM((pin & 0xF8) >> 3)) == 0) {
+ 1043               		.loc 1 384 0
+ 1044 0486 20FD      		sbrc r18,0
+ 1045 0488 00C0      		rjmp .L83
+ 385:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTD |= BM((pin & 0xF8) >> 3); } while(0);
+ 1046               		.loc 1 385 0
+ 1047 048a 21E0      		ldi r18,lo8(1)
+ 1048 048c 30E0      		ldi r19,0
+ 1049 048e 082E      		mov r0,r24
+ 1050 0490 00C0      		rjmp 2f
+ 1051               		1:
+ 1052 0492 220F      		lsl r18
+ 1053               		2:
+ 1054 0494 0A94      		dec r0
+ 1055 0496 02F4      		brpl 1b
+ 1056 0498 922B      		or r25,r18
+ 1057 049a 9BB9      		out 0xb,r25
+ 1058 049c 00C0      		rjmp .L91
+ 1059               	.L83:
+ 387:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTD &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 1060               		.loc 1 387 0
+ 1061 049e 21E0      		ldi r18,lo8(1)
+ 1062 04a0 30E0      		ldi r19,0
+ 1063 04a2 082E      		mov r0,r24
+ 1064 04a4 00C0      		rjmp 2f
+ 1065               		1:
+ 1066 04a6 220F      		lsl r18
+ 1067               		2:
+ 1068 04a8 0A94      		dec r0
+ 1069 04aa 02F4      		brpl 1b
+ 1070 04ac 2095      		com r18
+ 1071 04ae 2923      		and r18,r25
+ 1072 04b0 2BB9      		out 0xb,r18
+ 1073 04b2 00C0      		rjmp .L91
+ 1074               	.L77:
+ 391:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINE & BM((pin & 0xF8) >> 3)) == 0) {
+ 1075               		.loc 1 391 0
+ 1076 04b4 2CB1      		in r18,0xc
+ 1077 04b6 30E0      		ldi r19,0
+ 1078 04b8 082E      		mov r0,r24
+ 1079 04ba 00C0      		rjmp 2f
+ 1080               		1:
+ 1081 04bc 3595      		asr r19
+ 1082 04be 2795      		ror r18
+ 1083               		2:
+ 1084 04c0 0A94      		dec r0
+ 1085 04c2 02F4      		brpl 1b
+ 392:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTE |= BM((pin & 0xF8) >> 3); } while(0);
+ 1086               		.loc 1 392 0
+ 1087 04c4 9EB1      		in r25,0xe
+ 391:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINE & BM((pin & 0xF8) >> 3)) == 0) {
+ 1088               		.loc 1 391 0
+ 1089 04c6 20FD      		sbrc r18,0
+ 1090 04c8 00C0      		rjmp .L84
+ 392:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTE |= BM((pin & 0xF8) >> 3); } while(0);
+ 1091               		.loc 1 392 0
+ 1092 04ca 21E0      		ldi r18,lo8(1)
+ 1093 04cc 30E0      		ldi r19,0
+ 1094 04ce 082E      		mov r0,r24
+ 1095 04d0 00C0      		rjmp 2f
+ 1096               		1:
+ 1097 04d2 220F      		lsl r18
+ 1098               		2:
+ 1099 04d4 0A94      		dec r0
+ 1100 04d6 02F4      		brpl 1b
+ 1101 04d8 922B      		or r25,r18
+ 1102 04da 9EB9      		out 0xe,r25
+ 1103 04dc 00C0      		rjmp .L91
+ 1104               	.L84:
+ 394:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTE &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 1105               		.loc 1 394 0
+ 1106 04de 21E0      		ldi r18,lo8(1)
+ 1107 04e0 30E0      		ldi r19,0
+ 1108 04e2 082E      		mov r0,r24
+ 1109 04e4 00C0      		rjmp 2f
+ 1110               		1:
+ 1111 04e6 220F      		lsl r18
+ 1112               		2:
+ 1113 04e8 0A94      		dec r0
+ 1114 04ea 02F4      		brpl 1b
+ 1115 04ec 2095      		com r18
+ 1116 04ee 2923      		and r18,r25
+ 1117 04f0 2EB9      		out 0xe,r18
+ 1118 04f2 00C0      		rjmp .L91
+ 1119               	.L78:
+ 398:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINF & BM((pin & 0xF8) >> 3)) == 0) {
+ 1120               		.loc 1 398 0
+ 1121 04f4 2FB1      		in r18,0xf
+ 1122 04f6 30E0      		ldi r19,0
+ 1123 04f8 082E      		mov r0,r24
+ 1124 04fa 00C0      		rjmp 2f
+ 1125               		1:
+ 1126 04fc 3595      		asr r19
+ 1127 04fe 2795      		ror r18
+ 1128               		2:
+ 1129 0500 0A94      		dec r0
+ 1130 0502 02F4      		brpl 1b
+ 399:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTF |= BM((pin & 0xF8) >> 3); } while(0);
+ 1131               		.loc 1 399 0
+ 1132 0504 91B3      		in r25,0x11
+ 398:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PINF & BM((pin & 0xF8) >> 3)) == 0) {
+ 1133               		.loc 1 398 0
+ 1134 0506 20FD      		sbrc r18,0
+ 1135 0508 00C0      		rjmp .L85
+ 399:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTF |= BM((pin & 0xF8) >> 3); } while(0);
+ 1136               		.loc 1 399 0
+ 1137 050a 21E0      		ldi r18,lo8(1)
+ 1138 050c 30E0      		ldi r19,0
+ 1139 050e 082E      		mov r0,r24
+ 1140 0510 00C0      		rjmp 2f
+ 1141               		1:
+ 1142 0512 220F      		lsl r18
+ 1143               		2:
+ 1144 0514 0A94      		dec r0
+ 1145 0516 02F4      		brpl 1b
+ 1146 0518 922B      		or r25,r18
+ 1147 051a 91BB      		out 0x11,r25
+ 1148 051c 00C0      		rjmp .L91
+ 1149               	.L85:
+ 401:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTF &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 1150               		.loc 1 401 0
+ 1151 051e 21E0      		ldi r18,lo8(1)
+ 1152 0520 30E0      		ldi r19,0
+ 1153 0522 082E      		mov r0,r24
+ 1154 0524 00C0      		rjmp 2f
+ 1155               		1:
+ 1156 0526 220F      		lsl r18
+ 1157               		2:
+ 1158 0528 0A94      		dec r0
+ 1159 052a 02F4      		brpl 1b
+ 1160 052c 2095      		com r18
+ 1161 052e 2923      		and r18,r25
+ 1162 0530 21BB      		out 0x11,r18
+ 1163 0532 00C0      		rjmp .L91
+ 1164               	.L79:
+ 405:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PING & BM((pin & 0xF8) >> 3)) == 0) {
+ 1165               		.loc 1 405 0
+ 1166 0534 22B3      		in r18,0x12
+ 1167 0536 30E0      		ldi r19,0
+ 1168 0538 082E      		mov r0,r24
+ 1169 053a 00C0      		rjmp 2f
+ 1170               		1:
+ 1171 053c 3595      		asr r19
+ 1172 053e 2795      		ror r18
+ 1173               		2:
+ 1174 0540 0A94      		dec r0
+ 1175 0542 02F4      		brpl 1b
+ 406:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTG |= BM((pin & 0xF8) >> 3); } while(0);
+ 1176               		.loc 1 406 0
+ 1177 0544 94B3      		in r25,0x14
+ 405:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         if ((PING & BM((pin & 0xF8) >> 3)) == 0) {
+ 1178               		.loc 1 405 0
+ 1179 0546 20FD      		sbrc r18,0
+ 1180 0548 00C0      		rjmp .L86
+ 406:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTG |= BM((pin & 0xF8) >> 3); } while(0);
+ 1181               		.loc 1 406 0
+ 1182 054a 21E0      		ldi r18,lo8(1)
+ 1183 054c 30E0      		ldi r19,0
+ 1184 054e 082E      		mov r0,r24
+ 1185 0550 00C0      		rjmp 2f
+ 1186               		1:
+ 1187 0552 220F      		lsl r18
+ 1188               		2:
+ 1189 0554 0A94      		dec r0
+ 1190 0556 02F4      		brpl 1b
+ 1191 0558 922B      		or r25,r18
+ 1192 055a 94BB      		out 0x14,r25
+ 1193 055c 00C0      		rjmp .L91
+ 1194               	.L86:
+ 408:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 do { PORTG &= ~BM((pin & 0xF8) >> 3); } while(0);
+ 1195               		.loc 1 408 0
+ 1196 055e 21E0      		ldi r18,lo8(1)
+ 1197 0560 30E0      		ldi r19,0
+ 1198 0562 082E      		mov r0,r24
+ 1199 0564 00C0      		rjmp 2f
+ 1200               		1:
+ 1201 0566 220F      		lsl r18
+ 1202               		2:
+ 1203 0568 0A94      		dec r0
+ 1204 056a 02F4      		brpl 1b
+ 1205 056c 2095      		com r18
+ 1206 056e 2923      		and r18,r25
+ 1207 0570 24BB      		out 0x14,r18
+ 1208 0572 00C0      		rjmp .L91
+ 1209               	.LVL38:
+ 1210               	.L88:
+ 411:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                  default: return -1;
+ 1211               		.loc 1 411 0
+ 1212 0574 8FEF      		ldi r24,lo8(-1)
+ 1213               	.LVL39:
+ 414:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 1214               		.loc 1 414 0
+ 1215 0576 0895      		ret
+ 1216               		.cfi_endproc
+ 1217               	.LFE12:
+ 1219               	.global	nrk_gpio_direction
+ 1221               	nrk_gpio_direction:
+ 1222               	.LFB13:
+ 417:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1223               		.loc 1 417 0
+ 1224               		.cfi_startproc
+ 1225               	.LVL40:
+ 1226               	/* prologue: function */
+ 1227               	/* frame size = 0 */
+ 1228               	/* stack size = 0 */
+ 1229               	.L__stack_usage = 0
+ 418:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if (pin == NRK_INVALID_PIN_VAL) return -1;
+ 1230               		.loc 1 418 0
+ 1231 0578 8F3F      		cpi r24,lo8(-1)
+ 1232 057a 01F4      		brne .+2
+ 1233 057c 00C0      		rjmp .L113
+ 1234 057e 482F      		mov r20,r24
+ 1235 0580 4770      		andi r20,lo8(7)
+ 420:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 switch (pin & 0x07) {
+ 1236               		.loc 1 420 0
+ 1237 0582 50E0      		ldi r21,0
+ 419:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         if (pin_direction == NRK_PIN_INPUT) {
+ 1238               		.loc 1 419 0
+ 1239 0584 6111      		cpse r22,__zero_reg__
+ 1240 0586 00C0      		rjmp .L94
+ 420:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 switch (pin & 0x07) {
+ 1241               		.loc 1 420 0
+ 1242 0588 4730      		cpi r20,7
+ 1243 058a 5105      		cpc r21,__zero_reg__
+ 1244 058c 00F0      		brlo .+2
+ 1245 058e 00C0      		rjmp .L113
+ 1246 0590 FA01      		movw r30,r20
+ 1247 0592 E050      		subi r30,lo8(-(gs(.L96)))
+ 1248 0594 F040      		sbci r31,hi8(-(gs(.L96)))
+ 1249 0596 8695      		lsr r24
+ 1250 0598 8695      		lsr r24
+ 1251 059a 8695      		lsr r24
+ 1252               	.LVL41:
+ 1253 059c 0C94 0000 		jmp __tablejump2__
+ 1254               		.section	.progmem.gcc_sw_table,"a",@progbits
+ 1255               		.p2align	1
+ 1256               	.L96:
+ 1257 0038 0000      		.word gs(.L95)
+ 1258 003a 0000      		.word gs(.L97)
+ 1259 003c 0000      		.word gs(.L98)
+ 1260 003e 0000      		.word gs(.L99)
+ 1261 0040 0000      		.word gs(.L100)
+ 1262 0042 0000      		.word gs(.L101)
+ 1263 0044 0000      		.word gs(.L102)
+ 1264               		.text
+ 1265               	.L95:
+ 422:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRA &= ~BM((pin & 0xF8) >> 3); 
+ 1266               		.loc 1 422 0
+ 1267 05a0 91B1      		in r25,0x1
+ 1268 05a2 21E0      		ldi r18,lo8(1)
+ 1269 05a4 30E0      		ldi r19,0
+ 1270 05a6 082E      		mov r0,r24
+ 1271 05a8 00C0      		rjmp 2f
+ 1272               		1:
+ 1273 05aa 220F      		lsl r18
+ 1274               		2:
+ 1275 05ac 0A94      		dec r0
+ 1276 05ae 02F4      		brpl 1b
+ 1277 05b0 2095      		com r18
+ 1278 05b2 2923      		and r18,r25
+ 1279 05b4 21B9      		out 0x1,r18
+ 1280 05b6 00C0      		rjmp .L114
+ 1281               	.L97:
+ 426:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRB &= ~BM((pin & 0xF8) >> 3); 
+ 1282               		.loc 1 426 0
+ 1283 05b8 94B1      		in r25,0x4
+ 1284 05ba 21E0      		ldi r18,lo8(1)
+ 1285 05bc 30E0      		ldi r19,0
+ 1286 05be 082E      		mov r0,r24
+ 1287 05c0 00C0      		rjmp 2f
+ 1288               		1:
+ 1289 05c2 220F      		lsl r18
+ 1290               		2:
+ 1291 05c4 0A94      		dec r0
+ 1292 05c6 02F4      		brpl 1b
+ 1293 05c8 2095      		com r18
+ 1294 05ca 2923      		and r18,r25
+ 1295 05cc 24B9      		out 0x4,r18
+ 1296 05ce 00C0      		rjmp .L114
+ 1297               	.L98:
+ 430:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRC &= ~BM((pin & 0xF8) >> 3); 
+ 1298               		.loc 1 430 0
+ 1299 05d0 97B1      		in r25,0x7
+ 1300 05d2 21E0      		ldi r18,lo8(1)
+ 1301 05d4 30E0      		ldi r19,0
+ 1302 05d6 082E      		mov r0,r24
+ 1303 05d8 00C0      		rjmp 2f
+ 1304               		1:
+ 1305 05da 220F      		lsl r18
+ 1306               		2:
+ 1307 05dc 0A94      		dec r0
+ 1308 05de 02F4      		brpl 1b
+ 1309 05e0 2095      		com r18
+ 1310 05e2 2923      		and r18,r25
+ 1311 05e4 27B9      		out 0x7,r18
+ 1312 05e6 00C0      		rjmp .L114
+ 1313               	.L99:
+ 434:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRD &= ~BM((pin & 0xF8) >> 3); 
+ 1314               		.loc 1 434 0
+ 1315 05e8 9AB1      		in r25,0xa
+ 1316 05ea 21E0      		ldi r18,lo8(1)
+ 1317 05ec 30E0      		ldi r19,0
+ 1318 05ee 082E      		mov r0,r24
+ 1319 05f0 00C0      		rjmp 2f
+ 1320               		1:
+ 1321 05f2 220F      		lsl r18
+ 1322               		2:
+ 1323 05f4 0A94      		dec r0
+ 1324 05f6 02F4      		brpl 1b
+ 1325 05f8 2095      		com r18
+ 1326 05fa 2923      		and r18,r25
+ 1327 05fc 2AB9      		out 0xa,r18
+ 1328 05fe 00C0      		rjmp .L114
+ 1329               	.L100:
+ 438:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRE &= ~BM((pin & 0xF8) >> 3); 
+ 1330               		.loc 1 438 0
+ 1331 0600 9DB1      		in r25,0xd
+ 1332 0602 21E0      		ldi r18,lo8(1)
+ 1333 0604 30E0      		ldi r19,0
+ 1334 0606 082E      		mov r0,r24
+ 1335 0608 00C0      		rjmp 2f
+ 1336               		1:
+ 1337 060a 220F      		lsl r18
+ 1338               		2:
+ 1339 060c 0A94      		dec r0
+ 1340 060e 02F4      		brpl 1b
+ 1341 0610 2095      		com r18
+ 1342 0612 2923      		and r18,r25
+ 1343 0614 2DB9      		out 0xd,r18
+ 1344 0616 00C0      		rjmp .L114
+ 1345               	.L101:
+ 442:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRF &= ~BM((pin & 0xF8) >> 3);
+ 1346               		.loc 1 442 0
+ 1347 0618 90B3      		in r25,0x10
+ 1348 061a 21E0      		ldi r18,lo8(1)
+ 1349 061c 30E0      		ldi r19,0
+ 1350 061e 082E      		mov r0,r24
+ 1351 0620 00C0      		rjmp 2f
+ 1352               		1:
+ 1353 0622 220F      		lsl r18
+ 1354               		2:
+ 1355 0624 0A94      		dec r0
+ 1356 0626 02F4      		brpl 1b
+ 1357 0628 2095      		com r18
+ 1358 062a 2923      		and r18,r25
+ 1359 062c 20BB      		out 0x10,r18
+ 1360 062e 00C0      		rjmp .L114
+ 1361               	.L102:
+ 446:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRG &= ~BM((pin & 0xF8) >> 3);
+ 1362               		.loc 1 446 0
+ 1363 0630 93B3      		in r25,0x13
+ 1364 0632 21E0      		ldi r18,lo8(1)
+ 1365 0634 30E0      		ldi r19,0
+ 1366 0636 082E      		mov r0,r24
+ 1367 0638 00C0      		rjmp 2f
+ 1368               		1:
+ 1369 063a 220F      		lsl r18
+ 1370               		2:
+ 1371 063c 0A94      		dec r0
+ 1372 063e 02F4      		brpl 1b
+ 1373 0640 2095      		com r18
+ 1374 0642 2923      		and r18,r25
+ 1375 0644 23BB      		out 0x13,r18
+ 1376 0646 00C0      		rjmp .L114
+ 1377               	.LVL42:
+ 1378               	.L94:
+ 452:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                 switch (pin & 0x07) {
+ 1379               		.loc 1 452 0
+ 1380 0648 4730      		cpi r20,7
+ 1381 064a 5105      		cpc r21,__zero_reg__
+ 1382 064c 00F0      		brlo .+2
+ 1383 064e 00C0      		rjmp .L113
+ 1384 0650 FA01      		movw r30,r20
+ 1385 0652 E050      		subi r30,lo8(-(gs(.L104)))
+ 1386 0654 F040      		sbci r31,hi8(-(gs(.L104)))
+ 1387 0656 8695      		lsr r24
+ 1388 0658 8695      		lsr r24
+ 1389 065a 8695      		lsr r24
+ 1390               	.LVL43:
+ 1391 065c 0C94 0000 		jmp __tablejump2__
+ 1392               		.section	.progmem.gcc_sw_table,"a",@progbits
+ 1393               		.p2align	1
+ 1394               	.L104:
+ 1395 0046 0000      		.word gs(.L103)
+ 1396 0048 0000      		.word gs(.L105)
+ 1397 004a 0000      		.word gs(.L106)
+ 1398 004c 0000      		.word gs(.L107)
+ 1399 004e 0000      		.word gs(.L108)
+ 1400 0050 0000      		.word gs(.L109)
+ 1401 0052 0000      		.word gs(.L110)
+ 1402               		.text
+ 1403               	.L103:
+ 454:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRA |= BM((pin & 0xF8) >> 3); break;
+ 1404               		.loc 1 454 0
+ 1405 0660 91B1      		in r25,0x1
+ 1406 0662 21E0      		ldi r18,lo8(1)
+ 1407 0664 30E0      		ldi r19,0
+ 1408 0666 082E      		mov r0,r24
+ 1409 0668 00C0      		rjmp 2f
+ 1410               		1:
+ 1411 066a 220F      		lsl r18
+ 1412               		2:
+ 1413 066c 0A94      		dec r0
+ 1414 066e 02F4      		brpl 1b
+ 1415 0670 922B      		or r25,r18
+ 1416 0672 91B9      		out 0x1,r25
+ 1417 0674 00C0      		rjmp .L114
+ 1418               	.L105:
+ 456:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRB |= BM((pin & 0xF8) >> 3); break;
+ 1419               		.loc 1 456 0
+ 1420 0676 94B1      		in r25,0x4
+ 1421 0678 21E0      		ldi r18,lo8(1)
+ 1422 067a 30E0      		ldi r19,0
+ 1423 067c 082E      		mov r0,r24
+ 1424 067e 00C0      		rjmp 2f
+ 1425               		1:
+ 1426 0680 220F      		lsl r18
+ 1427               		2:
+ 1428 0682 0A94      		dec r0
+ 1429 0684 02F4      		brpl 1b
+ 1430 0686 922B      		or r25,r18
+ 1431 0688 94B9      		out 0x4,r25
+ 1432 068a 00C0      		rjmp .L114
+ 1433               	.L106:
+ 458:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRC |= BM((pin & 0xF8) >> 3); break;
+ 1434               		.loc 1 458 0
+ 1435 068c 97B1      		in r25,0x7
+ 1436 068e 21E0      		ldi r18,lo8(1)
+ 1437 0690 30E0      		ldi r19,0
+ 1438 0692 082E      		mov r0,r24
+ 1439 0694 00C0      		rjmp 2f
+ 1440               		1:
+ 1441 0696 220F      		lsl r18
+ 1442               		2:
+ 1443 0698 0A94      		dec r0
+ 1444 069a 02F4      		brpl 1b
+ 1445 069c 922B      		or r25,r18
+ 1446 069e 97B9      		out 0x7,r25
+ 1447 06a0 00C0      		rjmp .L114
+ 1448               	.L107:
+ 460:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRD |= BM((pin & 0xF8) >> 3); break;
+ 1449               		.loc 1 460 0
+ 1450 06a2 9AB1      		in r25,0xa
+ 1451 06a4 21E0      		ldi r18,lo8(1)
+ 1452 06a6 30E0      		ldi r19,0
+ 1453 06a8 082E      		mov r0,r24
+ 1454 06aa 00C0      		rjmp 2f
+ 1455               		1:
+ 1456 06ac 220F      		lsl r18
+ 1457               		2:
+ 1458 06ae 0A94      		dec r0
+ 1459 06b0 02F4      		brpl 1b
+ 1460 06b2 922B      		or r25,r18
+ 1461 06b4 9AB9      		out 0xa,r25
+ 1462 06b6 00C0      		rjmp .L114
+ 1463               	.L108:
+ 462:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRE |= BM((pin & 0xF8) >> 3); break;
+ 1464               		.loc 1 462 0
+ 1465 06b8 9DB1      		in r25,0xd
+ 1466 06ba 21E0      		ldi r18,lo8(1)
+ 1467 06bc 30E0      		ldi r19,0
+ 1468 06be 082E      		mov r0,r24
+ 1469 06c0 00C0      		rjmp 2f
+ 1470               		1:
+ 1471 06c2 220F      		lsl r18
+ 1472               		2:
+ 1473 06c4 0A94      		dec r0
+ 1474 06c6 02F4      		brpl 1b
+ 1475 06c8 922B      		or r25,r18
+ 1476 06ca 9DB9      		out 0xd,r25
+ 1477 06cc 00C0      		rjmp .L114
+ 1478               	.L109:
+ 464:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRF |= BM((pin & 0xF8) >> 3); break;
+ 1479               		.loc 1 464 0
+ 1480 06ce 90B3      		in r25,0x10
+ 1481 06d0 21E0      		ldi r18,lo8(1)
+ 1482 06d2 30E0      		ldi r19,0
+ 1483 06d4 082E      		mov r0,r24
+ 1484 06d6 00C0      		rjmp 2f
+ 1485               		1:
+ 1486 06d8 220F      		lsl r18
+ 1487               		2:
+ 1488 06da 0A94      		dec r0
+ 1489 06dc 02F4      		brpl 1b
+ 1490 06de 922B      		or r25,r18
+ 1491 06e0 90BB      		out 0x10,r25
+ 1492 06e2 00C0      		rjmp .L114
+ 1493               	.L110:
+ 466:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRG |= BM((pin & 0xF8) >> 3); break;
+ 1494               		.loc 1 466 0
+ 1495 06e4 93B3      		in r25,0x13
+ 1496 06e6 21E0      		ldi r18,lo8(1)
+ 1497 06e8 30E0      		ldi r19,0
+ 1498 06ea 00C0      		rjmp 2f
+ 1499               		1:
+ 1500 06ec 220F      		lsl r18
+ 1501               		2:
+ 1502 06ee 8A95      		dec r24
+ 1503 06f0 02F4      		brpl 1b
+ 1504 06f2 922B      		or r25,r18
+ 1505 06f4 93BB      		out 0x13,r25
+ 1506               	.L114:
+ 470:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****         return 1;
+ 1507               		.loc 1 470 0
+ 1508 06f6 81E0      		ldi r24,lo8(1)
+ 466:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                                 DDRG |= BM((pin & 0xF8) >> 3); break;
+ 1509               		.loc 1 466 0
+ 1510 06f8 0895      		ret
+ 1511               	.LVL44:
+ 1512               	.L113:
+ 467:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****                         default: return -1;
+ 1513               		.loc 1 467 0
+ 1514 06fa 8FEF      		ldi r24,lo8(-1)
+ 1515               	.LVL45:
+ 471:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 1516               		.loc 1 471 0
+ 1517 06fc 0895      		ret
+ 1518               		.cfi_endproc
+ 1519               	.LFE13:
+ 1521               	.global	nrk_get_button
+ 1523               	nrk_get_button:
+ 1524               	.LFB14:
+ 474:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1525               		.loc 1 474 0
+ 1526               		.cfi_startproc
+ 1527               	.LVL46:
+ 1528               	/* prologue: function */
+ 1529               	/* frame size = 0 */
+ 1530               	/* stack size = 0 */
+ 1531               	.L__stack_usage = 0
+ 475:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(b==0) {
+ 1532               		.loc 1 475 0
+ 1533 06fe 8111      		cpse r24,__zero_reg__
+ 1534 0700 00C0      		rjmp .L117
+ 476:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** 	 return( !(PINA & BM(BUTTON))); 
+ 1535               		.loc 1 476 0
+ 1536 0702 80B1      		in r24,0
+ 1537               	.LVL47:
+ 1538 0704 8695      		lsr r24
+ 1539 0706 8170      		andi r24,1
+ 1540 0708 91E0      		ldi r25,lo8(1)
+ 1541 070a 8927      		eor r24,r25
+ 1542 070c 0895      		ret
+ 1543               	.LVL48:
+ 1544               	.L117:
+ 478:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return -1;
+ 1545               		.loc 1 478 0
+ 1546 070e 8FEF      		ldi r24,lo8(-1)
+ 1547               	.LVL49:
+ 479:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 1548               		.loc 1 479 0
+ 1549 0710 0895      		ret
+ 1550               		.cfi_endproc
+ 1551               	.LFE14:
+ 1553               	.global	nrk_led_toggle
+ 1555               	nrk_led_toggle:
+ 1556               	.LFB15:
+ 482:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1557               		.loc 1 482 0
+ 1558               		.cfi_startproc
+ 1559               	.LVL50:
+ 1560               	/* prologue: function */
+ 1561               	/* frame size = 0 */
+ 1562               	/* stack size = 0 */
+ 1563               	.L__stack_usage = 0
+ 483:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_toggle(NRK_LED_0); return 1; }
+ 1564               		.loc 1 483 0
+ 1565 0712 0097      		sbiw r24,0
+ 1566 0714 01F4      		brne .L119
+ 483:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_toggle(NRK_LED_0); return 1; }
+ 1567               		.loc 1 483 0 is_stmt 0 discriminator 1
+ 1568 0716 83E2      		ldi r24,lo8(35)
+ 1569               	.LVL51:
+ 1570 0718 00C0      		rjmp .L124
+ 1571               	.LVL52:
+ 1572               	.L119:
+ 484:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_toggle(NRK_LED_1); return 1; }
+ 1573               		.loc 1 484 0 is_stmt 1
+ 1574 071a 8130      		cpi r24,1
+ 1575 071c 9105      		cpc r25,__zero_reg__
+ 1576 071e 01F4      		brne .L121
+ 484:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_toggle(NRK_LED_1); return 1; }
+ 1577               		.loc 1 484 0 is_stmt 0 discriminator 1
+ 1578 0720 8BE2      		ldi r24,lo8(43)
+ 1579               	.LVL53:
+ 1580 0722 00C0      		rjmp .L124
+ 1581               	.LVL54:
+ 1582               	.L121:
+ 485:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_toggle(NRK_LED_2); return 1; }
+ 1583               		.loc 1 485 0 is_stmt 1
+ 1584 0724 8230      		cpi r24,2
+ 1585 0726 9105      		cpc r25,__zero_reg__
+ 1586 0728 01F4      		brne .L122
+ 485:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_toggle(NRK_LED_2); return 1; }
+ 1587               		.loc 1 485 0 is_stmt 0 discriminator 1
+ 1588 072a 83E3      		ldi r24,lo8(51)
+ 1589               	.LVL55:
+ 1590 072c 00C0      		rjmp .L124
+ 1591               	.LVL56:
+ 1592               	.L122:
+ 486:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_toggle(NRK_LED_3); return 1; }
+ 1593               		.loc 1 486 0 is_stmt 1
+ 1594 072e 0397      		sbiw r24,3
+ 1595 0730 01F4      		brne .L123
+ 486:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_toggle(NRK_LED_3); return 1; }
+ 1596               		.loc 1 486 0 is_stmt 0 discriminator 1
+ 1597 0732 8BE3      		ldi r24,lo8(59)
+ 1598               	.LVL57:
+ 1599               	.L124:
+ 1600 0734 0E94 0000 		call nrk_gpio_toggle
+ 1601               	.LVL58:
+ 1602 0738 81E0      		ldi r24,lo8(1)
+ 1603 073a 0895      		ret
+ 1604               	.LVL59:
+ 1605               	.L123:
+ 487:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return -1;
+ 1606               		.loc 1 487 0 is_stmt 1
+ 1607 073c 8FEF      		ldi r24,lo8(-1)
+ 1608               	.LVL60:
+ 488:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 1609               		.loc 1 488 0
+ 1610 073e 0895      		ret
+ 1611               		.cfi_endproc
+ 1612               	.LFE15:
+ 1614               	.global	nrk_led_clr
+ 1616               	nrk_led_clr:
+ 1617               	.LFB16:
+ 491:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1618               		.loc 1 491 0
+ 1619               		.cfi_startproc
+ 1620               	.LVL61:
+ 1621               	/* prologue: function */
+ 1622               	/* frame size = 0 */
+ 1623               	/* stack size = 0 */
+ 1624               	.L__stack_usage = 0
+ 492:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_set(NRK_LED_0); return 1; }
+ 1625               		.loc 1 492 0
+ 1626 0740 0097      		sbiw r24,0
+ 1627 0742 01F4      		brne .L126
+ 492:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_set(NRK_LED_0); return 1; }
+ 1628               		.loc 1 492 0 is_stmt 0 discriminator 1
+ 1629 0744 83E2      		ldi r24,lo8(35)
+ 1630               	.LVL62:
+ 1631 0746 00C0      		rjmp .L131
+ 1632               	.LVL63:
+ 1633               	.L126:
+ 493:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_set(NRK_LED_1); return 1; }
+ 1634               		.loc 1 493 0 is_stmt 1
+ 1635 0748 8130      		cpi r24,1
+ 1636 074a 9105      		cpc r25,__zero_reg__
+ 1637 074c 01F4      		brne .L128
+ 493:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_set(NRK_LED_1); return 1; }
+ 1638               		.loc 1 493 0 is_stmt 0 discriminator 1
+ 1639 074e 8BE2      		ldi r24,lo8(43)
+ 1640               	.LVL64:
+ 1641 0750 00C0      		rjmp .L131
+ 1642               	.LVL65:
+ 1643               	.L128:
+ 494:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_set(NRK_LED_2); return 1; }
+ 1644               		.loc 1 494 0 is_stmt 1
+ 1645 0752 8230      		cpi r24,2
+ 1646 0754 9105      		cpc r25,__zero_reg__
+ 1647 0756 01F4      		brne .L129
+ 494:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_set(NRK_LED_2); return 1; }
+ 1648               		.loc 1 494 0 is_stmt 0 discriminator 1
+ 1649 0758 83E3      		ldi r24,lo8(51)
+ 1650               	.LVL66:
+ 1651 075a 00C0      		rjmp .L131
+ 1652               	.LVL67:
+ 1653               	.L129:
+ 495:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_set(NRK_LED_3); return 1; }
+ 1654               		.loc 1 495 0 is_stmt 1
+ 1655 075c 0397      		sbiw r24,3
+ 1656 075e 01F4      		brne .L130
+ 495:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_set(NRK_LED_3); return 1; }
+ 1657               		.loc 1 495 0 is_stmt 0 discriminator 1
+ 1658 0760 8BE3      		ldi r24,lo8(59)
+ 1659               	.LVL68:
+ 1660               	.L131:
+ 1661 0762 0E94 0000 		call nrk_gpio_set
+ 1662               	.LVL69:
+ 1663 0766 81E0      		ldi r24,lo8(1)
+ 1664 0768 0895      		ret
+ 1665               	.LVL70:
+ 1666               	.L130:
+ 496:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return -1;
+ 1667               		.loc 1 496 0 is_stmt 1
+ 1668 076a 8FEF      		ldi r24,lo8(-1)
+ 1669               	.LVL71:
+ 497:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 1670               		.loc 1 497 0
+ 1671 076c 0895      		ret
+ 1672               		.cfi_endproc
+ 1673               	.LFE16:
+ 1675               	.global	nrk_led_set
+ 1677               	nrk_led_set:
+ 1678               	.LFB17:
+ 500:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1679               		.loc 1 500 0
+ 1680               		.cfi_startproc
+ 1681               	.LVL72:
+ 1682               	/* prologue: function */
+ 1683               	/* frame size = 0 */
+ 1684               	/* stack size = 0 */
+ 1685               	.L__stack_usage = 0
+ 501:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_clr(NRK_LED_0); return 1; }
+ 1686               		.loc 1 501 0
+ 1687 076e 0097      		sbiw r24,0
+ 1688 0770 01F4      		brne .L133
+ 501:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==0) { nrk_gpio_clr(NRK_LED_0); return 1; }
+ 1689               		.loc 1 501 0 is_stmt 0 discriminator 1
+ 1690 0772 83E2      		ldi r24,lo8(35)
+ 1691               	.LVL73:
+ 1692 0774 00C0      		rjmp .L138
+ 1693               	.LVL74:
+ 1694               	.L133:
+ 502:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_clr(NRK_LED_1); return 1; }
+ 1695               		.loc 1 502 0 is_stmt 1
+ 1696 0776 8130      		cpi r24,1
+ 1697 0778 9105      		cpc r25,__zero_reg__
+ 1698 077a 01F4      		brne .L135
+ 502:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==1) { nrk_gpio_clr(NRK_LED_1); return 1; }
+ 1699               		.loc 1 502 0 is_stmt 0 discriminator 1
+ 1700 077c 8BE2      		ldi r24,lo8(43)
+ 1701               	.LVL75:
+ 1702 077e 00C0      		rjmp .L138
+ 1703               	.LVL76:
+ 1704               	.L135:
+ 503:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_clr(NRK_LED_2); return 1; }
+ 1705               		.loc 1 503 0 is_stmt 1
+ 1706 0780 8230      		cpi r24,2
+ 1707 0782 9105      		cpc r25,__zero_reg__
+ 1708 0784 01F4      		brne .L136
+ 503:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==2) { nrk_gpio_clr(NRK_LED_2); return 1; }
+ 1709               		.loc 1 503 0 is_stmt 0 discriminator 1
+ 1710 0786 83E3      		ldi r24,lo8(51)
+ 1711               	.LVL77:
+ 1712 0788 00C0      		rjmp .L138
+ 1713               	.LVL78:
+ 1714               	.L136:
+ 504:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_clr(NRK_LED_3); return 1; }
+ 1715               		.loc 1 504 0 is_stmt 1
+ 1716 078a 0397      		sbiw r24,3
+ 1717 078c 01F4      		brne .L137
+ 504:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(led==3) { nrk_gpio_clr(NRK_LED_3); return 1; }
+ 1718               		.loc 1 504 0 is_stmt 0 discriminator 1
+ 1719 078e 8BE3      		ldi r24,lo8(59)
+ 1720               	.LVL79:
+ 1721               	.L138:
+ 1722 0790 0E94 0000 		call nrk_gpio_clr
+ 1723               	.LVL80:
+ 1724 0794 81E0      		ldi r24,lo8(1)
+ 1725 0796 0895      		ret
+ 1726               	.LVL81:
+ 1727               	.L137:
+ 505:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** return -1;
+ 1728               		.loc 1 505 0 is_stmt 1
+ 1729 0798 8FEF      		ldi r24,lo8(-1)
+ 1730               	.LVL82:
+ 506:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 1731               		.loc 1 506 0
+ 1732 079a 0895      		ret
+ 1733               		.cfi_endproc
+ 1734               	.LFE17:
+ 1736               	.global	nrk_gpio_pullups
+ 1738               	nrk_gpio_pullups:
+ 1739               	.LFB18:
+ 509:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1740               		.loc 1 509 0
+ 1741               		.cfi_startproc
+ 1742               	.LVL83:
+ 1743               	/* prologue: function */
+ 1744               	/* frame size = 0 */
+ 1745               	/* stack size = 0 */
+ 1746               	.L__stack_usage = 0
+ 510:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(enable) MCUCR &= ~BM(PUD);
+ 1747               		.loc 1 510 0
+ 1748 079c 8823      		tst r24
+ 1749 079e 01F0      		breq .L140
+ 510:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** if(enable) MCUCR &= ~BM(PUD);
+ 1750               		.loc 1 510 0 is_stmt 0 discriminator 1
+ 1751 07a0 85B7      		in r24,0x35
+ 1752               	.LVL84:
+ 1753 07a2 8F7E      		andi r24,lo8(-17)
+ 1754 07a4 00C0      		rjmp .L142
+ 1755               	.LVL85:
+ 1756               	.L140:
+ 511:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** else MCUCR |= BM(PUD);
+ 1757               		.loc 1 511 0 is_stmt 1
+ 1758 07a6 85B7      		in r24,0x35
+ 1759               	.LVL86:
+ 1760 07a8 8061      		ori r24,lo8(16)
+ 1761               	.L142:
+ 1762 07aa 85BF      		out 0x35,r24
+ 513:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** }
+ 1763               		.loc 1 513 0
+ 1764 07ac 81E0      		ldi r24,lo8(1)
+ 1765 07ae 0895      		ret
+ 1766               		.cfi_endproc
+ 1767               	.LFE18:
+ 1769               	.global	putc0
+ 1771               	putc0:
+ 1772               	.LFB19:
+ 539:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1773               		.loc 1 539 0
+ 1774               		.cfi_startproc
+ 1775               	/* prologue: function */
+ 1776               	/* frame size = 0 */
+ 1777               	/* stack size = 0 */
+ 1778               	.L__stack_usage = 0
+ 1779               	.LVL87:
+ 1780               	.L145:
+ 540:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****      UART0_WAIT_AND_SEND(x);
+ 1781               		.loc 1 540 0 discriminator 1
+ 1782 07b0 9091 C000 		lds r25,192
+ 1783 07b4 95FF      		sbrs r25,5
+ 1784 07b6 00C0      		rjmp .L145
+ 540:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****      UART0_WAIT_AND_SEND(x);
+ 1785               		.loc 1 540 0 is_stmt 0 discriminator 2
+ 1786 07b8 9091 C000 		lds r25,192
+ 1787 07bc 9F7D      		andi r25,lo8(-33)
+ 1788 07be 9093 C000 		sts 192,r25
+ 1789 07c2 8093 C600 		sts 198,r24
+ 1790 07c6 0895      		ret
+ 1791               		.cfi_endproc
+ 1792               	.LFE19:
+ 1794               	.global	setup_uart0
+ 1796               	setup_uart0:
+ 1797               	.LFB21:
+ 549:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1798               		.loc 1 549 0 is_stmt 1
+ 1799               		.cfi_startproc
+ 1800               	.LVL88:
+ 1801               	/* prologue: function */
+ 1802               	/* frame size = 0 */
+ 1803               	/* stack size = 0 */
+ 1804               	.L__stack_usage = 0
+ 551:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** INIT_UART0( baudrate, (UART_OPT_NO_PARITY|UART_OPT_8_BITS_PER_CHAR|UART_OPT_ONE_STOP_BIT));
+ 1805               		.loc 1 551 0
+ 1806 07c8 9093 C500 		sts 197,r25
+ 1807 07cc 8093 C400 		sts 196,r24
+ 1808 07d0 86E0      		ldi r24,lo8(6)
+ 1809               	.LVL89:
+ 1810 07d2 8093 C200 		sts 194,r24
+ 1811 07d6 E1EC      		ldi r30,lo8(-63)
+ 1812 07d8 F0E0      		ldi r31,0
+ 1813 07da 8081      		ld r24,Z
+ 1814 07dc 8B7F      		andi r24,lo8(-5)
+ 1815 07de 8083      		st Z,r24
+ 1816 07e0 A0EC      		ldi r26,lo8(-64)
+ 1817 07e2 B0E0      		ldi r27,0
+ 1818 07e4 8C91      		ld r24,X
+ 1819 07e6 8260      		ori r24,lo8(2)
+ 1820 07e8 8C93      		st X,r24
+ 552:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** ENABLE_UART0();
+ 1821               		.loc 1 552 0
+ 1822 07ea 8081      		ld r24,Z
+ 1823 07ec 8861      		ori r24,lo8(24)
+ 1824 07ee 8083      		st Z,r24
+ 1825 07f0 0895      		ret
+ 1826               		.cfi_endproc
+ 1827               	.LFE21:
+ 1829               	.global	setup_uart1
+ 1831               	setup_uart1:
+ 1832               	.LFB22:
+ 556:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1833               		.loc 1 556 0
+ 1834               		.cfi_startproc
+ 1835               	.LVL90:
+ 1836               	/* prologue: function */
+ 1837               	/* frame size = 0 */
+ 1838               	/* stack size = 0 */
+ 1839               	.L__stack_usage = 0
+ 558:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** INIT_UART1( baudrate, (UART_OPT_NO_PARITY|UART_OPT_8_BITS_PER_CHAR|UART_OPT_ONE_STOP_BIT));
+ 1840               		.loc 1 558 0
+ 1841 07f2 9093 CD00 		sts 205,r25
+ 1842 07f6 8093 CC00 		sts 204,r24
+ 1843 07fa 86E0      		ldi r24,lo8(6)
+ 1844               	.LVL91:
+ 1845 07fc 8093 CA00 		sts 202,r24
+ 1846 0800 E9EC      		ldi r30,lo8(-55)
+ 1847 0802 F0E0      		ldi r31,0
+ 1848 0804 8081      		ld r24,Z
+ 1849 0806 8B7F      		andi r24,lo8(-5)
+ 1850 0808 8083      		st Z,r24
+ 1851 080a A8EC      		ldi r26,lo8(-56)
+ 1852 080c B0E0      		ldi r27,0
+ 1853 080e 8C91      		ld r24,X
+ 1854 0810 8260      		ori r24,lo8(2)
+ 1855 0812 8C93      		st X,r24
+ 559:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** ENABLE_UART1();
+ 1856               		.loc 1 559 0
+ 1857 0814 8081      		ld r24,Z
+ 1858 0816 8861      		ori r24,lo8(24)
+ 1859 0818 8083      		st Z,r24
+ 1860 081a 0895      		ret
+ 1861               		.cfi_endproc
+ 1862               	.LFE22:
+ 1864               	.global	nrk_setup_uart
+ 1866               	nrk_setup_uart:
+ 1867               	.LFB23:
+ 576:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c **** {
+ 1868               		.loc 1 576 0
+ 1869               		.cfi_startproc
+ 1870               	.LVL92:
+ 1871               	/* prologue: function */
+ 1872               	/* frame size = 0 */
+ 1873               	/* stack size = 0 */
+ 1874               	.L__stack_usage = 0
+ 582:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****   setup_uart1(baudrate);
+ 1875               		.loc 1 582 0
+ 1876 081c 0E94 0000 		call setup_uart1
+ 1877               	.LVL93:
+ 584:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****   stdout = fdevopen( (void *)putc1, (void *)getc1);
+ 1878               		.loc 1 584 0
+ 1879 0820 60E0      		ldi r22,lo8(gs(getc1))
+ 1880 0822 70E0      		ldi r23,hi8(gs(getc1))
+ 1881 0824 80E0      		ldi r24,lo8(gs(putc1))
+ 1882 0826 90E0      		ldi r25,hi8(gs(putc1))
+ 1883 0828 0E94 0000 		call fdevopen
+ 1884               	.LVL94:
+ 1885 082c 9093 0000 		sts __iob+2+1,r25
+ 1886 0830 8093 0000 		sts __iob+2,r24
+ 585:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****   stdin = fdevopen( (void *)putc1, (void *)getc1);
+ 1887               		.loc 1 585 0
+ 1888 0834 60E0      		ldi r22,lo8(gs(getc1))
+ 1889 0836 70E0      		ldi r23,hi8(gs(getc1))
+ 1890 0838 80E0      		ldi r24,lo8(gs(putc1))
+ 1891 083a 90E0      		ldi r25,hi8(gs(putc1))
+ 1892 083c 0E94 0000 		call fdevopen
+ 1893               	.LVL95:
+ 1894 0840 9093 0000 		sts __iob+1,r25
+ 1895 0844 8093 0000 		sts __iob,r24
+ 588:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_signal=nrk_signal_create();
+ 1896               		.loc 1 588 0
+ 1897 0848 0E94 0000 		call nrk_signal_create
+ 1898               	.LVL96:
+ 1899 084c 8093 0000 		sts uart_rx_signal,r24
+ 589:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_signal==NRK_ERROR) nrk_error_add(NRK_SIGNAL_CREATE_ERROR);
+ 1900               		.loc 1 589 0
+ 1901 0850 8F3F      		cpi r24,lo8(-1)
+ 1902 0852 01F4      		brne .L149
+ 589:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    if(uart_rx_signal==NRK_ERROR) nrk_error_add(NRK_SIGNAL_CREATE_ERROR);
+ 1903               		.loc 1 589 0 is_stmt 0 discriminator 1
+ 1904 0854 8EE0      		ldi r24,lo8(14)
+ 1905 0856 0E94 0000 		call nrk_error_add
+ 1906               	.LVL97:
+ 1907               	.L149:
+ 590:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_start=0;
+ 1908               		.loc 1 590 0 is_stmt 1
+ 1909 085a 1092 0000 		sts uart_rx_buf_start+1,__zero_reg__
+ 1910 085e 1092 0000 		sts uart_rx_buf_start,__zero_reg__
+ 591:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    uart_rx_buf_end=0;
+ 1911               		.loc 1 591 0
+ 1912 0862 1092 0000 		sts uart_rx_buf_end+1,__zero_reg__
+ 1913 0866 1092 0000 		sts uart_rx_buf_end,__zero_reg__
+ 592:/home/agr/nano-RK/src/platform/firefly3_alps/source/ulib.c ****    ENABLE_UART1_RX_INT();
+ 1914               		.loc 1 592 0
+ 1915 086a 8091 C900 		lds r24,201
+ 1916 086e 8068      		ori r24,lo8(-128)
+ 1917 0870 8093 C900 		sts 201,r24
+ 1918 0874 0895      		ret
+ 1919               		.cfi_endproc
+ 1920               	.LFE23:
+ 1922               		.section	.progmem.data,"a",@progbits
+ 1925               	__c.2161:
+ 1926 0000 7561 7274 		.string	"uart rx sig failed\r\n"
+ 1926      2072 7820 
+ 1926      7369 6720 
+ 1926      6661 696C 
+ 1926      6564 0D0A 
+ 1927               	.global	NRK_ADC_INPUT_7
+ 1928               		.section	.rodata
+ 1931               	NRK_ADC_INPUT_7:
+ 1932 0000 3D        		.byte	61
+ 1933               	.global	NRK_ADC_INPUT_6
+ 1936               	NRK_ADC_INPUT_6:
+ 1937 0001 35        		.byte	53
+ 1938               	.global	NRK_ADC_INPUT_5
+ 1941               	NRK_ADC_INPUT_5:
+ 1942 0002 2D        		.byte	45
+ 1943               	.global	NRK_ADC_INPUT_4
+ 1946               	NRK_ADC_INPUT_4:
+ 1947 0003 25        		.byte	37
+ 1948               	.global	NRK_ADC_INPUT_3
+ 1951               	NRK_ADC_INPUT_3:
+ 1952 0004 1D        		.byte	29
+ 1953               	.global	NRK_ADC_INPUT_2
+ 1956               	NRK_ADC_INPUT_2:
+ 1957 0005 15        		.byte	21
+ 1958               	.global	NRK_ADC_INPUT_1
+ 1961               	NRK_ADC_INPUT_1:
+ 1962 0006 0D        		.byte	13
+ 1963               	.global	NRK_ADC_INPUT_0
+ 1966               	NRK_ADC_INPUT_0:
+ 1967 0007 05        		.byte	5
+ 1968               	.global	NRK_PORTF_7
+ 1971               	NRK_PORTF_7:
+ 1972 0008 3D        		.byte	61
+ 1973               	.global	NRK_PORTF_6
+ 1976               	NRK_PORTF_6:
+ 1977 0009 35        		.byte	53
+ 1978               	.global	NRK_PORTF_5
+ 1981               	NRK_PORTF_5:
+ 1982 000a 2D        		.byte	45
+ 1983               	.global	NRK_PORTF_4
+ 1986               	NRK_PORTF_4:
+ 1987 000b 25        		.byte	37
+ 1988               	.global	NRK_PORTF_3
+ 1991               	NRK_PORTF_3:
+ 1992 000c 1D        		.byte	29
+ 1993               	.global	NRK_PORTF_2
+ 1996               	NRK_PORTF_2:
+ 1997 000d 15        		.byte	21
+ 1998               	.global	NRK_PORTF_1
+ 2001               	NRK_PORTF_1:
+ 2002 000e 0D        		.byte	13
+ 2003               	.global	NRK_PORTF_0
+ 2006               	NRK_PORTF_0:
+ 2007 000f 05        		.byte	5
+ 2008               	.global	NRK_PORTG_5
+ 2011               	NRK_PORTG_5:
+ 2012 0010 2E        		.byte	46
+ 2013               	.global	NRK_PORTG_4
+ 2016               	NRK_PORTG_4:
+ 2017 0011 26        		.byte	38
+ 2018               	.global	NRK_PORTG_3
+ 2021               	NRK_PORTG_3:
+ 2022 0012 1E        		.byte	30
+ 2023               	.global	NRK_PORTG_2
+ 2026               	NRK_PORTG_2:
+ 2027 0013 16        		.byte	22
+ 2028               	.global	NRK_PORTG_1
+ 2031               	NRK_PORTG_1:
+ 2032 0014 0E        		.byte	14
+ 2033               	.global	NRK_PORTG_0
+ 2036               	NRK_PORTG_0:
+ 2037 0015 06        		.byte	6
+ 2038               	.global	NRK_ANT_1
+ 2041               	NRK_ANT_1:
+ 2042 0016 FF        		.byte	-1
+ 2043               	.global	NRK_ANT_0
+ 2046               	NRK_ANT_0:
+ 2047 0017 FF        		.byte	-1
+ 2048               	.global	NRK_UART0_TXD
+ 2051               	NRK_UART0_TXD:
+ 2052 0018 0C        		.byte	12
+ 2053               	.global	NRK_UART0_RXD
+ 2056               	NRK_UART0_RXD:
+ 2057 0019 04        		.byte	4
+ 2058               	.global	NRK_PORTE_7
+ 2061               	NRK_PORTE_7:
+ 2062 001a 3C        		.byte	60
+ 2063               	.global	NRK_PORTE_6
+ 2066               	NRK_PORTE_6:
+ 2067 001b 34        		.byte	52
+ 2068               	.global	NRK_PORTE_5
+ 2071               	NRK_PORTE_5:
+ 2072 001c 2C        		.byte	44
+ 2073               	.global	NRK_PORTE_4
+ 2076               	NRK_PORTE_4:
+ 2077 001d 24        		.byte	36
+ 2078               	.global	NRK_PORTE_3
+ 2081               	NRK_PORTE_3:
+ 2082 001e 1C        		.byte	28
+ 2083               	.global	NRK_PORTE_2
+ 2086               	NRK_PORTE_2:
+ 2087 001f 14        		.byte	20
+ 2088               	.global	NRK_PORTE_1
+ 2091               	NRK_PORTE_1:
+ 2092 0020 0C        		.byte	12
+ 2093               	.global	NRK_PORTE_0
+ 2096               	NRK_PORTE_0:
+ 2097 0021 04        		.byte	4
+ 2098               	.global	NRK_LED_3
+ 2101               	NRK_LED_3:
+ 2102 0022 3B        		.byte	59
+ 2103               	.global	NRK_LED_2
+ 2106               	NRK_LED_2:
+ 2107 0023 33        		.byte	51
+ 2108               	.global	NRK_LED_1
+ 2111               	NRK_LED_1:
+ 2112 0024 2B        		.byte	43
+ 2113               	.global	NRK_LED_0
+ 2116               	NRK_LED_0:
+ 2117 0025 23        		.byte	35
+ 2118               	.global	NRK_UART1_TXD
+ 2121               	NRK_UART1_TXD:
+ 2122 0026 1B        		.byte	27
+ 2123               	.global	NRK_UART1_RXD
+ 2126               	NRK_UART1_RXD:
+ 2127 0027 13        		.byte	19
+ 2128               	.global	NRK_BUTTON
+ 2131               	NRK_BUTTON:
+ 2132 0028 0B        		.byte	11
+ 2133               	.global	NRK_PORTD_7
+ 2136               	NRK_PORTD_7:
+ 2137 0029 3B        		.byte	59
+ 2138               	.global	NRK_PORTD_6
+ 2141               	NRK_PORTD_6:
+ 2142 002a 33        		.byte	51
+ 2143               	.global	NRK_PORTD_5
+ 2146               	NRK_PORTD_5:
+ 2147 002b 2B        		.byte	43
+ 2148               	.global	NRK_PORTD_4
+ 2151               	NRK_PORTD_4:
+ 2152 002c 23        		.byte	35
+ 2153               	.global	NRK_PORTD_3
+ 2156               	NRK_PORTD_3:
+ 2157 002d 1B        		.byte	27
+ 2158               	.global	NRK_PORTD_2
+ 2161               	NRK_PORTD_2:
+ 2162 002e 13        		.byte	19
+ 2163               	.global	NRK_PORTD_1
+ 2166               	NRK_PORTD_1:
+ 2167 002f 0B        		.byte	11
+ 2168               	.global	NRK_PORTD_0
+ 2171               	NRK_PORTD_0:
+ 2172 0030 03        		.byte	3
+ 2173               	.global	NRK_PORTC_7
+ 2176               	NRK_PORTC_7:
+ 2177 0031 FF        		.byte	-1
+ 2178               	.global	NRK_PORTC_6
+ 2181               	NRK_PORTC_6:
+ 2182 0032 FF        		.byte	-1
+ 2183               	.global	NRK_PORTC_5
+ 2186               	NRK_PORTC_5:
+ 2187 0033 FF        		.byte	-1
+ 2188               	.global	NRK_PORTC_4
+ 2191               	NRK_PORTC_4:
+ 2192 0034 FF        		.byte	-1
+ 2193               	.global	NRK_PORTC_3
+ 2196               	NRK_PORTC_3:
+ 2197 0035 FF        		.byte	-1
+ 2198               	.global	NRK_PORTC_2
+ 2201               	NRK_PORTC_2:
+ 2202 0036 FF        		.byte	-1
+ 2203               	.global	NRK_PORTC_1
+ 2206               	NRK_PORTC_1:
+ 2207 0037 FF        		.byte	-1
+ 2208               	.global	NRK_PORTC_0
+ 2211               	NRK_PORTC_0:
+ 2212 0038 FF        		.byte	-1
+ 2213               	.global	NRK_PORTB_7
+ 2216               	NRK_PORTB_7:
+ 2217 0039 39        		.byte	57
+ 2218               	.global	NRK_PORTB_6
+ 2221               	NRK_PORTB_6:
+ 2222 003a 31        		.byte	49
+ 2223               	.global	NRK_PORTB_5
+ 2226               	NRK_PORTB_5:
+ 2227 003b 29        		.byte	41
+ 2228               	.global	NRK_PORTB_4
+ 2231               	NRK_PORTB_4:
+ 2232 003c 21        		.byte	33
+ 2233               	.global	NRK_PORTB_3
+ 2236               	NRK_PORTB_3:
+ 2237 003d 19        		.byte	25
+ 2238               	.global	NRK_PORTB_2
+ 2241               	NRK_PORTB_2:
+ 2242 003e 11        		.byte	17
+ 2243               	.global	NRK_PORTB_1
+ 2246               	NRK_PORTB_1:
+ 2247 003f 09        		.byte	9
+ 2248               	.global	NRK_PORTB_0
+ 2251               	NRK_PORTB_0:
+ 2252 0040 01        		.byte	1
+ 2253               	.global	NRK_MISO
+ 2256               	NRK_MISO:
+ 2257 0041 19        		.byte	25
+ 2258               	.global	NRK_MOSI
+ 2261               	NRK_MOSI:
+ 2262 0042 11        		.byte	17
+ 2263               	.global	NRK_SCK
+ 2266               	NRK_SCK:
+ 2267 0043 09        		.byte	9
+ 2268               	.global	NRK_SPI_SS
+ 2271               	NRK_SPI_SS:
+ 2272 0044 01        		.byte	1
+ 2273               	.global	NRK_DEBUG_3
+ 2276               	NRK_DEBUG_3:
+ 2277 0045 FF        		.byte	-1
+ 2278               	.global	NRK_DEBUG_2
+ 2281               	NRK_DEBUG_2:
+ 2282 0046 FF        		.byte	-1
+ 2283               	.global	NRK_DEBUG_1
+ 2286               	NRK_DEBUG_1:
+ 2287 0047 FF        		.byte	-1
+ 2288               	.global	NRK_DEBUG_0
+ 2291               	NRK_DEBUG_0:
+ 2292 0048 FF        		.byte	-1
+ 2293               	.global	NRK_PORTA_7
+ 2296               	NRK_PORTA_7:
+ 2297 0049 FF        		.byte	-1
+ 2298               	.global	NRK_PORTA_6
+ 2301               	NRK_PORTA_6:
+ 2302 004a FF        		.byte	-1
+ 2303               	.global	NRK_PORTA_5
+ 2306               	NRK_PORTA_5:
+ 2307 004b FF        		.byte	-1
+ 2308               	.global	NRK_PORTA_4
+ 2311               	NRK_PORTA_4:
+ 2312 004c FF        		.byte	-1
+ 2313               	.global	NRK_PORTA_3
+ 2316               	NRK_PORTA_3:
+ 2317 004d FF        		.byte	-1
+ 2318               	.global	NRK_PORTA_2
+ 2321               	NRK_PORTA_2:
+ 2322 004e FF        		.byte	-1
+ 2323               	.global	NRK_PORTA_1
+ 2326               	NRK_PORTA_1:
+ 2327 004f FF        		.byte	-1
+ 2328               	.global	NRK_PORTA_0
+ 2331               	NRK_PORTA_0:
+ 2332 0050 FF        		.byte	-1
+ 2333               		.local	uart_rx_signal
+ 2334               		.comm	uart_rx_signal,1,1
+ 2335               		.local	uart_rx_buf
+ 2336               		.comm	uart_rx_buf,16,1
+ 2337               		.local	uart_rx_buf_end
+ 2338               		.comm	uart_rx_buf_end,2,1
+ 2339               		.local	uart_rx_buf_start
+ 2340               		.comm	uart_rx_buf_start,2,1
+ 2341               		.comm	error_num,1,1
+ 2342               		.comm	error_task,1,1
+ 2343               		.comm	_nrk_signal_list,4,1
+ 2344               		.text
+ 2345               	.Letext0:
+ 2346               		.file 2 "/home/agr/avr8-gnu-toolchain-linux_x86_64/avr/include/stdint.h"
+ 2347               		.file 3 "/home/agr/nano-RK/src/kernel/include/nrk_events.h"
+ 2348               		.file 4 "/home/agr/avr8-gnu-toolchain-linux_x86_64/avr/include/stdio.h"
+ 2349               		.file 5 "/home/agr/nano-RK/src/kernel/include/nrk_error.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 ulib.c
+     /tmp/cc5MaiC5.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cc5MaiC5.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cc5MaiC5.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cc5MaiC5.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/cc5MaiC5.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cc5MaiC5.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cc5MaiC5.s:13     .text:0000000000000000 putc1
+     /tmp/cc5MaiC5.s:36     .text:000000000000000e getc1
+     /tmp/cc5MaiC5.s:62     .text:0000000000000026 __vector_25
+     /tmp/cc5MaiC5.s:2336   .bss:0000000000000011 uart_rx_buf_end
+     /tmp/cc5MaiC5.s:2334   .bss:0000000000000001 uart_rx_buf
+                             .bss:0000000000000000 uart_rx_signal
+     /tmp/cc5MaiC5.s:204    .text:00000000000000cc nrk_uart_data_ready
+     /tmp/cc5MaiC5.s:2338   .bss:0000000000000013 uart_rx_buf_start
+     /tmp/cc5MaiC5.s:249    .text:00000000000000fa nrk_uart_rx_signal_get
+     /tmp/cc5MaiC5.s:274    .text:000000000000010e nrk_kprintf
+     /tmp/cc5MaiC5.s:332    .text:0000000000000138 getc0
+     /tmp/cc5MaiC5.s:1925   .progmem.data:0000000000000000 __c.2161
+     /tmp/cc5MaiC5.s:408    .text:00000000000001ae PORT_INIT
+     /tmp/cc5MaiC5.s:436    .text:00000000000001c2 nrk_setup_ports
+     /tmp/cc5MaiC5.s:452    .text:00000000000001c6 nrk_gpio_set
+     /tmp/cc5MaiC5.s:612    .text:0000000000000288 nrk_gpio_clr
+     /tmp/cc5MaiC5.s:763    .text:0000000000000340 nrk_gpio_get
+     /tmp/cc5MaiC5.s:852    .text:0000000000000390 nrk_gpio_toggle
+     /tmp/cc5MaiC5.s:1221   .text:0000000000000578 nrk_gpio_direction
+     /tmp/cc5MaiC5.s:1523   .text:00000000000006fe nrk_get_button
+     /tmp/cc5MaiC5.s:1555   .text:0000000000000712 nrk_led_toggle
+     /tmp/cc5MaiC5.s:1616   .text:0000000000000740 nrk_led_clr
+     /tmp/cc5MaiC5.s:1677   .text:000000000000076e nrk_led_set
+     /tmp/cc5MaiC5.s:1738   .text:000000000000079c nrk_gpio_pullups
+     /tmp/cc5MaiC5.s:1771   .text:00000000000007b0 putc0
+     /tmp/cc5MaiC5.s:1796   .text:00000000000007c8 setup_uart0
+     /tmp/cc5MaiC5.s:1831   .text:00000000000007f2 setup_uart1
+     /tmp/cc5MaiC5.s:1866   .text:000000000000081c nrk_setup_uart
+     /tmp/cc5MaiC5.s:1931   .rodata:0000000000000000 NRK_ADC_INPUT_7
+     /tmp/cc5MaiC5.s:1936   .rodata:0000000000000001 NRK_ADC_INPUT_6
+     /tmp/cc5MaiC5.s:1941   .rodata:0000000000000002 NRK_ADC_INPUT_5
+     /tmp/cc5MaiC5.s:1946   .rodata:0000000000000003 NRK_ADC_INPUT_4
+     /tmp/cc5MaiC5.s:1951   .rodata:0000000000000004 NRK_ADC_INPUT_3
+     /tmp/cc5MaiC5.s:1956   .rodata:0000000000000005 NRK_ADC_INPUT_2
+     /tmp/cc5MaiC5.s:1961   .rodata:0000000000000006 NRK_ADC_INPUT_1
+     /tmp/cc5MaiC5.s:1966   .rodata:0000000000000007 NRK_ADC_INPUT_0
+     /tmp/cc5MaiC5.s:1971   .rodata:0000000000000008 NRK_PORTF_7
+     /tmp/cc5MaiC5.s:1976   .rodata:0000000000000009 NRK_PORTF_6
+     /tmp/cc5MaiC5.s:1981   .rodata:000000000000000a NRK_PORTF_5
+     /tmp/cc5MaiC5.s:1986   .rodata:000000000000000b NRK_PORTF_4
+     /tmp/cc5MaiC5.s:1991   .rodata:000000000000000c NRK_PORTF_3
+     /tmp/cc5MaiC5.s:1996   .rodata:000000000000000d NRK_PORTF_2
+     /tmp/cc5MaiC5.s:2001   .rodata:000000000000000e NRK_PORTF_1
+     /tmp/cc5MaiC5.s:2006   .rodata:000000000000000f NRK_PORTF_0
+     /tmp/cc5MaiC5.s:2011   .rodata:0000000000000010 NRK_PORTG_5
+     /tmp/cc5MaiC5.s:2016   .rodata:0000000000000011 NRK_PORTG_4
+     /tmp/cc5MaiC5.s:2021   .rodata:0000000000000012 NRK_PORTG_3
+     /tmp/cc5MaiC5.s:2026   .rodata:0000000000000013 NRK_PORTG_2
+     /tmp/cc5MaiC5.s:2031   .rodata:0000000000000014 NRK_PORTG_1
+     /tmp/cc5MaiC5.s:2036   .rodata:0000000000000015 NRK_PORTG_0
+     /tmp/cc5MaiC5.s:2041   .rodata:0000000000000016 NRK_ANT_1
+     /tmp/cc5MaiC5.s:2046   .rodata:0000000000000017 NRK_ANT_0
+     /tmp/cc5MaiC5.s:2051   .rodata:0000000000000018 NRK_UART0_TXD
+     /tmp/cc5MaiC5.s:2056   .rodata:0000000000000019 NRK_UART0_RXD
+     /tmp/cc5MaiC5.s:2061   .rodata:000000000000001a NRK_PORTE_7
+     /tmp/cc5MaiC5.s:2066   .rodata:000000000000001b NRK_PORTE_6
+     /tmp/cc5MaiC5.s:2071   .rodata:000000000000001c NRK_PORTE_5
+     /tmp/cc5MaiC5.s:2076   .rodata:000000000000001d NRK_PORTE_4
+     /tmp/cc5MaiC5.s:2081   .rodata:000000000000001e NRK_PORTE_3
+     /tmp/cc5MaiC5.s:2086   .rodata:000000000000001f NRK_PORTE_2
+     /tmp/cc5MaiC5.s:2091   .rodata:0000000000000020 NRK_PORTE_1
+     /tmp/cc5MaiC5.s:2096   .rodata:0000000000000021 NRK_PORTE_0
+     /tmp/cc5MaiC5.s:2101   .rodata:0000000000000022 NRK_LED_3
+     /tmp/cc5MaiC5.s:2106   .rodata:0000000000000023 NRK_LED_2
+     /tmp/cc5MaiC5.s:2111   .rodata:0000000000000024 NRK_LED_1
+     /tmp/cc5MaiC5.s:2116   .rodata:0000000000000025 NRK_LED_0
+     /tmp/cc5MaiC5.s:2121   .rodata:0000000000000026 NRK_UART1_TXD
+     /tmp/cc5MaiC5.s:2126   .rodata:0000000000000027 NRK_UART1_RXD
+     /tmp/cc5MaiC5.s:2131   .rodata:0000000000000028 NRK_BUTTON
+     /tmp/cc5MaiC5.s:2136   .rodata:0000000000000029 NRK_PORTD_7
+     /tmp/cc5MaiC5.s:2141   .rodata:000000000000002a NRK_PORTD_6
+     /tmp/cc5MaiC5.s:2146   .rodata:000000000000002b NRK_PORTD_5
+     /tmp/cc5MaiC5.s:2151   .rodata:000000000000002c NRK_PORTD_4
+     /tmp/cc5MaiC5.s:2156   .rodata:000000000000002d NRK_PORTD_3
+     /tmp/cc5MaiC5.s:2161   .rodata:000000000000002e NRK_PORTD_2
+     /tmp/cc5MaiC5.s:2166   .rodata:000000000000002f NRK_PORTD_1
+     /tmp/cc5MaiC5.s:2171   .rodata:0000000000000030 NRK_PORTD_0
+     /tmp/cc5MaiC5.s:2176   .rodata:0000000000000031 NRK_PORTC_7
+     /tmp/cc5MaiC5.s:2181   .rodata:0000000000000032 NRK_PORTC_6
+     /tmp/cc5MaiC5.s:2186   .rodata:0000000000000033 NRK_PORTC_5
+     /tmp/cc5MaiC5.s:2191   .rodata:0000000000000034 NRK_PORTC_4
+     /tmp/cc5MaiC5.s:2196   .rodata:0000000000000035 NRK_PORTC_3
+     /tmp/cc5MaiC5.s:2201   .rodata:0000000000000036 NRK_PORTC_2
+     /tmp/cc5MaiC5.s:2206   .rodata:0000000000000037 NRK_PORTC_1
+     /tmp/cc5MaiC5.s:2211   .rodata:0000000000000038 NRK_PORTC_0
+     /tmp/cc5MaiC5.s:2216   .rodata:0000000000000039 NRK_PORTB_7
+     /tmp/cc5MaiC5.s:2221   .rodata:000000000000003a NRK_PORTB_6
+     /tmp/cc5MaiC5.s:2226   .rodata:000000000000003b NRK_PORTB_5
+     /tmp/cc5MaiC5.s:2231   .rodata:000000000000003c NRK_PORTB_4
+     /tmp/cc5MaiC5.s:2236   .rodata:000000000000003d NRK_PORTB_3
+     /tmp/cc5MaiC5.s:2241   .rodata:000000000000003e NRK_PORTB_2
+     /tmp/cc5MaiC5.s:2246   .rodata:000000000000003f NRK_PORTB_1
+     /tmp/cc5MaiC5.s:2251   .rodata:0000000000000040 NRK_PORTB_0
+     /tmp/cc5MaiC5.s:2256   .rodata:0000000000000041 NRK_MISO
+     /tmp/cc5MaiC5.s:2261   .rodata:0000000000000042 NRK_MOSI
+     /tmp/cc5MaiC5.s:2266   .rodata:0000000000000043 NRK_SCK
+     /tmp/cc5MaiC5.s:2271   .rodata:0000000000000044 NRK_SPI_SS
+     /tmp/cc5MaiC5.s:2276   .rodata:0000000000000045 NRK_DEBUG_3
+     /tmp/cc5MaiC5.s:2281   .rodata:0000000000000046 NRK_DEBUG_2
+     /tmp/cc5MaiC5.s:2286   .rodata:0000000000000047 NRK_DEBUG_1
+     /tmp/cc5MaiC5.s:2291   .rodata:0000000000000048 NRK_DEBUG_0
+     /tmp/cc5MaiC5.s:2296   .rodata:0000000000000049 NRK_PORTA_7
+     /tmp/cc5MaiC5.s:2301   .rodata:000000000000004a NRK_PORTA_6
+     /tmp/cc5MaiC5.s:2306   .rodata:000000000000004b NRK_PORTA_5
+     /tmp/cc5MaiC5.s:2311   .rodata:000000000000004c NRK_PORTA_4
+     /tmp/cc5MaiC5.s:2316   .rodata:000000000000004d NRK_PORTA_3
+     /tmp/cc5MaiC5.s:2321   .rodata:000000000000004e NRK_PORTA_2
+     /tmp/cc5MaiC5.s:2326   .rodata:000000000000004f NRK_PORTA_1
+     /tmp/cc5MaiC5.s:2331   .rodata:0000000000000050 NRK_PORTA_0
+                            *COM*:0000000000000001 error_num
+                            *COM*:0000000000000001 error_task
+                            *COM*:0000000000000004 _nrk_signal_list
+
+UNDEFINED SYMBOLS
+nrk_int_disable
+nrk_event_signal
+nrk_int_enable
+nrk_error_add
+__iob
+fputc
+nrk_signal_register
+nrk_event_wait
+__tablejump2__
+fdevopen
+nrk_signal_create
+__do_copy_data
+__do_clear_bss

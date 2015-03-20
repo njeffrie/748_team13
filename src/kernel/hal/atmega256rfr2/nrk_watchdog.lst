@@ -1,0 +1,242 @@
+   1               		.file	"nrk_watchdog.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	nrk_watchdog_disable
+  13               	nrk_watchdog_disable:
+  14               	.LFB2:
+  15               		.file 1 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c"
+   1:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** /******************************************************************************
+   2:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  Nano-RK, a real-time operating system for sensor networks.
+   3:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
+   4:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  All rights reserved.
+   5:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *
+   6:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  This is the Open Source Version of Nano-RK included as part of a Dual
+   7:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  Licensing Model. If you are unsure which license to use please refer to:
+   8:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  http://www.nanork.org/nano-RK/wiki/Licensing
+   9:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *
+  10:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  This program is free software: you can redistribute it and/or modify
+  11:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  it under the terms of the GNU General Public License as published by
+  12:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  the Free Software Foundation, version 2.0 of the License.
+  13:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *
+  14:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  This program is distributed in the hope that it will be useful,
+  15:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  16:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  17:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  GNU General Public License for more details.
+  18:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *
+  19:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  You should have received a copy of the GNU General Public License
+  20:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  21:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *
+  22:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  Contributing Authors (specific to this file):
+  23:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *  Anthony Rowe
+  24:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** *******************************************************************************/
+  25:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** 
+  26:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** #include <include.h>
+  27:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** #include <nrk_watchdog.h>
+  28:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** #include <nrk_error.h>
+  29:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** #include <nrk.h>
+  30:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** #include <avr/wdt.h>
+  31:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** 
+  32:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** void nrk_watchdog_disable()
+  33:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** {
+  16               		.loc 1 33 0
+  17               		.cfi_startproc
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  34:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_int_disable();
+  22               		.loc 1 34 0
+  23 0000 0E94 0000 		call nrk_int_disable
+  24               	.LVL0:
+  25               	.LBB6:
+  26               	.LBB7:
+  35:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_watchdog_reset();
+  36:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** MCUSR &= ~(1<<WDRF);
+  37:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** WDTCSR |= (1<<WDCE) | (1<<WDE);
+  38:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** WDTCSR = 0;
+  39:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_int_enable();
+  40:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** }
+  41:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** 
+  42:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** void nrk_watchdog_enable()
+  43:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** {
+  44:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** // Enable watchdog with 1024K cycle timeout
+  45:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** // No Interrupt Trigger
+  46:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_int_disable();
+  47:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_watchdog_reset();
+  48:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** MCUSR &= ~(1<<WDRF);
+  49:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** WDTCSR |= (1<<WDCE) | (1<<WDE);
+  50:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** WDTCSR = (1<<WDE) | (1<<WDP2) | (1<<WDP0);
+  51:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_int_enable();
+  52:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** }
+  53:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** 
+  54:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** int8_t nrk_watchdog_check()
+  55:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** {
+  56:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** 
+  57:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** if((MCUSR & (1<<WDRF))==0) return NRK_OK;
+  58:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** return NRK_ERROR;
+  59:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** }
+  60:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** 
+  61:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** inline void nrk_watchdog_reset()
+  62:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** {
+  63:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** wdt_reset();
+  27               		.loc 1 63 0
+  28               	/* #APP */
+  29               	 ;  63 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c" 1
+  30 0004 A895      		wdr
+  31               	 ;  0 "" 2
+  32               	/* #NOAPP */
+  33               	.LBE7:
+  34               	.LBE6:
+  36:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** MCUSR &= ~(1<<WDRF);
+  35               		.loc 1 36 0
+  36 0006 84B7      		in r24,0x34
+  37 0008 877F      		andi r24,lo8(-9)
+  38 000a 84BF      		out 0x34,r24
+  37:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** WDTCSR |= (1<<WDCE) | (1<<WDE);
+  39               		.loc 1 37 0
+  40 000c E0E6      		ldi r30,lo8(96)
+  41 000e F0E0      		ldi r31,0
+  42 0010 8081      		ld r24,Z
+  43 0012 8861      		ori r24,lo8(24)
+  44 0014 8083      		st Z,r24
+  38:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** WDTCSR = 0;
+  45               		.loc 1 38 0
+  46 0016 1082      		st Z,__zero_reg__
+  39:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_int_enable();
+  47               		.loc 1 39 0
+  48 0018 0C94 0000 		jmp nrk_int_enable
+  49               	.LVL1:
+  50               		.cfi_endproc
+  51               	.LFE2:
+  53               	.global	nrk_watchdog_enable
+  55               	nrk_watchdog_enable:
+  56               	.LFB3:
+  43:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** {
+  57               		.loc 1 43 0
+  58               		.cfi_startproc
+  59               	/* prologue: function */
+  60               	/* frame size = 0 */
+  61               	/* stack size = 0 */
+  62               	.L__stack_usage = 0
+  46:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_int_disable();
+  63               		.loc 1 46 0
+  64 001c 0E94 0000 		call nrk_int_disable
+  65               	.LVL2:
+  66               	.LBB8:
+  67               	.LBB9:
+  68               		.loc 1 63 0
+  69               	/* #APP */
+  70               	 ;  63 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c" 1
+  71 0020 A895      		wdr
+  72               	 ;  0 "" 2
+  73               	/* #NOAPP */
+  74               	.LBE9:
+  75               	.LBE8:
+  48:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** MCUSR &= ~(1<<WDRF);
+  76               		.loc 1 48 0
+  77 0022 84B7      		in r24,0x34
+  78 0024 877F      		andi r24,lo8(-9)
+  79 0026 84BF      		out 0x34,r24
+  49:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** WDTCSR |= (1<<WDCE) | (1<<WDE);
+  80               		.loc 1 49 0
+  81 0028 E0E6      		ldi r30,lo8(96)
+  82 002a F0E0      		ldi r31,0
+  83 002c 8081      		ld r24,Z
+  84 002e 8861      		ori r24,lo8(24)
+  85 0030 8083      		st Z,r24
+  50:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** WDTCSR = (1<<WDE) | (1<<WDP2) | (1<<WDP0);
+  86               		.loc 1 50 0
+  87 0032 8DE0      		ldi r24,lo8(13)
+  88 0034 8083      		st Z,r24
+  51:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** nrk_int_enable();
+  89               		.loc 1 51 0
+  90 0036 0C94 0000 		jmp nrk_int_enable
+  91               	.LVL3:
+  92               		.cfi_endproc
+  93               	.LFE3:
+  95               	.global	nrk_watchdog_check
+  97               	nrk_watchdog_check:
+  98               	.LFB4:
+  55:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** {
+  99               		.loc 1 55 0
+ 100               		.cfi_startproc
+ 101               	/* prologue: function */
+ 102               	/* frame size = 0 */
+ 103               	/* stack size = 0 */
+ 104               	.L__stack_usage = 0
+  57:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** if((MCUSR & (1<<WDRF))==0) return NRK_OK;
+ 105               		.loc 1 57 0
+ 106 003a 04B6      		in __tmp_reg__,0x34
+ 107 003c 03FC      		sbrc __tmp_reg__,3
+ 108 003e 00C0      		rjmp .L5
+ 109 0040 81E0      		ldi r24,lo8(1)
+ 110 0042 0895      		ret
+ 111               	.L5:
+  58:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** return NRK_ERROR;
+ 112               		.loc 1 58 0
+ 113 0044 8FEF      		ldi r24,lo8(-1)
+  59:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** }
+ 114               		.loc 1 59 0
+ 115 0046 0895      		ret
+ 116               		.cfi_endproc
+ 117               	.LFE4:
+ 119               	.global	nrk_watchdog_reset
+ 121               	nrk_watchdog_reset:
+ 122               	.LFB5:
+  62:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c **** {
+ 123               		.loc 1 62 0
+ 124               		.cfi_startproc
+ 125               	/* prologue: function */
+ 126               	/* frame size = 0 */
+ 127               	/* stack size = 0 */
+ 128               	.L__stack_usage = 0
+ 129               		.loc 1 63 0
+ 130               	/* #APP */
+ 131               	 ;  63 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_watchdog.c" 1
+ 132 0048 A895      		wdr
+ 133               	 ;  0 "" 2
+ 134               	/* #NOAPP */
+ 135 004a 0895      		ret
+ 136               		.cfi_endproc
+ 137               	.LFE5:
+ 139               		.comm	nrk_kernel_stk_ptr,2,1
+ 140               		.comm	nrk_idle_task_stk,128,1
+ 141               		.comm	error_num,1,1
+ 142               		.comm	error_task,1,1
+ 143               		.comm	_nrk_signal_list,4,1
+ 144               	.Letext0:
+ 145               		.file 2 "/home/agr/avr8-gnu-toolchain-linux_x86_64/avr/include/stdint.h"
+ 146               		.file 3 "/home/agr/nano-RK/src/platform/firefly3_alps/include/hal.h"
+ 147               		.file 4 "/home/agr/nano-RK/src/kernel/include/nrk_events.h"
+ 148               		.file 5 "/home/agr/nano-RK/src/kernel/include/nrk_error.h"
+ 149               		.file 6 "/home/agr/nano-RK/src/kernel/include/nrk.h"
+ 150               		.file 7 "/home/agr/nano-RK/src/kernel/hal/include/nrk_cpu.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 nrk_watchdog.c
+     /tmp/ccKZOG0d.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccKZOG0d.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccKZOG0d.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccKZOG0d.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccKZOG0d.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccKZOG0d.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccKZOG0d.s:13     .text:0000000000000000 nrk_watchdog_disable
+     /tmp/ccKZOG0d.s:55     .text:000000000000001c nrk_watchdog_enable
+     /tmp/ccKZOG0d.s:97     .text:000000000000003a nrk_watchdog_check
+     /tmp/ccKZOG0d.s:121    .text:0000000000000048 nrk_watchdog_reset
+                            *COM*:0000000000000002 nrk_kernel_stk_ptr
+                            *COM*:0000000000000080 nrk_idle_task_stk
+                            *COM*:0000000000000001 error_num
+                            *COM*:0000000000000001 error_task
+                            *COM*:0000000000000004 _nrk_signal_list
+
+UNDEFINED SYMBOLS
+nrk_int_disable
+nrk_int_enable
+__do_clear_bss

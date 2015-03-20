@@ -1,0 +1,117 @@
+   1               		.file	"hal_wait.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	halWait
+  13               	halWait:
+  14               	.LFB1:
+  15               		.file 1 "/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c"
+   1:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** /******************************************************************************
+   2:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  Nano-RK, a real-time operating system for sensor networks.
+   3:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
+   4:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  All rights reserved.
+   5:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *
+   6:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  This is the Open Source Version of Nano-RK included as part of a Dual
+   7:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  Licensing Model. If you are unsure which license to use please refer to:
+   8:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  http://www.nanork.org/nano-RK/wiki/Licensing
+   9:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *
+  10:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  This program is free software: you can redistribute it and/or modify
+  11:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  it under the terms of the GNU General Public License as published by
+  12:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  the Free Software Foundation, version 2.0 of the License.
+  13:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *
+  14:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  This program is distributed in the hope that it will be useful,
+  15:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  16:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  17:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  GNU General Public License for more details.
+  18:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *
+  19:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  You should have received a copy of the GNU General Public License
+  20:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  21:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *
+  22:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  Contributing Authors (specific to this file):
+  23:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *  Chipcon Development Team 
+  24:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** *******************************************************************************/
+  25:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** 
+  26:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** 
+  27:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** #include <include.h>
+  28:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** 
+  29:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** 
+  30:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //-------------------------------------------------------------------------------------------------
+  31:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //	void halWait(uint16_t timeout)
+  32:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //
+  33:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //	DESCRIPTION:
+  34:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //		Runs an idle loop for [timeout] microseconds.
+  35:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //
+  36:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //  ARGUMENTS:
+  37:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //      uint16_t timeout
+  38:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //          The timeout in microseconds
+  39:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** //-------------------------------------------------------------------------------------------------
+  40:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** void halWait(uint16_t timeout) {
+  16               		.loc 1 40 0
+  17               		.cfi_startproc
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  22               	.LVL0:
+  23               	.L3:
+  41:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** 
+  42:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c ****     // This sequence uses exactly 8 clock cycle for each round
+  43:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c ****     do {
+  44:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c ****         NOP();
+  24               		.loc 1 44 0 discriminator 1
+  25               	/* #APP */
+  26               	 ;  44 "/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c" 1
+  27 0000 0000      		nop
+  28               		
+  29               	 ;  0 "" 2
+  45:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c ****         NOP();
+  30               		.loc 1 45 0 discriminator 1
+  31               	 ;  45 "/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c" 1
+  32 0002 0000      		nop
+  33               		
+  34               	 ;  0 "" 2
+  46:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c ****         NOP();
+  35               		.loc 1 46 0 discriminator 1
+  36               	 ;  46 "/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c" 1
+  37 0004 0000      		nop
+  38               		
+  39               	 ;  0 "" 2
+  47:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c ****         NOP();
+  40               		.loc 1 47 0 discriminator 1
+  41               	 ;  47 "/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c" 1
+  42 0006 0000      		nop
+  43               		
+  44               	 ;  0 "" 2
+  48:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c ****     } while (--timeout);
+  45               		.loc 1 48 0 discriminator 1
+  46               	/* #NOAPP */
+  47 0008 0197      		sbiw r24,1
+  48               	.LVL1:
+  49 000a 0097      		sbiw r24,0
+  50 000c 01F4      		brne .L3
+  51               	/* epilogue start */
+  49:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** 
+  50:/home/agr/nano-RK/src/platform/firefly3_alps/source/hal_wait.c **** } // halWait
+  52               		.loc 1 50 0
+  53 000e 0895      		ret
+  54               		.cfi_endproc
+  55               	.LFE1:
+  57               	.Letext0:
+  58               		.file 2 "/home/agr/avr8-gnu-toolchain-linux_x86_64/avr/include/stdint.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 hal_wait.c
+     /tmp/ccjuXojd.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccjuXojd.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccjuXojd.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccjuXojd.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccjuXojd.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccjuXojd.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccjuXojd.s:13     .text:0000000000000000 halWait
+
+NO UNDEFINED SYMBOLS

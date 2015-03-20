@@ -1,0 +1,1065 @@
+   1               		.file	"nrk_ext_int.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	nrk_ext_int_enable
+  13               	nrk_ext_int_enable:
+  14               	.LFB2:
+  15               		.file 1 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c"
+   1:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** /******************************************************************************
+   2:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  Nano-RK, a real-time operating system for sensor networks.
+   3:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
+   4:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  All rights reserved.
+   5:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *
+   6:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  This is the Open Source Version of Nano-RK included as part of a Dual
+   7:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  Licensing Model. If you are unsure which license to use please refer to:
+   8:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  http://www.nanork.org/nano-RK/wiki/Licensing
+   9:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *
+  10:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  This program is free software: you can redistribute it and/or modify
+  11:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  it under the terms of the GNU General Public License as published by
+  12:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  the Free Software Foundation, version 2.0 of the License.
+  13:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *
+  14:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  This program is distributed in the hope that it will be useful,
+  15:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  16:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  17:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  GNU General Public License for more details.
+  18:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *
+  19:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  You should have received a copy of the GNU General Public License
+  20:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  21:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *
+  22:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  Contributing Authors (specific to this file):
+  23:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *  Anthony Rowe
+  24:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** *******************************************************************************/
+  25:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+  26:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** #include <include.h>
+  27:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** #include <avr/interrupt.h>
+  28:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** #include <ulib.h>
+  29:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** #include <nrk_ext_int.h>
+  30:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** #include <nrk_error.h>
+  31:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** #include <nrk_cfg.h>
+  32:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+  33:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+  34:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** int8_t  nrk_ext_int_enable(uint8_t pin )
+  35:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** {
+  16               		.loc 1 35 0
+  17               		.cfi_startproc
+  18               	.LVL0:
+  19               	/* prologue: function */
+  20               	/* frame size = 0 */
+  21               	/* stack size = 0 */
+  22               	.L__stack_usage = 0
+  36:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_0) { EIMSK |= BM(INT0); return NRK_OK; }
+  23               		.loc 1 36 0
+  24 0000 8111      		cpse r24,__zero_reg__
+  25 0002 00C0      		rjmp .L2
+  26               		.loc 1 36 0 is_stmt 0 discriminator 1
+  27 0004 E89A      		sbi 0x1d,0
+  28 0006 00C0      		rjmp .L15
+  29               	.L2:
+  37:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_1) { EIMSK |= BM(INT1); return NRK_OK; }
+  30               		.loc 1 37 0 is_stmt 1
+  31 0008 8130      		cpi r24,lo8(1)
+  32 000a 01F4      		brne .L4
+  33               		.loc 1 37 0 is_stmt 0 discriminator 1
+  34 000c E99A      		sbi 0x1d,1
+  35 000e 0895      		ret
+  36               	.L4:
+  38:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_2) { EIMSK |= BM(INT2); return NRK_OK; }
+  37               		.loc 1 38 0 is_stmt 1
+  38 0010 8230      		cpi r24,lo8(2)
+  39 0012 01F4      		brne .L5
+  40               		.loc 1 38 0 is_stmt 0 discriminator 1
+  41 0014 EA9A      		sbi 0x1d,2
+  42 0016 00C0      		rjmp .L15
+  43               	.L5:
+  39:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_0 ) { PCMSK0 |= BM(PCINT0); return NRK_OK; }
+  44               		.loc 1 39 0 is_stmt 1
+  45 0018 8330      		cpi r24,lo8(3)
+  46 001a 01F4      		brne .L6
+  47               		.loc 1 39 0 is_stmt 0 discriminator 1
+  48 001c 8091 6B00 		lds r24,107
+  49               	.LVL1:
+  50 0020 8160      		ori r24,lo8(1)
+  51 0022 00C0      		rjmp .L14
+  52               	.LVL2:
+  53               	.L6:
+  40:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_1 ) { PCMSK0 |= BM(PCINT1); return NRK_OK; }
+  54               		.loc 1 40 0 is_stmt 1
+  55 0024 8430      		cpi r24,lo8(4)
+  56 0026 01F4      		brne .L7
+  57               		.loc 1 40 0 is_stmt 0 discriminator 1
+  58 0028 8091 6B00 		lds r24,107
+  59               	.LVL3:
+  60 002c 8260      		ori r24,lo8(2)
+  61 002e 00C0      		rjmp .L14
+  62               	.LVL4:
+  63               	.L7:
+  41:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_2 ) { PCMSK0 |= BM(PCINT2); return NRK_OK; }
+  64               		.loc 1 41 0 is_stmt 1
+  65 0030 8530      		cpi r24,lo8(5)
+  66 0032 01F4      		brne .L8
+  67               		.loc 1 41 0 is_stmt 0 discriminator 1
+  68 0034 8091 6B00 		lds r24,107
+  69               	.LVL5:
+  70 0038 8460      		ori r24,lo8(4)
+  71 003a 00C0      		rjmp .L14
+  72               	.LVL6:
+  73               	.L8:
+  42:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_3 ) { PCMSK0 |= BM(PCINT3); return NRK_OK; }
+  74               		.loc 1 42 0 is_stmt 1
+  75 003c 8630      		cpi r24,lo8(6)
+  76 003e 01F4      		brne .L9
+  77               		.loc 1 42 0 is_stmt 0 discriminator 1
+  78 0040 8091 6B00 		lds r24,107
+  79               	.LVL7:
+  80 0044 8860      		ori r24,lo8(8)
+  81 0046 00C0      		rjmp .L14
+  82               	.LVL8:
+  83               	.L9:
+  43:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_4 ) { PCMSK0 |= BM(PCINT4); return NRK_OK; }
+  84               		.loc 1 43 0 is_stmt 1
+  85 0048 8730      		cpi r24,lo8(7)
+  86 004a 01F4      		brne .L10
+  87               		.loc 1 43 0 is_stmt 0 discriminator 1
+  88 004c 8091 6B00 		lds r24,107
+  89               	.LVL9:
+  90 0050 8061      		ori r24,lo8(16)
+  91 0052 00C0      		rjmp .L14
+  92               	.LVL10:
+  93               	.L10:
+  44:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_5 ) { PCMSK0 |= BM(PCINT5); return NRK_OK; }
+  94               		.loc 1 44 0 is_stmt 1
+  95 0054 8830      		cpi r24,lo8(8)
+  96 0056 01F4      		brne .L11
+  97               		.loc 1 44 0 is_stmt 0 discriminator 1
+  98 0058 8091 6B00 		lds r24,107
+  99               	.LVL11:
+ 100 005c 8062      		ori r24,lo8(32)
+ 101 005e 00C0      		rjmp .L14
+ 102               	.LVL12:
+ 103               	.L11:
+  45:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_6 ) { PCMSK0 |= BM(PCINT6); return NRK_OK; }
+ 104               		.loc 1 45 0 is_stmt 1
+ 105 0060 8930      		cpi r24,lo8(9)
+ 106 0062 01F4      		brne .L12
+ 107               		.loc 1 45 0 is_stmt 0 discriminator 1
+ 108 0064 8091 6B00 		lds r24,107
+ 109               	.LVL13:
+ 110 0068 8064      		ori r24,lo8(64)
+ 111 006a 00C0      		rjmp .L14
+ 112               	.LVL14:
+ 113               	.L12:
+  46:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_7 ) { PCMSK0 |= BM(PCINT7); return NRK_OK; }
+ 114               		.loc 1 46 0 is_stmt 1
+ 115 006c 8A30      		cpi r24,lo8(10)
+ 116 006e 01F4      		brne .L13
+ 117               		.loc 1 46 0 is_stmt 0 discriminator 1
+ 118 0070 8091 6B00 		lds r24,107
+ 119               	.LVL15:
+ 120 0074 8068      		ori r24,lo8(-128)
+ 121               	.L14:
+ 122 0076 8093 6B00 		sts 107,r24
+ 123               	.L15:
+ 124 007a 81E0      		ldi r24,lo8(1)
+ 125 007c 0895      		ret
+ 126               	.LVL16:
+ 127               	.L13:
+  47:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** return NRK_ERROR;
+ 128               		.loc 1 47 0 is_stmt 1
+ 129 007e 8FEF      		ldi r24,lo8(-1)
+ 130               	.LVL17:
+  48:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** }
+ 131               		.loc 1 48 0
+ 132 0080 0895      		ret
+ 133               		.cfi_endproc
+ 134               	.LFE2:
+ 136               	.global	nrk_ext_int_disable
+ 138               	nrk_ext_int_disable:
+ 139               	.LFB3:
+  49:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+  50:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** int8_t  nrk_ext_int_disable(uint8_t pin )
+  51:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** {
+ 140               		.loc 1 51 0
+ 141               		.cfi_startproc
+ 142               	.LVL18:
+ 143               	/* prologue: function */
+ 144               	/* frame size = 0 */
+ 145               	/* stack size = 0 */
+ 146               	.L__stack_usage = 0
+  52:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_0) { EIMSK &= ~BM(INT0); return NRK_OK; }
+ 147               		.loc 1 52 0
+ 148 0082 8111      		cpse r24,__zero_reg__
+ 149 0084 00C0      		rjmp .L18
+ 150               		.loc 1 52 0 is_stmt 0 discriminator 1
+ 151 0086 E898      		cbi 0x1d,0
+ 152 0088 00C0      		rjmp .L31
+ 153               	.L18:
+  53:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_1) { EIMSK &= ~BM(INT1); return NRK_OK; }
+ 154               		.loc 1 53 0 is_stmt 1
+ 155 008a 8130      		cpi r24,lo8(1)
+ 156 008c 01F4      		brne .L20
+ 157               		.loc 1 53 0 is_stmt 0 discriminator 1
+ 158 008e E998      		cbi 0x1d,1
+ 159 0090 0895      		ret
+ 160               	.L20:
+  54:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_2) { EIMSK &= ~BM(INT1); return NRK_OK; }
+ 161               		.loc 1 54 0 is_stmt 1
+ 162 0092 8230      		cpi r24,lo8(2)
+ 163 0094 01F4      		brne .L21
+ 164               		.loc 1 54 0 is_stmt 0 discriminator 1
+ 165 0096 E998      		cbi 0x1d,1
+ 166 0098 00C0      		rjmp .L31
+ 167               	.L21:
+  55:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_0 ) { PCMSK0 &= ~BM(PCINT0); return NRK_OK; }
+ 168               		.loc 1 55 0 is_stmt 1
+ 169 009a 8330      		cpi r24,lo8(3)
+ 170 009c 01F4      		brne .L22
+ 171               		.loc 1 55 0 is_stmt 0 discriminator 1
+ 172 009e 8091 6B00 		lds r24,107
+ 173               	.LVL19:
+ 174 00a2 8E7F      		andi r24,lo8(-2)
+ 175 00a4 00C0      		rjmp .L30
+ 176               	.LVL20:
+ 177               	.L22:
+  56:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_1 ) { PCMSK0 &= ~BM(PCINT1); return NRK_OK; }
+ 178               		.loc 1 56 0 is_stmt 1
+ 179 00a6 8430      		cpi r24,lo8(4)
+ 180 00a8 01F4      		brne .L23
+ 181               		.loc 1 56 0 is_stmt 0 discriminator 1
+ 182 00aa 8091 6B00 		lds r24,107
+ 183               	.LVL21:
+ 184 00ae 8D7F      		andi r24,lo8(-3)
+ 185 00b0 00C0      		rjmp .L30
+ 186               	.LVL22:
+ 187               	.L23:
+  57:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_2 ) { PCMSK0 &= ~BM(PCINT2); return NRK_OK; }
+ 188               		.loc 1 57 0 is_stmt 1
+ 189 00b2 8530      		cpi r24,lo8(5)
+ 190 00b4 01F4      		brne .L24
+ 191               		.loc 1 57 0 is_stmt 0 discriminator 1
+ 192 00b6 8091 6B00 		lds r24,107
+ 193               	.LVL23:
+ 194 00ba 8B7F      		andi r24,lo8(-5)
+ 195 00bc 00C0      		rjmp .L30
+ 196               	.LVL24:
+ 197               	.L24:
+  58:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_3 ) { PCMSK0 &= ~BM(PCINT3); return NRK_OK; }
+ 198               		.loc 1 58 0 is_stmt 1
+ 199 00be 8630      		cpi r24,lo8(6)
+ 200 00c0 01F4      		brne .L25
+ 201               		.loc 1 58 0 is_stmt 0 discriminator 1
+ 202 00c2 8091 6B00 		lds r24,107
+ 203               	.LVL25:
+ 204 00c6 877F      		andi r24,lo8(-9)
+ 205 00c8 00C0      		rjmp .L30
+ 206               	.LVL26:
+ 207               	.L25:
+  59:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_4 ) { PCMSK0 &= ~BM(PCINT4); return NRK_OK; }
+ 208               		.loc 1 59 0 is_stmt 1
+ 209 00ca 8730      		cpi r24,lo8(7)
+ 210 00cc 01F4      		brne .L26
+ 211               		.loc 1 59 0 is_stmt 0 discriminator 1
+ 212 00ce 8091 6B00 		lds r24,107
+ 213               	.LVL27:
+ 214 00d2 8F7E      		andi r24,lo8(-17)
+ 215 00d4 00C0      		rjmp .L30
+ 216               	.LVL28:
+ 217               	.L26:
+  60:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_5 ) { PCMSK0 &= ~BM(PCINT5); return NRK_OK; }
+ 218               		.loc 1 60 0 is_stmt 1
+ 219 00d6 8830      		cpi r24,lo8(8)
+ 220 00d8 01F4      		brne .L27
+ 221               		.loc 1 60 0 is_stmt 0 discriminator 1
+ 222 00da 8091 6B00 		lds r24,107
+ 223               	.LVL29:
+ 224 00de 8F7D      		andi r24,lo8(-33)
+ 225 00e0 00C0      		rjmp .L30
+ 226               	.LVL30:
+ 227               	.L27:
+  61:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_6 ) { PCMSK0 &= ~BM(PCINT6); return NRK_OK; }
+ 228               		.loc 1 61 0 is_stmt 1
+ 229 00e2 8930      		cpi r24,lo8(9)
+ 230 00e4 01F4      		brne .L28
+ 231               		.loc 1 61 0 is_stmt 0 discriminator 1
+ 232 00e6 8091 6B00 		lds r24,107
+ 233               	.LVL31:
+ 234 00ea 8F7B      		andi r24,lo8(-65)
+ 235 00ec 00C0      		rjmp .L30
+ 236               	.LVL32:
+ 237               	.L28:
+  62:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_7 ) { PCMSK0 &= ~BM(PCINT7); return NRK_OK; }
+ 238               		.loc 1 62 0 is_stmt 1
+ 239 00ee 8A30      		cpi r24,lo8(10)
+ 240 00f0 01F4      		brne .L29
+ 241               		.loc 1 62 0 is_stmt 0 discriminator 1
+ 242 00f2 8091 6B00 		lds r24,107
+ 243               	.LVL33:
+ 244 00f6 8F77      		andi r24,lo8(127)
+ 245               	.L30:
+ 246 00f8 8093 6B00 		sts 107,r24
+ 247               	.L31:
+ 248 00fc 81E0      		ldi r24,lo8(1)
+ 249 00fe 0895      		ret
+ 250               	.LVL34:
+ 251               	.L29:
+  63:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** return NRK_ERROR;
+ 252               		.loc 1 63 0 is_stmt 1
+ 253 0100 8FEF      		ldi r24,lo8(-1)
+ 254               	.LVL35:
+  64:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** }
+ 255               		.loc 1 64 0
+ 256 0102 0895      		ret
+ 257               		.cfi_endproc
+ 258               	.LFE3:
+ 260               	.global	nrk_ext_int_configure
+ 262               	nrk_ext_int_configure:
+ 263               	.LFB4:
+  65:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+  66:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+  67:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+  68:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** int8_t  nrk_ext_int_configure(uint8_t pin, uint8_t mode, void *callback_func)
+  69:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** {
+ 264               		.loc 1 69 0
+ 265               		.cfi_startproc
+ 266               	.LVL36:
+ 267               	/* prologue: function */
+ 268               	/* frame size = 0 */
+ 269               	/* stack size = 0 */
+ 270               	.L__stack_usage = 0
+  70:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_0)
+ 271               		.loc 1 70 0
+ 272 0104 8111      		cpse r24,__zero_reg__
+ 273 0106 00C0      		rjmp .L33
+  71:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	{
+  72:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	ext_int0_callback=callback_func;
+ 274               		.loc 1 72 0
+ 275 0108 5093 0000 		sts ext_int0_callback+1,r21
+ 276 010c 4093 0000 		sts ext_int0_callback,r20
+  73:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_LOW_TRIGGER) EICRA &= ~(BM(ISC01) | BM(ISC00));
+ 277               		.loc 1 73 0
+ 278 0110 6111      		cpse r22,__zero_reg__
+ 279 0112 00C0      		rjmp .L34
+ 280               		.loc 1 73 0 is_stmt 0 discriminator 1
+ 281 0114 8091 6900 		lds r24,105
+ 282               	.LVL37:
+ 283 0118 8C7F      		andi r24,lo8(-4)
+ 284 011a 00C0      		rjmp .L51
+ 285               	.LVL38:
+ 286               	.L34:
+  74:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_LEVEL_TRIGGER) 
+ 287               		.loc 1 74 0 is_stmt 1
+ 288 011c 6130      		cpi r22,lo8(1)
+ 289 011e 01F4      		brne .L36
+  75:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 		{ EICRA &= (~BM(ISC01)); EICRA |= BM(ISC00); }
+ 290               		.loc 1 75 0
+ 291 0120 8091 6900 		lds r24,105
+ 292               	.LVL39:
+ 293 0124 8D7F      		andi r24,lo8(-3)
+ 294 0126 8093 6900 		sts 105,r24
+ 295 012a 8091 6900 		lds r24,105
+ 296 012e 8160      		ori r24,lo8(1)
+ 297 0130 00C0      		rjmp .L51
+ 298               	.LVL40:
+ 299               	.L36:
+  76:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_FALLING_EDGE) 
+ 300               		.loc 1 76 0
+ 301 0132 6230      		cpi r22,lo8(2)
+ 302 0134 01F4      		brne .L38
+  77:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 		{ EICRA |= BM(ISC01); EICRA &= (~BM(ISC00)); }
+ 303               		.loc 1 77 0
+ 304 0136 8091 6900 		lds r24,105
+ 305               	.LVL41:
+ 306 013a 8260      		ori r24,lo8(2)
+ 307 013c 8093 6900 		sts 105,r24
+ 308 0140 8091 6900 		lds r24,105
+ 309 0144 8E7F      		andi r24,lo8(-2)
+ 310 0146 00C0      		rjmp .L51
+ 311               	.LVL42:
+ 312               	.L38:
+  78:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_RISING_EDGE) EICRA |= BM(ISC01) | BM(ISC00);
+ 313               		.loc 1 78 0
+ 314 0148 6330      		cpi r22,lo8(3)
+ 315 014a 01F4      		brne .L50
+ 316               		.loc 1 78 0 is_stmt 0 discriminator 1
+ 317 014c 8091 6900 		lds r24,105
+ 318               	.LVL43:
+ 319 0150 8360      		ori r24,lo8(3)
+ 320 0152 00C0      		rjmp .L51
+ 321               	.LVL44:
+ 322               	.L33:
+  79:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	return NRK_OK;
+  80:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	}
+  81:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_1)
+ 323               		.loc 1 81 0 is_stmt 1
+ 324 0154 8130      		cpi r24,lo8(1)
+ 325 0156 01F4      		brne .L40
+  82:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	{
+  83:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	ext_int1_callback=callback_func;
+ 326               		.loc 1 83 0
+ 327 0158 5093 0000 		sts ext_int1_callback+1,r21
+ 328 015c 4093 0000 		sts ext_int1_callback,r20
+  84:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_LOW_TRIGGER) EICRA &= ~(BM(ISC11) | BM(ISC10));
+ 329               		.loc 1 84 0
+ 330 0160 6111      		cpse r22,__zero_reg__
+ 331 0162 00C0      		rjmp .L41
+ 332               		.loc 1 84 0 is_stmt 0 discriminator 1
+ 333 0164 8091 6900 		lds r24,105
+ 334               	.LVL45:
+ 335 0168 837F      		andi r24,lo8(-13)
+ 336 016a 00C0      		rjmp .L51
+ 337               	.LVL46:
+ 338               	.L41:
+  85:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_LEVEL_TRIGGER) 
+ 339               		.loc 1 85 0 is_stmt 1
+ 340 016c 6130      		cpi r22,lo8(1)
+ 341 016e 01F4      		brne .L42
+  86:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 		{ EICRA &= (~BM(ISC11)); EICRA |= BM(ISC10); }
+ 342               		.loc 1 86 0
+ 343 0170 8091 6900 		lds r24,105
+ 344               	.LVL47:
+ 345 0174 877F      		andi r24,lo8(-9)
+ 346 0176 8093 6900 		sts 105,r24
+ 347 017a 8091 6900 		lds r24,105
+ 348 017e 8460      		ori r24,lo8(4)
+ 349 0180 00C0      		rjmp .L51
+ 350               	.LVL48:
+ 351               	.L42:
+  87:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_FALLING_EDGE) 
+ 352               		.loc 1 87 0
+ 353 0182 6230      		cpi r22,lo8(2)
+ 354 0184 01F4      		brne .L43
+  88:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 		{ EICRA |= BM(ISC11); EICRA &= (~BM(ISC10)); }
+ 355               		.loc 1 88 0
+ 356 0186 8091 6900 		lds r24,105
+ 357               	.LVL49:
+ 358 018a 8860      		ori r24,lo8(8)
+ 359 018c 8093 6900 		sts 105,r24
+ 360 0190 8091 6900 		lds r24,105
+ 361 0194 8B7F      		andi r24,lo8(-5)
+ 362               	.L51:
+ 363 0196 8093 6900 		sts 105,r24
+ 364               	.L50:
+  89:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_RISING_EDGE) EICRA |= BM(ISC11) | BM(ISC10);
+  90:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	return NRK_OK;
+ 365               		.loc 1 90 0
+ 366 019a 81E0      		ldi r24,lo8(1)
+ 367 019c 0895      		ret
+ 368               	.LVL50:
+ 369               	.L43:
+  89:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_RISING_EDGE) EICRA |= BM(ISC11) | BM(ISC10);
+ 370               		.loc 1 89 0
+ 371 019e 6330      		cpi r22,lo8(3)
+ 372 01a0 01F4      		brne .L50
+  89:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_RISING_EDGE) EICRA |= BM(ISC11) | BM(ISC10);
+ 373               		.loc 1 89 0 is_stmt 0 discriminator 1
+ 374 01a2 8091 6900 		lds r24,105
+ 375               	.LVL51:
+ 376 01a6 8C60      		ori r24,lo8(12)
+ 377 01a8 00C0      		rjmp .L51
+ 378               	.LVL52:
+ 379               	.L40:
+  91:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	}
+  92:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_EXT_INT_2)
+ 380               		.loc 1 92 0 is_stmt 1
+ 381 01aa 8230      		cpi r24,lo8(2)
+ 382 01ac 01F4      		brne .L44
+  93:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	{
+  94:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	ext_int2_callback=callback_func;
+ 383               		.loc 1 94 0
+ 384 01ae 5093 0000 		sts ext_int2_callback+1,r21
+ 385 01b2 4093 0000 		sts ext_int2_callback,r20
+  95:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_LOW_TRIGGER) EICRA &= ~(BM(ISC21) | BM(ISC20));
+ 386               		.loc 1 95 0
+ 387 01b6 6111      		cpse r22,__zero_reg__
+ 388 01b8 00C0      		rjmp .L45
+ 389               		.loc 1 95 0 is_stmt 0 discriminator 1
+ 390 01ba 8091 6900 		lds r24,105
+ 391               	.LVL53:
+ 392 01be 8F7C      		andi r24,lo8(-49)
+ 393 01c0 00C0      		rjmp .L51
+ 394               	.LVL54:
+ 395               	.L45:
+  96:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_LEVEL_TRIGGER) 
+ 396               		.loc 1 96 0 is_stmt 1
+ 397 01c2 6130      		cpi r22,lo8(1)
+ 398 01c4 01F4      		brne .L46
+  97:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 		{ EICRA &= (~BM(ISC21)); EICRA |= BM(ISC20); }
+ 399               		.loc 1 97 0
+ 400 01c6 8091 6900 		lds r24,105
+ 401               	.LVL55:
+ 402 01ca 8F7D      		andi r24,lo8(-33)
+ 403 01cc 8093 6900 		sts 105,r24
+ 404 01d0 8091 6900 		lds r24,105
+ 405 01d4 8061      		ori r24,lo8(16)
+ 406 01d6 00C0      		rjmp .L51
+ 407               	.LVL56:
+ 408               	.L46:
+  98:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_FALLING_EDGE) 
+ 409               		.loc 1 98 0
+ 410 01d8 6230      		cpi r22,lo8(2)
+ 411 01da 01F4      		brne .L47
+  99:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 		{ EICRA |= BM(ISC21); EICRA &= (~BM(ISC20)); }
+ 412               		.loc 1 99 0
+ 413 01dc 8091 6900 		lds r24,105
+ 414               	.LVL57:
+ 415 01e0 8062      		ori r24,lo8(32)
+ 416 01e2 8093 6900 		sts 105,r24
+ 417 01e6 8091 6900 		lds r24,105
+ 418 01ea 8F7E      		andi r24,lo8(-17)
+ 419 01ec 00C0      		rjmp .L51
+ 420               	.LVL58:
+ 421               	.L47:
+ 100:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(mode==NRK_RISING_EDGE) EICRA |= BM(ISC21) | BM(ISC20);
+ 422               		.loc 1 100 0
+ 423 01ee 6330      		cpi r22,lo8(3)
+ 424 01f0 01F4      		brne .L50
+ 425               		.loc 1 100 0 is_stmt 0 discriminator 1
+ 426 01f2 8091 6900 		lds r24,105
+ 427               	.LVL59:
+ 428 01f6 8063      		ori r24,lo8(48)
+ 429 01f8 00C0      		rjmp .L51
+ 430               	.LVL60:
+ 431               	.L44:
+ 101:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	return NRK_OK;
+ 102:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	}
+ 103:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+ 104:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+ 105:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+ 106:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** if(pin==NRK_PC_INT_0 || pin==NRK_PC_INT_1 || pin==NRK_PC_INT_2 || pin==NRK_PC_INT_3 || pin==NRK_PC_
+ 432               		.loc 1 106 0 is_stmt 1
+ 433 01fa 8350      		subi r24,lo8(-(-3))
+ 434               	.LVL61:
+ 435 01fc 8830      		cpi r24,lo8(8)
+ 436 01fe 00F4      		brsh .L48
+ 107:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	PCICR |= BM(PCIE0);	
+ 437               		.loc 1 107 0
+ 438 0200 8091 6800 		lds r24,104
+ 439               	.LVL62:
+ 440 0204 8160      		ori r24,lo8(1)
+ 441 0206 8093 6800 		sts 104,r24
+ 108:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	pc_int0_callback=callback_func;
+ 442               		.loc 1 108 0
+ 443 020a 5093 0000 		sts pc_int0_callback+1,r21
+ 444 020e 4093 0000 		sts pc_int0_callback,r20
+ 445 0212 00C0      		rjmp .L50
+ 446               	.L48:
+ 109:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	return NRK_OK;
+ 110:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	}
+ 111:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** return NRK_ERROR;
+ 447               		.loc 1 111 0
+ 448 0214 8FEF      		ldi r24,lo8(-1)
+ 112:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** }
+ 449               		.loc 1 112 0
+ 450 0216 0895      		ret
+ 451               		.cfi_endproc
+ 452               	.LFE4:
+ 454               	.global	__vector_9
+ 456               	__vector_9:
+ 457               	.LFB5:
+ 113:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+ 114:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** #ifndef NRK_DISABLE_EXT_INT
+ 115:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** SIGNAL(PCINT0_vect) {
+ 458               		.loc 1 115 0
+ 459               		.cfi_startproc
+ 460 0218 1F92      		push r1
+ 461               	.LCFI0:
+ 462               		.cfi_def_cfa_offset 4
+ 463               		.cfi_offset 1, -3
+ 464 021a 0F92      		push r0
+ 465               	.LCFI1:
+ 466               		.cfi_def_cfa_offset 5
+ 467               		.cfi_offset 0, -4
+ 468 021c 0FB6      		in r0,__SREG__
+ 469 021e 0F92      		push r0
+ 470 0220 1124      		clr __zero_reg__
+ 471 0222 0BB6      		in r0,__RAMPZ__
+ 472 0224 0F92      		push r0
+ 473 0226 2F93      		push r18
+ 474               	.LCFI2:
+ 475               		.cfi_def_cfa_offset 6
+ 476               		.cfi_offset 18, -5
+ 477 0228 3F93      		push r19
+ 478               	.LCFI3:
+ 479               		.cfi_def_cfa_offset 7
+ 480               		.cfi_offset 19, -6
+ 481 022a 4F93      		push r20
+ 482               	.LCFI4:
+ 483               		.cfi_def_cfa_offset 8
+ 484               		.cfi_offset 20, -7
+ 485 022c 5F93      		push r21
+ 486               	.LCFI5:
+ 487               		.cfi_def_cfa_offset 9
+ 488               		.cfi_offset 21, -8
+ 489 022e 6F93      		push r22
+ 490               	.LCFI6:
+ 491               		.cfi_def_cfa_offset 10
+ 492               		.cfi_offset 22, -9
+ 493 0230 7F93      		push r23
+ 494               	.LCFI7:
+ 495               		.cfi_def_cfa_offset 11
+ 496               		.cfi_offset 23, -10
+ 497 0232 8F93      		push r24
+ 498               	.LCFI8:
+ 499               		.cfi_def_cfa_offset 12
+ 500               		.cfi_offset 24, -11
+ 501 0234 9F93      		push r25
+ 502               	.LCFI9:
+ 503               		.cfi_def_cfa_offset 13
+ 504               		.cfi_offset 25, -12
+ 505 0236 AF93      		push r26
+ 506               	.LCFI10:
+ 507               		.cfi_def_cfa_offset 14
+ 508               		.cfi_offset 26, -13
+ 509 0238 BF93      		push r27
+ 510               	.LCFI11:
+ 511               		.cfi_def_cfa_offset 15
+ 512               		.cfi_offset 27, -14
+ 513 023a EF93      		push r30
+ 514               	.LCFI12:
+ 515               		.cfi_def_cfa_offset 16
+ 516               		.cfi_offset 30, -15
+ 517 023c FF93      		push r31
+ 518               	.LCFI13:
+ 519               		.cfi_def_cfa_offset 17
+ 520               		.cfi_offset 31, -16
+ 521               	/* prologue: Signal */
+ 522               	/* frame size = 0 */
+ 523               	/* stack size = 16 */
+ 524               	.L__stack_usage = 16
+ 116:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(pc_int0_callback!=NULL) pc_int0_callback();
+ 525               		.loc 1 116 0
+ 526 023e E091 0000 		lds r30,pc_int0_callback
+ 527 0242 F091 0000 		lds r31,pc_int0_callback+1
+ 528 0246 3097      		sbiw r30,0
+ 529 0248 01F0      		breq .L53
+ 530               		.loc 1 116 0 is_stmt 0 discriminator 1
+ 531 024a 1995      		eicall
+ 532               	.LVL63:
+ 533 024c 00C0      		rjmp .L52
+ 534               	.L53:
+ 117:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	else
+ 118:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	nrk_kernel_error_add(NRK_SEG_FAULT,0);
+ 535               		.loc 1 118 0 is_stmt 1
+ 536 024e 60E0      		ldi r22,0
+ 537 0250 8AE0      		ldi r24,lo8(10)
+ 538 0252 0E94 0000 		call nrk_kernel_error_add
+ 539               	.LVL64:
+ 540               	.L52:
+ 541               	/* epilogue start */
+ 119:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	return;  	
+ 120:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** }
+ 542               		.loc 1 120 0
+ 543 0256 FF91      		pop r31
+ 544 0258 EF91      		pop r30
+ 545 025a BF91      		pop r27
+ 546 025c AF91      		pop r26
+ 547 025e 9F91      		pop r25
+ 548 0260 8F91      		pop r24
+ 549 0262 7F91      		pop r23
+ 550 0264 6F91      		pop r22
+ 551 0266 5F91      		pop r21
+ 552 0268 4F91      		pop r20
+ 553 026a 3F91      		pop r19
+ 554 026c 2F91      		pop r18
+ 555 026e 0F90      		pop r0
+ 556 0270 0BBE      		out __RAMPZ__,r0
+ 557 0272 0F90      		pop r0
+ 558 0274 0FBE      		out __SREG__,r0
+ 559 0276 0F90      		pop r0
+ 560 0278 1F90      		pop r1
+ 561 027a 1895      		reti
+ 562               		.cfi_endproc
+ 563               	.LFE5:
+ 565               	.global	__vector_1
+ 567               	__vector_1:
+ 568               	.LFB6:
+ 121:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+ 122:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+ 123:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** SIGNAL(INT0_vect) {
+ 569               		.loc 1 123 0
+ 570               		.cfi_startproc
+ 571 027c 1F92      		push r1
+ 572               	.LCFI14:
+ 573               		.cfi_def_cfa_offset 4
+ 574               		.cfi_offset 1, -3
+ 575 027e 0F92      		push r0
+ 576               	.LCFI15:
+ 577               		.cfi_def_cfa_offset 5
+ 578               		.cfi_offset 0, -4
+ 579 0280 0FB6      		in r0,__SREG__
+ 580 0282 0F92      		push r0
+ 581 0284 1124      		clr __zero_reg__
+ 582 0286 0BB6      		in r0,__RAMPZ__
+ 583 0288 0F92      		push r0
+ 584 028a 2F93      		push r18
+ 585               	.LCFI16:
+ 586               		.cfi_def_cfa_offset 6
+ 587               		.cfi_offset 18, -5
+ 588 028c 3F93      		push r19
+ 589               	.LCFI17:
+ 590               		.cfi_def_cfa_offset 7
+ 591               		.cfi_offset 19, -6
+ 592 028e 4F93      		push r20
+ 593               	.LCFI18:
+ 594               		.cfi_def_cfa_offset 8
+ 595               		.cfi_offset 20, -7
+ 596 0290 5F93      		push r21
+ 597               	.LCFI19:
+ 598               		.cfi_def_cfa_offset 9
+ 599               		.cfi_offset 21, -8
+ 600 0292 6F93      		push r22
+ 601               	.LCFI20:
+ 602               		.cfi_def_cfa_offset 10
+ 603               		.cfi_offset 22, -9
+ 604 0294 7F93      		push r23
+ 605               	.LCFI21:
+ 606               		.cfi_def_cfa_offset 11
+ 607               		.cfi_offset 23, -10
+ 608 0296 8F93      		push r24
+ 609               	.LCFI22:
+ 610               		.cfi_def_cfa_offset 12
+ 611               		.cfi_offset 24, -11
+ 612 0298 9F93      		push r25
+ 613               	.LCFI23:
+ 614               		.cfi_def_cfa_offset 13
+ 615               		.cfi_offset 25, -12
+ 616 029a AF93      		push r26
+ 617               	.LCFI24:
+ 618               		.cfi_def_cfa_offset 14
+ 619               		.cfi_offset 26, -13
+ 620 029c BF93      		push r27
+ 621               	.LCFI25:
+ 622               		.cfi_def_cfa_offset 15
+ 623               		.cfi_offset 27, -14
+ 624 029e EF93      		push r30
+ 625               	.LCFI26:
+ 626               		.cfi_def_cfa_offset 16
+ 627               		.cfi_offset 30, -15
+ 628 02a0 FF93      		push r31
+ 629               	.LCFI27:
+ 630               		.cfi_def_cfa_offset 17
+ 631               		.cfi_offset 31, -16
+ 632               	/* prologue: Signal */
+ 633               	/* frame size = 0 */
+ 634               	/* stack size = 16 */
+ 635               	.L__stack_usage = 16
+ 124:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(ext_int0_callback!=NULL) ext_int0_callback();
+ 636               		.loc 1 124 0
+ 637 02a2 E091 0000 		lds r30,ext_int0_callback
+ 638 02a6 F091 0000 		lds r31,ext_int0_callback+1
+ 639 02aa 3097      		sbiw r30,0
+ 640 02ac 01F0      		breq .L56
+ 641               		.loc 1 124 0 is_stmt 0 discriminator 1
+ 642 02ae 1995      		eicall
+ 643               	.LVL65:
+ 644 02b0 00C0      		rjmp .L55
+ 645               	.L56:
+ 125:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	else
+ 126:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	nrk_kernel_error_add(NRK_SEG_FAULT,0);
+ 646               		.loc 1 126 0 is_stmt 1
+ 647 02b2 60E0      		ldi r22,0
+ 648 02b4 8AE0      		ldi r24,lo8(10)
+ 649 02b6 0E94 0000 		call nrk_kernel_error_add
+ 650               	.LVL66:
+ 651               	.L55:
+ 652               	/* epilogue start */
+ 127:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	return;  	
+ 128:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** }
+ 653               		.loc 1 128 0
+ 654 02ba FF91      		pop r31
+ 655 02bc EF91      		pop r30
+ 656 02be BF91      		pop r27
+ 657 02c0 AF91      		pop r26
+ 658 02c2 9F91      		pop r25
+ 659 02c4 8F91      		pop r24
+ 660 02c6 7F91      		pop r23
+ 661 02c8 6F91      		pop r22
+ 662 02ca 5F91      		pop r21
+ 663 02cc 4F91      		pop r20
+ 664 02ce 3F91      		pop r19
+ 665 02d0 2F91      		pop r18
+ 666 02d2 0F90      		pop r0
+ 667 02d4 0BBE      		out __RAMPZ__,r0
+ 668 02d6 0F90      		pop r0
+ 669 02d8 0FBE      		out __SREG__,r0
+ 670 02da 0F90      		pop r0
+ 671 02dc 1F90      		pop r1
+ 672 02de 1895      		reti
+ 673               		.cfi_endproc
+ 674               	.LFE6:
+ 676               	.global	__vector_2
+ 678               	__vector_2:
+ 679               	.LFB7:
+ 129:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+ 130:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** SIGNAL(INT1_vect) {
+ 680               		.loc 1 130 0
+ 681               		.cfi_startproc
+ 682 02e0 1F92      		push r1
+ 683               	.LCFI28:
+ 684               		.cfi_def_cfa_offset 4
+ 685               		.cfi_offset 1, -3
+ 686 02e2 0F92      		push r0
+ 687               	.LCFI29:
+ 688               		.cfi_def_cfa_offset 5
+ 689               		.cfi_offset 0, -4
+ 690 02e4 0FB6      		in r0,__SREG__
+ 691 02e6 0F92      		push r0
+ 692 02e8 1124      		clr __zero_reg__
+ 693 02ea 0BB6      		in r0,__RAMPZ__
+ 694 02ec 0F92      		push r0
+ 695 02ee 2F93      		push r18
+ 696               	.LCFI30:
+ 697               		.cfi_def_cfa_offset 6
+ 698               		.cfi_offset 18, -5
+ 699 02f0 3F93      		push r19
+ 700               	.LCFI31:
+ 701               		.cfi_def_cfa_offset 7
+ 702               		.cfi_offset 19, -6
+ 703 02f2 4F93      		push r20
+ 704               	.LCFI32:
+ 705               		.cfi_def_cfa_offset 8
+ 706               		.cfi_offset 20, -7
+ 707 02f4 5F93      		push r21
+ 708               	.LCFI33:
+ 709               		.cfi_def_cfa_offset 9
+ 710               		.cfi_offset 21, -8
+ 711 02f6 6F93      		push r22
+ 712               	.LCFI34:
+ 713               		.cfi_def_cfa_offset 10
+ 714               		.cfi_offset 22, -9
+ 715 02f8 7F93      		push r23
+ 716               	.LCFI35:
+ 717               		.cfi_def_cfa_offset 11
+ 718               		.cfi_offset 23, -10
+ 719 02fa 8F93      		push r24
+ 720               	.LCFI36:
+ 721               		.cfi_def_cfa_offset 12
+ 722               		.cfi_offset 24, -11
+ 723 02fc 9F93      		push r25
+ 724               	.LCFI37:
+ 725               		.cfi_def_cfa_offset 13
+ 726               		.cfi_offset 25, -12
+ 727 02fe AF93      		push r26
+ 728               	.LCFI38:
+ 729               		.cfi_def_cfa_offset 14
+ 730               		.cfi_offset 26, -13
+ 731 0300 BF93      		push r27
+ 732               	.LCFI39:
+ 733               		.cfi_def_cfa_offset 15
+ 734               		.cfi_offset 27, -14
+ 735 0302 EF93      		push r30
+ 736               	.LCFI40:
+ 737               		.cfi_def_cfa_offset 16
+ 738               		.cfi_offset 30, -15
+ 739 0304 FF93      		push r31
+ 740               	.LCFI41:
+ 741               		.cfi_def_cfa_offset 17
+ 742               		.cfi_offset 31, -16
+ 743               	/* prologue: Signal */
+ 744               	/* frame size = 0 */
+ 745               	/* stack size = 16 */
+ 746               	.L__stack_usage = 16
+ 131:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(ext_int1_callback!=NULL) ext_int1_callback();
+ 747               		.loc 1 131 0
+ 748 0306 E091 0000 		lds r30,ext_int1_callback
+ 749 030a F091 0000 		lds r31,ext_int1_callback+1
+ 750 030e 3097      		sbiw r30,0
+ 751 0310 01F0      		breq .L59
+ 752               		.loc 1 131 0 is_stmt 0 discriminator 1
+ 753 0312 1995      		eicall
+ 754               	.LVL67:
+ 755 0314 00C0      		rjmp .L58
+ 756               	.L59:
+ 132:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	else
+ 133:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	nrk_kernel_error_add(NRK_SEG_FAULT,0);
+ 757               		.loc 1 133 0 is_stmt 1
+ 758 0316 60E0      		ldi r22,0
+ 759 0318 8AE0      		ldi r24,lo8(10)
+ 760 031a 0E94 0000 		call nrk_kernel_error_add
+ 761               	.LVL68:
+ 762               	.L58:
+ 763               	/* epilogue start */
+ 134:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	return;  	
+ 135:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** }
+ 764               		.loc 1 135 0
+ 765 031e FF91      		pop r31
+ 766 0320 EF91      		pop r30
+ 767 0322 BF91      		pop r27
+ 768 0324 AF91      		pop r26
+ 769 0326 9F91      		pop r25
+ 770 0328 8F91      		pop r24
+ 771 032a 7F91      		pop r23
+ 772 032c 6F91      		pop r22
+ 773 032e 5F91      		pop r21
+ 774 0330 4F91      		pop r20
+ 775 0332 3F91      		pop r19
+ 776 0334 2F91      		pop r18
+ 777 0336 0F90      		pop r0
+ 778 0338 0BBE      		out __RAMPZ__,r0
+ 779 033a 0F90      		pop r0
+ 780 033c 0FBE      		out __SREG__,r0
+ 781 033e 0F90      		pop r0
+ 782 0340 1F90      		pop r1
+ 783 0342 1895      		reti
+ 784               		.cfi_endproc
+ 785               	.LFE7:
+ 787               	.global	__vector_3
+ 789               	__vector_3:
+ 790               	.LFB8:
+ 136:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 
+ 137:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** SIGNAL(INT2_vect) {
+ 791               		.loc 1 137 0
+ 792               		.cfi_startproc
+ 793 0344 1F92      		push r1
+ 794               	.LCFI42:
+ 795               		.cfi_def_cfa_offset 4
+ 796               		.cfi_offset 1, -3
+ 797 0346 0F92      		push r0
+ 798               	.LCFI43:
+ 799               		.cfi_def_cfa_offset 5
+ 800               		.cfi_offset 0, -4
+ 801 0348 0FB6      		in r0,__SREG__
+ 802 034a 0F92      		push r0
+ 803 034c 1124      		clr __zero_reg__
+ 804 034e 0BB6      		in r0,__RAMPZ__
+ 805 0350 0F92      		push r0
+ 806 0352 2F93      		push r18
+ 807               	.LCFI44:
+ 808               		.cfi_def_cfa_offset 6
+ 809               		.cfi_offset 18, -5
+ 810 0354 3F93      		push r19
+ 811               	.LCFI45:
+ 812               		.cfi_def_cfa_offset 7
+ 813               		.cfi_offset 19, -6
+ 814 0356 4F93      		push r20
+ 815               	.LCFI46:
+ 816               		.cfi_def_cfa_offset 8
+ 817               		.cfi_offset 20, -7
+ 818 0358 5F93      		push r21
+ 819               	.LCFI47:
+ 820               		.cfi_def_cfa_offset 9
+ 821               		.cfi_offset 21, -8
+ 822 035a 6F93      		push r22
+ 823               	.LCFI48:
+ 824               		.cfi_def_cfa_offset 10
+ 825               		.cfi_offset 22, -9
+ 826 035c 7F93      		push r23
+ 827               	.LCFI49:
+ 828               		.cfi_def_cfa_offset 11
+ 829               		.cfi_offset 23, -10
+ 830 035e 8F93      		push r24
+ 831               	.LCFI50:
+ 832               		.cfi_def_cfa_offset 12
+ 833               		.cfi_offset 24, -11
+ 834 0360 9F93      		push r25
+ 835               	.LCFI51:
+ 836               		.cfi_def_cfa_offset 13
+ 837               		.cfi_offset 25, -12
+ 838 0362 AF93      		push r26
+ 839               	.LCFI52:
+ 840               		.cfi_def_cfa_offset 14
+ 841               		.cfi_offset 26, -13
+ 842 0364 BF93      		push r27
+ 843               	.LCFI53:
+ 844               		.cfi_def_cfa_offset 15
+ 845               		.cfi_offset 27, -14
+ 846 0366 EF93      		push r30
+ 847               	.LCFI54:
+ 848               		.cfi_def_cfa_offset 16
+ 849               		.cfi_offset 30, -15
+ 850 0368 FF93      		push r31
+ 851               	.LCFI55:
+ 852               		.cfi_def_cfa_offset 17
+ 853               		.cfi_offset 31, -16
+ 854               	/* prologue: Signal */
+ 855               	/* frame size = 0 */
+ 856               	/* stack size = 16 */
+ 857               	.L__stack_usage = 16
+ 138:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	if(ext_int2_callback!=NULL) ext_int2_callback();
+ 858               		.loc 1 138 0
+ 859 036a E091 0000 		lds r30,ext_int2_callback
+ 860 036e F091 0000 		lds r31,ext_int2_callback+1
+ 861 0372 3097      		sbiw r30,0
+ 862 0374 01F0      		breq .L62
+ 863               		.loc 1 138 0 is_stmt 0 discriminator 1
+ 864 0376 1995      		eicall
+ 865               	.LVL69:
+ 866 0378 00C0      		rjmp .L61
+ 867               	.L62:
+ 139:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	else
+ 140:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	nrk_kernel_error_add(NRK_SEG_FAULT,0);
+ 868               		.loc 1 140 0 is_stmt 1
+ 869 037a 60E0      		ldi r22,0
+ 870 037c 8AE0      		ldi r24,lo8(10)
+ 871 037e 0E94 0000 		call nrk_kernel_error_add
+ 872               	.LVL70:
+ 873               	.L61:
+ 874               	/* epilogue start */
+ 141:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** 	return;  	
+ 142:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_ext_int.c **** }
+ 875               		.loc 1 142 0
+ 876 0382 FF91      		pop r31
+ 877 0384 EF91      		pop r30
+ 878 0386 BF91      		pop r27
+ 879 0388 AF91      		pop r26
+ 880 038a 9F91      		pop r25
+ 881 038c 8F91      		pop r24
+ 882 038e 7F91      		pop r23
+ 883 0390 6F91      		pop r22
+ 884 0392 5F91      		pop r21
+ 885 0394 4F91      		pop r20
+ 886 0396 3F91      		pop r19
+ 887 0398 2F91      		pop r18
+ 888 039a 0F90      		pop r0
+ 889 039c 0BBE      		out __RAMPZ__,r0
+ 890 039e 0F90      		pop r0
+ 891 03a0 0FBE      		out __SREG__,r0
+ 892 03a2 0F90      		pop r0
+ 893 03a4 1F90      		pop r1
+ 894 03a6 1895      		reti
+ 895               		.cfi_endproc
+ 896               	.LFE8:
+ 898               		.comm	error_num,1,1
+ 899               		.comm	error_task,1,1
+ 900               		.comm	pc_int0_callback,2,1
+ 901               		.comm	ext_int2_callback,2,1
+ 902               		.comm	ext_int1_callback,2,1
+ 903               		.comm	ext_int0_callback,2,1
+ 904               		.comm	_nrk_signal_list,4,1
+ 905               	.Letext0:
+ 906               		.file 2 "/home/agr/avr8-gnu-toolchain-linux_x86_64/avr/include/stdint.h"
+ 907               		.file 3 "/home/agr/nano-RK/src/kernel/include/nrk_events.h"
+ 908               		.file 4 "/home/agr/nano-RK/src/kernel/hal/include/nrk_ext_int.h"
+ 909               		.file 5 "/home/agr/nano-RK/src/kernel/include/nrk_error.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 nrk_ext_int.c
+     /tmp/cco8vDK9.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/cco8vDK9.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/cco8vDK9.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/cco8vDK9.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/cco8vDK9.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/cco8vDK9.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/cco8vDK9.s:13     .text:0000000000000000 nrk_ext_int_enable
+     /tmp/cco8vDK9.s:138    .text:0000000000000082 nrk_ext_int_disable
+     /tmp/cco8vDK9.s:262    .text:0000000000000104 nrk_ext_int_configure
+                            *COM*:0000000000000002 ext_int0_callback
+                            *COM*:0000000000000002 ext_int1_callback
+                            *COM*:0000000000000002 ext_int2_callback
+                            *COM*:0000000000000002 pc_int0_callback
+     /tmp/cco8vDK9.s:456    .text:0000000000000218 __vector_9
+     /tmp/cco8vDK9.s:567    .text:000000000000027c __vector_1
+     /tmp/cco8vDK9.s:678    .text:00000000000002e0 __vector_2
+     /tmp/cco8vDK9.s:789    .text:0000000000000344 __vector_3
+                            *COM*:0000000000000001 error_num
+                            *COM*:0000000000000001 error_task
+                            *COM*:0000000000000004 _nrk_signal_list
+
+UNDEFINED SYMBOLS
+nrk_kernel_error_add
+__do_clear_bss

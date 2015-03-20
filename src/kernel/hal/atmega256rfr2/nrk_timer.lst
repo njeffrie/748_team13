@@ -1,0 +1,1527 @@
+   1               		.file	"nrk_timer.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	nrk_spin_wait_us
+  13               	nrk_spin_wait_us:
+  14               	.LFB2:
+  15               		.file 1 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c"
+   1:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** /******************************************************************************
+   2:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  Nano-RK, a real-time operating system for sensor networks.
+   3:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
+   4:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  All rights reserved.
+   5:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *
+   6:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  This is the Open Source Version of Nano-RK included as part of a Dual
+   7:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  Licensing Model. If you are unsure which license to use please refer to:
+   8:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  http://www.nanork.org/nano-RK/wiki/Licensing
+   9:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *
+  10:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  This program is free software: you can redistribute it and/or modify
+  11:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  it under the terms of the GNU General Public License as published by
+  12:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  the Free Software Foundation, version 2.0 of the License.
+  13:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *
+  14:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  This program is distributed in the hope that it will be useful,
+  15:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  16:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  17:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  GNU General Public License for more details.
+  18:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *
+  19:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  You should have received a copy of the GNU General Public License
+  20:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  21:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *
+  22:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  Contributing Authors (specific to this file):
+  23:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *  Anthony Rowe
+  24:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** *******************************************************************************/
+  25:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  26:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** #include <include.h>
+  27:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** #include <avr/interrupt.h>
+  28:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** #include <ulib.h>
+  29:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** #include <nrk_timer.h>
+  30:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** #include <nrk_error.h>
+  31:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** #include <nrk_cfg.h>
+  32:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  33:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void nrk_spin_wait_us(uint16_t timeout)
+  34:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+  16               		.loc 1 34 0
+  17               		.cfi_startproc
+  18               	/* prologue: function */
+  19               	/* frame size = 0 */
+  20               	/* stack size = 0 */
+  21               	.L__stack_usage = 0
+  22               	.LVL0:
+  23               	.L3:
+  35:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  36:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****     // This sequence uses exactly 8 clock cycle for each round
+  37:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****     do {
+  38:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  24               		.loc 1 38 0 discriminator 1
+  25               	/* #APP */
+  26               	 ;  38 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  27 0000 0000      		nop
+  28               		
+  29               	 ;  0 "" 2
+  39:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  30               		.loc 1 39 0 discriminator 1
+  31               	 ;  39 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  32 0002 0000      		nop
+  33               		
+  34               	 ;  0 "" 2
+  40:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  35               		.loc 1 40 0 discriminator 1
+  36               	 ;  40 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  37 0004 0000      		nop
+  38               		
+  39               	 ;  0 "" 2
+  41:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  40               		.loc 1 41 0 discriminator 1
+  41               	 ;  41 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  42 0006 0000      		nop
+  43               		
+  44               	 ;  0 "" 2
+  42:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  45               		.loc 1 42 0 discriminator 1
+  46               	 ;  42 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  47 0008 0000      		nop
+  48               		
+  49               	 ;  0 "" 2
+  43:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  50               		.loc 1 43 0 discriminator 1
+  51               	 ;  43 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  52 000a 0000      		nop
+  53               		
+  54               	 ;  0 "" 2
+  44:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  55               		.loc 1 44 0 discriminator 1
+  56               	 ;  44 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  57 000c 0000      		nop
+  58               		
+  59               	 ;  0 "" 2
+  45:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  60               		.loc 1 45 0 discriminator 1
+  61               	 ;  45 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  62 000e 0000      		nop
+  63               		
+  64               	 ;  0 "" 2
+  46:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  65               		.loc 1 46 0 discriminator 1
+  66               	 ;  46 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  67 0010 0000      		nop
+  68               		
+  69               	 ;  0 "" 2
+  47:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  70               		.loc 1 47 0 discriminator 1
+  71               	 ;  47 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  72 0012 0000      		nop
+  73               		
+  74               	 ;  0 "" 2
+  48:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  75               		.loc 1 48 0 discriminator 1
+  76               	 ;  48 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  77 0014 0000      		nop
+  78               		
+  79               	 ;  0 "" 2
+  49:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         NOP();
+  80               		.loc 1 49 0 discriminator 1
+  81               	 ;  49 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+  82 0016 0000      		nop
+  83               		
+  84               	 ;  0 "" 2
+  50:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****     } while (--timeout);
+  85               		.loc 1 50 0 discriminator 1
+  86               	/* #NOAPP */
+  87 0018 0197      		sbiw r24,1
+  88               	.LVL1:
+  89 001a 0097      		sbiw r24,0
+  90 001c 01F4      		brne .L3
+  91               	/* epilogue start */
+  51:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  52:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+  92               		.loc 1 52 0
+  93 001e 0895      		ret
+  94               		.cfi_endproc
+  95               	.LFE2:
+  97               	.global	_nrk_precision_os_timer_stop
+  99               	_nrk_precision_os_timer_stop:
+ 100               	.LFB4:
+  53:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  54:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  55:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_setup_timer() {
+  56:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_prev_timer_val=254;
+  57:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****  
+  58:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** // Timer 0 Setup as Asynchronous timer running from 32Khz Clock
+  59:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   ASSR = BM(AS2);
+  60:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   OCR2A = _nrk_prev_timer_val;
+  61:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //OCR2B = 2;
+  62:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TIFR2 =   BM(OCF2A) | BM(TOV2); //| BM(OCF2B2) ;       // Clear interrupt flag
+  63:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR2A = BM(WGM21);
+  64:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR2B = BM(CS21) | BM(CS20); //|      // reset counter on interrupt, set divider to 128
+  65:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRASY);              // reset prescaler
+  66:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    // Clear interrupt flag
+  67:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TIFR2 =   BM(OCF2A) | BM(TOV2);    
+  68:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   // reset counter on interrupt, set divider to 128
+  69:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR0A = BM(WGM01) | BM(CS01) | BM(CS00); 
+  70:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   // reset prescaler
+  71:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //GTCCR |= TSM;              
+  72:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRASY);              // reset prescaler
+  73:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  74:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** // Timer 1 High Precision Timer
+  75:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** // No interrupt, prescaler 1, Normal Operation
+  76:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR1A=0;  
+  77:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR1B=BM(CS10);  // clk I/O no prescale
+  78:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCNT1=0;  // 16 bit
+  79:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRASY);              // reset prescaler
+  80:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRSYNC);              // reset prescaler
+  81:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  82:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** // Timer 5 High Precision Time Sync Timer
+  83:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** // No interrupt, prescaler 1, Normal Operation
+  84:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR5A=0;
+  85:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //TIFR5=0; // Clear interrupt flags
+  86:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //TIMSK5=BM(TOIE5); // Overflow interrupt enable
+  87:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCNT5=0;  // 16 bit
+  88:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRASY);              // reset prescaler
+  89:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRSYNC);              // reset prescaler
+  90:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  91:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_os_timer_reset();
+  92:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_precision_os_timer_reset();
+  93:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_os_timer_start();
+  94:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_precision_os_timer_start();
+  95:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_time_trigger=0;
+  96:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+  97:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+  98:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_precision_os_timer_stop()
+  99:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 101               		.loc 1 99 0
+ 102               		.cfi_startproc
+ 103               	/* prologue: function */
+ 104               	/* frame size = 0 */
+ 105               	/* stack size = 0 */
+ 106               	.L__stack_usage = 0
+ 100:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR5B=0; // no clock
+ 107               		.loc 1 100 0
+ 108 0020 1092 2101 		sts 289,__zero_reg__
+ 109 0024 0895      		ret
+ 110               		.cfi_endproc
+ 111               	.LFE4:
+ 113               	.global	_nrk_precision_os_timer_start
+ 115               	_nrk_precision_os_timer_start:
+ 116               	.LFB5:
+ 101:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 102:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 103:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_precision_os_timer_start()
+ 104:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 117               		.loc 1 104 0
+ 118               		.cfi_startproc
+ 119               	/* prologue: function */
+ 120               	/* frame size = 0 */
+ 121               	/* stack size = 0 */
+ 122               	.L__stack_usage = 0
+ 105:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   // Set timer 5 to count up to the number of timer 5 ticks per OS tick and then reset to 0
+ 106:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   // Whenever you read it, this should indicate the offset into the OS tick
+ 107:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR5B=BM(WGM52) | BM(CS50);  // clk I/O no prescale, CTC match on OCR5A
+ 123               		.loc 1 107 0
+ 124 0026 89E0      		ldi r24,lo8(9)
+ 125 0028 8093 2101 		sts 289,r24
+ 108:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   OCR5A=PRECISION_TICKS_PER_TICK;  // Reset to 0 each tick...
+ 126               		.loc 1 108 0
+ 127 002c 8DE8      		ldi r24,lo8(-115)
+ 128 002e 9CE3      		ldi r25,lo8(60)
+ 129 0030 9093 2901 		sts 296+1,r25
+ 130 0034 8093 2801 		sts 296,r24
+ 131 0038 0895      		ret
+ 132               		.cfi_endproc
+ 133               	.LFE5:
+ 135               	.global	_nrk_precision_os_timer_reset
+ 137               	_nrk_precision_os_timer_reset:
+ 138               	.LFB6:
+ 109:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 110:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 111:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_precision_os_timer_reset()
+ 112:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 139               		.loc 1 112 0
+ 140               		.cfi_startproc
+ 141               	/* prologue: function */
+ 142               	/* frame size = 0 */
+ 143               	/* stack size = 0 */
+ 144               	.L__stack_usage = 0
+ 113:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //GTCCR |= BM(PSRSYNC);              // reset prescaler
+ 114:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCNT5=0;  // 16 bit
+ 145               		.loc 1 114 0
+ 146 003a 1092 2501 		sts 292+1,__zero_reg__
+ 147 003e 1092 2401 		sts 292,__zero_reg__
+ 148 0042 0895      		ret
+ 149               		.cfi_endproc
+ 150               	.LFE6:
+ 152               	.global	_nrk_precision_os_timer_get
+ 154               	_nrk_precision_os_timer_get:
+ 155               	.LFB7:
+ 115:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 116:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 117:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** inline uint16_t _nrk_precision_os_timer_get()
+ 118:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 156               		.loc 1 118 0
+ 157               		.cfi_startproc
+ 158 0044 CF93      		push r28
+ 159               	.LCFI0:
+ 160               		.cfi_def_cfa_offset 4
+ 161               		.cfi_offset 28, -3
+ 162 0046 DF93      		push r29
+ 163               	.LCFI1:
+ 164               		.cfi_def_cfa_offset 5
+ 165               		.cfi_offset 29, -4
+ 166 0048 1F92      		push __zero_reg__
+ 167 004a 1F92      		push __zero_reg__
+ 168               	.LCFI2:
+ 169               		.cfi_def_cfa_offset 7
+ 170 004c CDB7      		in r28,__SP_L__
+ 171 004e DEB7      		in r29,__SP_H__
+ 172               	.LCFI3:
+ 173               		.cfi_def_cfa_register 28
+ 174               	/* prologue: function */
+ 175               	/* frame size = 2 */
+ 176               	/* stack size = 4 */
+ 177               	.L__stack_usage = 4
+ 119:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** volatile uint16_t tmp;
+ 120:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   tmp=TCNT5;
+ 178               		.loc 1 120 0
+ 179 0050 8091 2401 		lds r24,292
+ 180 0054 9091 2501 		lds r25,292+1
+ 181 0058 9A83      		std Y+2,r25
+ 182 005a 8983      		std Y+1,r24
+ 121:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   
+ 122:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   return tmp;
+ 183               		.loc 1 122 0
+ 184 005c 8981      		ldd r24,Y+1
+ 185 005e 9A81      		ldd r25,Y+2
+ 186               	/* epilogue start */
+ 123:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 187               		.loc 1 123 0
+ 188 0060 0F90      		pop __tmp_reg__
+ 189 0062 0F90      		pop __tmp_reg__
+ 190 0064 DF91      		pop r29
+ 191 0066 CF91      		pop r28
+ 192 0068 0895      		ret
+ 193               		.cfi_endproc
+ 194               	.LFE7:
+ 196               	.global	_nrk_high_speed_timer_stop
+ 198               	_nrk_high_speed_timer_stop:
+ 199               	.LFB8:
+ 124:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 125:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_high_speed_timer_stop()
+ 126:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 200               		.loc 1 126 0
+ 201               		.cfi_startproc
+ 202               	/* prologue: function */
+ 203               	/* frame size = 0 */
+ 204               	/* stack size = 0 */
+ 205               	.L__stack_usage = 0
+ 127:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR1B=0;  // no clock 
+ 206               		.loc 1 127 0
+ 207 006a 1092 8100 		sts 129,__zero_reg__
+ 208 006e 0895      		ret
+ 209               		.cfi_endproc
+ 210               	.LFE8:
+ 212               	.global	_nrk_high_speed_timer_start
+ 214               	_nrk_high_speed_timer_start:
+ 215               	.LFB9:
+ 128:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 129:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 130:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_high_speed_timer_start()
+ 131:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 216               		.loc 1 131 0
+ 217               		.cfi_startproc
+ 218               	/* prologue: function */
+ 219               	/* frame size = 0 */
+ 220               	/* stack size = 0 */
+ 221               	.L__stack_usage = 0
+ 132:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR1B=BM(CS10);  // clk I/O no prescaler 
+ 222               		.loc 1 132 0
+ 223 0070 81E0      		ldi r24,lo8(1)
+ 224 0072 8093 8100 		sts 129,r24
+ 225 0076 0895      		ret
+ 226               		.cfi_endproc
+ 227               	.LFE9:
+ 229               	.global	_nrk_high_speed_timer_reset
+ 231               	_nrk_high_speed_timer_reset:
+ 232               	.LFB10:
+ 133:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 134:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 135:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_high_speed_timer_reset()
+ 136:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 233               		.loc 1 136 0
+ 234               		.cfi_startproc
+ 235               	/* prologue: function */
+ 236               	/* frame size = 0 */
+ 237               	/* stack size = 0 */
+ 238               	.L__stack_usage = 0
+ 137:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** //  nrk_int_disable();
+ 138:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //SFIOR |= BM(PSR321);              // reset prescaler
+ 139:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRSYNC);              // reset prescaler
+ 239               		.loc 1 139 0
+ 240 0078 83B5      		in r24,0x23
+ 241 007a 8160      		ori r24,lo8(1)
+ 242 007c 83BD      		out 0x23,r24
+ 140:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCNT1=0;
+ 243               		.loc 1 140 0
+ 244 007e 1092 8500 		sts 132+1,__zero_reg__
+ 245 0082 1092 8400 		sts 132,__zero_reg__
+ 246 0086 0895      		ret
+ 247               		.cfi_endproc
+ 248               	.LFE10:
+ 250               	.global	_nrk_high_speed_timer_get
+ 252               	_nrk_high_speed_timer_get:
+ 253               	.LFB12:
+ 141:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** //  nrk_int_enable();
+ 142:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 143:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 144:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** /**
+ 145:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   This function blocks for n ticks of the high speed timer after the
+ 146:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   start number of ticks.  It will handle the overflow that can occur.
+ 147:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   Do not use this for delays longer than 8ms!
+ 148:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** */
+ 149:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void nrk_high_speed_timer_wait( uint16_t start, uint16_t ticks )
+ 150:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 151:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** uint32_t tmp;
+ 152:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 153:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** // Adjust for 16MHz clock
+ 154:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** // Copy into tmp to avoid overflow problem
+ 155:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** tmp=start*2;
+ 156:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(tmp>65400) start=0;
+ 157:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** else start=tmp;
+ 158:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** tmp=(uint32_t)start+(uint32_t)ticks;
+ 159:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(tmp>65536) 
+ 160:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	{
+ 161:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	tmp-=65536;
+ 162:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	do{}while(_nrk_high_speed_timer_get()>start);
+ 163:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	}
+ 164:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 165:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** ticks=tmp;
+ 166:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** do{}while(_nrk_high_speed_timer_get()<ticks);
+ 167:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 168:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 169:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** inline uint16_t _nrk_high_speed_timer_get()
+ 170:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 254               		.loc 1 170 0
+ 255               		.cfi_startproc
+ 256 0088 CF93      		push r28
+ 257               	.LCFI4:
+ 258               		.cfi_def_cfa_offset 4
+ 259               		.cfi_offset 28, -3
+ 260 008a DF93      		push r29
+ 261               	.LCFI5:
+ 262               		.cfi_def_cfa_offset 5
+ 263               		.cfi_offset 29, -4
+ 264 008c 1F92      		push __zero_reg__
+ 265 008e 1F92      		push __zero_reg__
+ 266               	.LCFI6:
+ 267               		.cfi_def_cfa_offset 7
+ 268 0090 CDB7      		in r28,__SP_L__
+ 269 0092 DEB7      		in r29,__SP_H__
+ 270               	.LCFI7:
+ 271               		.cfi_def_cfa_register 28
+ 272               	/* prologue: function */
+ 273               	/* frame size = 2 */
+ 274               	/* stack size = 4 */
+ 275               	.L__stack_usage = 4
+ 171:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** volatile uint16_t tmp;
+ 172:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //nrk_int_disable();
+ 173:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   tmp=TCNT1;
+ 276               		.loc 1 173 0
+ 277 0094 8091 8400 		lds r24,132
+ 278 0098 9091 8500 		lds r25,132+1
+ 279 009c 9A83      		std Y+2,r25
+ 280 009e 8983      		std Y+1,r24
+ 174:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //nrk_int_enable();
+ 175:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   return tmp;
+ 281               		.loc 1 175 0
+ 282 00a0 8981      		ldd r24,Y+1
+ 283 00a2 9A81      		ldd r25,Y+2
+ 284               	/* epilogue start */
+ 176:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 285               		.loc 1 176 0
+ 286 00a4 0F90      		pop __tmp_reg__
+ 287 00a6 0F90      		pop __tmp_reg__
+ 288 00a8 DF91      		pop r29
+ 289 00aa CF91      		pop r28
+ 290 00ac 0895      		ret
+ 291               		.cfi_endproc
+ 292               	.LFE12:
+ 294               	.global	nrk_high_speed_timer_wait
+ 296               	nrk_high_speed_timer_wait:
+ 297               	.LFB11:
+ 150:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 298               		.loc 1 150 0
+ 299               		.cfi_startproc
+ 300               	.LVL2:
+ 301 00ae CF92      		push r12
+ 302               	.LCFI8:
+ 303               		.cfi_def_cfa_offset 4
+ 304               		.cfi_offset 12, -3
+ 305 00b0 DF92      		push r13
+ 306               	.LCFI9:
+ 307               		.cfi_def_cfa_offset 5
+ 308               		.cfi_offset 13, -4
+ 309 00b2 EF92      		push r14
+ 310               	.LCFI10:
+ 311               		.cfi_def_cfa_offset 6
+ 312               		.cfi_offset 14, -5
+ 313 00b4 FF92      		push r15
+ 314               	.LCFI11:
+ 315               		.cfi_def_cfa_offset 7
+ 316               		.cfi_offset 15, -6
+ 317 00b6 CF93      		push r28
+ 318               	.LCFI12:
+ 319               		.cfi_def_cfa_offset 8
+ 320               		.cfi_offset 28, -7
+ 321 00b8 DF93      		push r29
+ 322               	.LCFI13:
+ 323               		.cfi_def_cfa_offset 9
+ 324               		.cfi_offset 29, -8
+ 325               	/* prologue: function */
+ 326               	/* frame size = 0 */
+ 327               	/* stack size = 6 */
+ 328               	.L__stack_usage = 6
+ 155:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** tmp=start*2;
+ 329               		.loc 1 155 0
+ 330 00ba EC01      		movw r28,r24
+ 331 00bc CC0F      		lsl r28
+ 332 00be DD1F      		rol r29
+ 333               	.LVL3:
+ 156:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(tmp>65400) start=0;
+ 334               		.loc 1 156 0
+ 335 00c0 C937      		cpi r28,121
+ 336 00c2 8FEF      		ldi r24,-1
+ 337 00c4 D807      		cpc r29,r24
+ 338 00c6 00F0      		brlo .L14
+ 339 00c8 C0E0      		ldi r28,0
+ 340 00ca D0E0      		ldi r29,0
+ 341               	.LVL4:
+ 342               	.L14:
+ 158:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** tmp=(uint32_t)start+(uint32_t)ticks;
+ 343               		.loc 1 158 0
+ 344 00cc 6B01      		movw r12,r22
+ 345 00ce E12C      		mov r14,__zero_reg__
+ 346 00d0 F12C      		mov r15,__zero_reg__
+ 347 00d2 CC0E      		add r12,r28
+ 348 00d4 DD1E      		adc r13,r29
+ 349 00d6 E11C      		adc r14,__zero_reg__
+ 350 00d8 F11C      		adc r15,__zero_reg__
+ 351               	.LVL5:
+ 159:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(tmp>65536) 
+ 352               		.loc 1 159 0
+ 353 00da 81E0      		ldi r24,1
+ 354 00dc C816      		cp r12,r24
+ 355 00de D104      		cpc r13,__zero_reg__
+ 356 00e0 E806      		cpc r14,r24
+ 357 00e2 F104      		cpc r15,__zero_reg__
+ 358 00e4 00F0      		brlo .L18
+ 359               	.LVL6:
+ 161:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	tmp-=65536;
+ 360               		.loc 1 161 0
+ 361 00e6 81E0      		ldi r24,1
+ 362 00e8 E81A      		sub r14,r24
+ 363 00ea F108      		sbc r15,__zero_reg__
+ 364               	.LVL7:
+ 365               	.L16:
+ 162:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	do{}while(_nrk_high_speed_timer_get()>start);
+ 366               		.loc 1 162 0 discriminator 1
+ 367 00ec 0E94 0000 		call _nrk_high_speed_timer_get
+ 368               	.LVL8:
+ 369 00f0 C817      		cp r28,r24
+ 370 00f2 D907      		cpc r29,r25
+ 371 00f4 00F0      		brlo .L16
+ 372               	.L18:
+ 166:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** do{}while(_nrk_high_speed_timer_get()<ticks);
+ 373               		.loc 1 166 0 discriminator 1
+ 374 00f6 0E94 0000 		call _nrk_high_speed_timer_get
+ 375               	.LVL9:
+ 376 00fa 8C15      		cp r24,r12
+ 377 00fc 9D05      		cpc r25,r13
+ 378 00fe 00F0      		brlo .L18
+ 379               	/* epilogue start */
+ 167:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 380               		.loc 1 167 0
+ 381 0100 DF91      		pop r29
+ 382 0102 CF91      		pop r28
+ 383               	.LVL10:
+ 384 0104 FF90      		pop r15
+ 385 0106 EF90      		pop r14
+ 386 0108 DF90      		pop r13
+ 387 010a CF90      		pop r12
+ 388               	.LVL11:
+ 389 010c 0895      		ret
+ 390               		.cfi_endproc
+ 391               	.LFE11:
+ 393               	.global	_nrk_os_timer_stop
+ 395               	_nrk_os_timer_stop:
+ 396               	.LFB13:
+ 177:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 178:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** inline void _nrk_os_timer_stop()
+ 179:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 397               		.loc 1 179 0
+ 398               		.cfi_startproc
+ 399               	/* prologue: function */
+ 400               	/* frame size = 0 */
+ 401               	/* stack size = 0 */
+ 402               	.L__stack_usage = 0
+ 180:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR2B=0;  // stop timer 
+ 403               		.loc 1 180 0
+ 404 010e 1092 B100 		sts 177,__zero_reg__
+ 181:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TIMSK2 &=  ~BM(OCIE2A) ;
+ 405               		.loc 1 181 0
+ 406 0112 E0E7      		ldi r30,lo8(112)
+ 407 0114 F0E0      		ldi r31,0
+ 408 0116 8081      		ld r24,Z
+ 409 0118 8D7F      		andi r24,lo8(-3)
+ 410 011a 8083      		st Z,r24
+ 182:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //TIMSK2 &=  ~BM(OCIE2B) ;
+ 183:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TIMSK2 &=  ~BM(TOIE2) ;
+ 411               		.loc 1 183 0
+ 412 011c 8081      		ld r24,Z
+ 413 011e 8E7F      		andi r24,lo8(-2)
+ 414 0120 8083      		st Z,r24
+ 415 0122 0895      		ret
+ 416               		.cfi_endproc
+ 417               	.LFE13:
+ 419               	.global	_nrk_os_timer_set
+ 421               	_nrk_os_timer_set:
+ 422               	.LFB14:
+ 184:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 185:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 186:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** inline void _nrk_os_timer_set(uint8_t v)
+ 187:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 423               		.loc 1 187 0
+ 424               		.cfi_startproc
+ 425               	.LVL12:
+ 426               	/* prologue: function */
+ 427               	/* frame size = 0 */
+ 428               	/* stack size = 0 */
+ 429               	.L__stack_usage = 0
+ 188:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** TCNT2=v;
+ 430               		.loc 1 188 0
+ 431 0124 8093 B200 		sts 178,r24
+ 432 0128 0895      		ret
+ 433               		.cfi_endproc
+ 434               	.LFE14:
+ 436               	.global	_nrk_os_timer_start
+ 438               	_nrk_os_timer_start:
+ 439               	.LFB15:
+ 189:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 190:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    
+ 191:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** inline void _nrk_os_timer_start()
+ 192:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 440               		.loc 1 192 0
+ 441               		.cfi_startproc
+ 442               	/* prologue: function */
+ 443               	/* frame size = 0 */
+ 444               	/* stack size = 0 */
+ 445               	.L__stack_usage = 0
+ 193:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //GTCCR |= BM(PSRASY);              // reset prescaler
+ 194:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   //TCNT2 = 0;                  // reset counter
+ 195:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TIMSK2 |=   BM(OCIE2A)| BM(TOIE2);// | BM(OCIE2B);//| BM(TICIE1);    // Enable interrupt
+ 446               		.loc 1 195 0
+ 447 012a E0E7      		ldi r30,lo8(112)
+ 448 012c F0E0      		ldi r31,0
+ 449 012e 8081      		ld r24,Z
+ 450 0130 8360      		ori r24,lo8(3)
+ 451 0132 8083      		st Z,r24
+ 196:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR2B = BM(CS21) | BM(CS20); //|     // reset counter on interrupt, set divider to 128
+ 452               		.loc 1 196 0
+ 453 0134 83E0      		ldi r24,lo8(3)
+ 454 0136 8093 B100 		sts 177,r24
+ 455 013a 0895      		ret
+ 456               		.cfi_endproc
+ 457               	.LFE15:
+ 459               	.global	_nrk_os_timer_reset
+ 461               	_nrk_os_timer_reset:
+ 462               	.LFB16:
+ 197:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 198:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 199:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** inline void _nrk_os_timer_reset()
+ 200:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 463               		.loc 1 200 0
+ 464               		.cfi_startproc
+ 465               	/* prologue: function */
+ 466               	/* frame size = 0 */
+ 467               	/* stack size = 0 */
+ 468               	.L__stack_usage = 0
+ 201:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 202:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****     GTCCR |= BM(PSRASY);              // reset prescaler
+ 469               		.loc 1 202 0
+ 470 013c 83B5      		in r24,0x23
+ 471 013e 8260      		ori r24,lo8(2)
+ 472 0140 83BD      		out 0x23,r24
+ 203:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****     TCNT2 = 0;                  // reset counter
+ 473               		.loc 1 203 0
+ 474 0142 1092 B200 		sts 178,__zero_reg__
+ 204:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****     _nrk_time_trigger=0;
+ 475               		.loc 1 204 0
+ 476 0146 1092 0000 		sts _nrk_time_trigger,__zero_reg__
+ 205:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****     _nrk_prev_timer_val=0;
+ 477               		.loc 1 205 0
+ 478 014a 1092 0000 		sts _nrk_prev_timer_val,__zero_reg__
+ 479 014e 0895      		ret
+ 480               		.cfi_endproc
+ 481               	.LFE16:
+ 483               	.global	_nrk_setup_timer
+ 485               	_nrk_setup_timer:
+ 486               	.LFB3:
+  55:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_setup_timer() {
+ 487               		.loc 1 55 0
+ 488               		.cfi_startproc
+ 489 0150 CF93      		push r28
+ 490               	.LCFI14:
+ 491               		.cfi_def_cfa_offset 4
+ 492               		.cfi_offset 28, -3
+ 493 0152 DF93      		push r29
+ 494               	.LCFI15:
+ 495               		.cfi_def_cfa_offset 5
+ 496               		.cfi_offset 29, -4
+ 497               	/* prologue: function */
+ 498               	/* frame size = 0 */
+ 499               	/* stack size = 2 */
+ 500               	.L__stack_usage = 2
+  56:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_prev_timer_val=254;
+ 501               		.loc 1 56 0
+ 502 0154 8EEF      		ldi r24,lo8(-2)
+ 503 0156 8093 0000 		sts _nrk_prev_timer_val,r24
+  59:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   ASSR = BM(AS2);
+ 504               		.loc 1 59 0
+ 505 015a 80E2      		ldi r24,lo8(32)
+ 506 015c 8093 B600 		sts 182,r24
+  60:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   OCR2A = _nrk_prev_timer_val;
+ 507               		.loc 1 60 0
+ 508 0160 8091 0000 		lds r24,_nrk_prev_timer_val
+ 509 0164 8093 B300 		sts 179,r24
+  62:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TIFR2 =   BM(OCF2A) | BM(TOV2); //| BM(OCF2B2) ;       // Clear interrupt flag
+ 510               		.loc 1 62 0
+ 511 0168 83E0      		ldi r24,lo8(3)
+ 512 016a 87BB      		out 0x17,r24
+  63:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR2A = BM(WGM21);
+ 513               		.loc 1 63 0
+ 514 016c 92E0      		ldi r25,lo8(2)
+ 515 016e 9093 B000 		sts 176,r25
+  64:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR2B = BM(CS21) | BM(CS20); //|      // reset counter on interrupt, set divider to 128
+ 516               		.loc 1 64 0
+ 517 0172 8093 B100 		sts 177,r24
+  65:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRASY);              // reset prescaler
+ 518               		.loc 1 65 0
+ 519 0176 93B5      		in r25,0x23
+ 520 0178 9260      		ori r25,lo8(2)
+ 521 017a 93BD      		out 0x23,r25
+  67:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TIFR2 =   BM(OCF2A) | BM(TOV2);    
+ 522               		.loc 1 67 0
+ 523 017c 87BB      		out 0x17,r24
+  69:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR0A = BM(WGM01) | BM(CS01) | BM(CS00); 
+ 524               		.loc 1 69 0
+ 525 017e 84BD      		out 0x24,r24
+  72:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRASY);              // reset prescaler
+ 526               		.loc 1 72 0
+ 527 0180 83B5      		in r24,0x23
+ 528 0182 8260      		ori r24,lo8(2)
+ 529 0184 83BD      		out 0x23,r24
+  76:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR1A=0;  
+ 530               		.loc 1 76 0
+ 531 0186 1092 8000 		sts 128,__zero_reg__
+  77:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR1B=BM(CS10);  // clk I/O no prescale
+ 532               		.loc 1 77 0
+ 533 018a 81E0      		ldi r24,lo8(1)
+ 534 018c 8093 8100 		sts 129,r24
+  78:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCNT1=0;  // 16 bit
+ 535               		.loc 1 78 0
+ 536 0190 1092 8500 		sts 132+1,__zero_reg__
+ 537 0194 1092 8400 		sts 132,__zero_reg__
+  79:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRASY);              // reset prescaler
+ 538               		.loc 1 79 0
+ 539 0198 83B5      		in r24,0x23
+ 540 019a 8260      		ori r24,lo8(2)
+ 541 019c 83BD      		out 0x23,r24
+  80:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRSYNC);              // reset prescaler
+ 542               		.loc 1 80 0
+ 543 019e 83B5      		in r24,0x23
+ 544 01a0 8160      		ori r24,lo8(1)
+ 545 01a2 83BD      		out 0x23,r24
+  84:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCCR5A=0;
+ 546               		.loc 1 84 0
+ 547 01a4 1092 2001 		sts 288,__zero_reg__
+  87:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCNT5=0;  // 16 bit
+ 548               		.loc 1 87 0
+ 549 01a8 C4E2      		ldi r28,lo8(36)
+ 550 01aa D1E0      		ldi r29,lo8(1)
+ 551 01ac 1982      		std Y+1,__zero_reg__
+ 552 01ae 1882      		st Y,__zero_reg__
+  88:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRASY);              // reset prescaler
+ 553               		.loc 1 88 0
+ 554 01b0 83B5      		in r24,0x23
+ 555 01b2 8260      		ori r24,lo8(2)
+ 556 01b4 83BD      		out 0x23,r24
+  89:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   GTCCR |= BM(PSRSYNC);              // reset prescaler
+ 557               		.loc 1 89 0
+ 558 01b6 83B5      		in r24,0x23
+ 559 01b8 8160      		ori r24,lo8(1)
+ 560 01ba 83BD      		out 0x23,r24
+  91:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_os_timer_reset();
+ 561               		.loc 1 91 0
+ 562 01bc 0E94 0000 		call _nrk_os_timer_reset
+ 563               	.LVL13:
+ 564               	.LBB4:
+ 565               	.LBB5:
+ 114:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   TCNT5=0;  // 16 bit
+ 566               		.loc 1 114 0
+ 567 01c0 1982      		std Y+1,__zero_reg__
+ 568 01c2 1882      		st Y,__zero_reg__
+ 569               	.LBE5:
+ 570               	.LBE4:
+  93:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_os_timer_start();
+ 571               		.loc 1 93 0
+ 572 01c4 0E94 0000 		call _nrk_os_timer_start
+ 573               	.LVL14:
+  94:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_precision_os_timer_start();
+ 574               		.loc 1 94 0
+ 575 01c8 0E94 0000 		call _nrk_precision_os_timer_start
+ 576               	.LVL15:
+  95:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   _nrk_time_trigger=0;
+ 577               		.loc 1 95 0
+ 578 01cc 1092 0000 		sts _nrk_time_trigger,__zero_reg__
+ 579               	/* epilogue start */
+  96:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 580               		.loc 1 96 0
+ 581 01d0 DF91      		pop r29
+ 582 01d2 CF91      		pop r28
+ 583 01d4 0895      		ret
+ 584               		.cfi_endproc
+ 585               	.LFE3:
+ 587               	.global	_nrk_get_next_wakeup
+ 589               	_nrk_get_next_wakeup:
+ 590               	.LFB17:
+ 206:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 207:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 208:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 209:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** uint8_t _nrk_get_next_wakeup()
+ 210:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 591               		.loc 1 210 0
+ 592               		.cfi_startproc
+ 593               	/* prologue: function */
+ 594               	/* frame size = 0 */
+ 595               	/* stack size = 0 */
+ 596               	.L__stack_usage = 0
+ 211:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return (uint8_t)(OCR2A+1);
+ 597               		.loc 1 211 0
+ 598 01d6 8091 B300 		lds r24,179
+ 212:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 599               		.loc 1 212 0
+ 600 01da 8F5F      		subi r24,lo8(-(1))
+ 601 01dc 0895      		ret
+ 602               		.cfi_endproc
+ 603               	.LFE17:
+ 605               	.global	_nrk_set_next_wakeup
+ 607               	_nrk_set_next_wakeup:
+ 608               	.LFB18:
+ 213:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 214:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void _nrk_set_next_wakeup(uint8_t nw)
+ 215:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 609               		.loc 1 215 0
+ 610               		.cfi_startproc
+ 611               	.LVL16:
+ 612               	/* prologue: function */
+ 613               	/* frame size = 0 */
+ 614               	/* stack size = 0 */
+ 615               	.L__stack_usage = 0
+ 216:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    OCR2A = nw-1;
+ 616               		.loc 1 216 0
+ 617 01de 8150      		subi r24,lo8(-(-1))
+ 618               	.LVL17:
+ 619 01e0 8093 B300 		sts 179,r24
+ 620 01e4 0895      		ret
+ 621               		.cfi_endproc
+ 622               	.LFE18:
+ 624               	.global	nrk_timer_int_stop
+ 626               	nrk_timer_int_stop:
+ 627               	.LFB19:
+ 217:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 218:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 219:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** int8_t nrk_timer_int_stop(uint8_t timer )
+ 220:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 628               		.loc 1 220 0
+ 629               		.cfi_startproc
+ 630               	.LVL18:
+ 631               	/* prologue: function */
+ 632               	/* frame size = 0 */
+ 633               	/* stack size = 0 */
+ 634               	.L__stack_usage = 0
+ 221:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(timer==NRK_APP_TIMER_0)
+ 635               		.loc 1 221 0
+ 636 01e6 8111      		cpse r24,__zero_reg__
+ 637 01e8 00C0      		rjmp .L27
+ 222:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	{
+ 223:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	TIMSK3 = 0;
+ 638               		.loc 1 223 0
+ 639 01ea 1092 7100 		sts 113,__zero_reg__
+ 640               	.L27:
+ 224:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	}
+ 225:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** return NRK_ERROR;
+ 226:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 641               		.loc 1 226 0
+ 642 01ee 8FEF      		ldi r24,lo8(-1)
+ 643               	.LVL19:
+ 644 01f0 0895      		ret
+ 645               		.cfi_endproc
+ 646               	.LFE19:
+ 648               	.global	nrk_timer_int_reset
+ 650               	nrk_timer_int_reset:
+ 651               	.LFB20:
+ 227:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 228:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** int8_t nrk_timer_int_reset(uint8_t timer )
+ 229:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 652               		.loc 1 229 0
+ 653               		.cfi_startproc
+ 654               	.LVL20:
+ 655               	/* prologue: function */
+ 656               	/* frame size = 0 */
+ 657               	/* stack size = 0 */
+ 658               	.L__stack_usage = 0
+ 230:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(timer==NRK_APP_TIMER_0)
+ 659               		.loc 1 230 0
+ 660 01f2 8111      		cpse r24,__zero_reg__
+ 661 01f4 00C0      		rjmp .L30
+ 231:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	{
+ 232:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	TCNT3=0;
+ 662               		.loc 1 232 0
+ 663 01f6 1092 9500 		sts 148+1,__zero_reg__
+ 664 01fa 1092 9400 		sts 148,__zero_reg__
+ 233:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return NRK_OK;
+ 665               		.loc 1 233 0
+ 666 01fe 81E0      		ldi r24,lo8(1)
+ 667               	.LVL21:
+ 668 0200 0895      		ret
+ 669               	.LVL22:
+ 670               	.L30:
+ 234:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	}
+ 235:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** return NRK_ERROR;
+ 671               		.loc 1 235 0
+ 672 0202 8FEF      		ldi r24,lo8(-1)
+ 673               	.LVL23:
+ 236:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 674               		.loc 1 236 0
+ 675 0204 0895      		ret
+ 676               		.cfi_endproc
+ 677               	.LFE20:
+ 679               	.global	nrk_timer_int_read
+ 681               	nrk_timer_int_read:
+ 682               	.LFB21:
+ 237:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 238:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** uint16_t nrk_timer_int_read(uint8_t timer )
+ 239:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 683               		.loc 1 239 0
+ 684               		.cfi_startproc
+ 685               	.LVL24:
+ 686               	/* prologue: function */
+ 687               	/* frame size = 0 */
+ 688               	/* stack size = 0 */
+ 689               	.L__stack_usage = 0
+ 240:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(timer==NRK_APP_TIMER_0)
+ 690               		.loc 1 240 0
+ 691 0206 8111      		cpse r24,__zero_reg__
+ 692 0208 00C0      		rjmp .L33
+ 241:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	{
+ 242:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return TCNT3;
+ 693               		.loc 1 242 0
+ 694 020a 8091 9400 		lds r24,148
+ 695 020e 9091 9500 		lds r25,148+1
+ 696               	.LVL25:
+ 697 0212 0895      		ret
+ 698               	.LVL26:
+ 699               	.L33:
+ 243:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	}
+ 244:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** return 0;
+ 700               		.loc 1 244 0
+ 701 0214 80E0      		ldi r24,0
+ 702 0216 90E0      		ldi r25,0
+ 703               	.LVL27:
+ 245:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 246:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 704               		.loc 1 246 0
+ 705 0218 0895      		ret
+ 706               		.cfi_endproc
+ 707               	.LFE21:
+ 709               	.global	nrk_timer_int_start
+ 711               	nrk_timer_int_start:
+ 712               	.LFB22:
+ 247:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 248:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** int8_t  nrk_timer_int_start(uint8_t timer)
+ 249:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 713               		.loc 1 249 0
+ 714               		.cfi_startproc
+ 715               	.LVL28:
+ 716               	/* prologue: function */
+ 717               	/* frame size = 0 */
+ 718               	/* stack size = 0 */
+ 719               	.L__stack_usage = 0
+ 250:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(timer==NRK_APP_TIMER_0)
+ 720               		.loc 1 250 0
+ 721 021a 8111      		cpse r24,__zero_reg__
+ 722 021c 00C0      		rjmp .L36
+ 251:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	{
+ 252:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 		TIMSK3 = BM(OCIE3A);
+ 723               		.loc 1 252 0
+ 724 021e 82E0      		ldi r24,lo8(2)
+ 725               	.LVL29:
+ 726 0220 8093 7100 		sts 113,r24
+ 253:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return NRK_OK;
+ 727               		.loc 1 253 0
+ 728 0224 81E0      		ldi r24,lo8(1)
+ 729 0226 0895      		ret
+ 730               	.LVL30:
+ 731               	.L36:
+ 254:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	}
+ 255:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** return NRK_ERROR;
+ 732               		.loc 1 255 0
+ 733 0228 8FEF      		ldi r24,lo8(-1)
+ 734               	.LVL31:
+ 256:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 735               		.loc 1 256 0
+ 736 022a 0895      		ret
+ 737               		.cfi_endproc
+ 738               	.LFE22:
+ 740               	.global	nrk_timer_int_configure
+ 742               	nrk_timer_int_configure:
+ 743               	.LFB23:
+ 257:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 258:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** int8_t  nrk_timer_int_configure(uint8_t timer, uint16_t prescaler, uint16_t compare_value, void *ca
+ 259:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 744               		.loc 1 259 0
+ 745               		.cfi_startproc
+ 746               	.LVL32:
+ 747               	/* prologue: function */
+ 748               	/* frame size = 0 */
+ 749               	/* stack size = 0 */
+ 750               	.L__stack_usage = 0
+ 260:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** if(timer==NRK_APP_TIMER_0)
+ 751               		.loc 1 260 0
+ 752 022c 8111      		cpse r24,__zero_reg__
+ 753 022e 00C0      		rjmp .L44
+ 261:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	{
+ 262:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	if(prescaler>0 && prescaler<6 ) app_timer0_prescale=prescaler;
+ 754               		.loc 1 262 0
+ 755 0230 CB01      		movw r24,r22
+ 756               	.LVL33:
+ 757 0232 0197      		sbiw r24,1
+ 758 0234 0597      		sbiw r24,5
+ 759 0236 00F4      		brsh .L39
+ 760               		.loc 1 262 0 is_stmt 0 discriminator 1
+ 761 0238 6093 0000 		sts app_timer0_prescale,r22
+ 762               	.L39:
+ 263:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	TCCR3A = 0;  
+ 763               		.loc 1 263 0 is_stmt 1
+ 764 023c 1092 9000 		sts 144,__zero_reg__
+ 264:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	TCCR3B = BM(WGM32);  // Automatic restart on compare, count up
+ 765               		.loc 1 264 0
+ 766 0240 88E0      		ldi r24,lo8(8)
+ 767 0242 8093 9100 		sts 145,r24
+ 265:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         OCR3AH = (compare_value >> 8) & 0xFF;	
+ 768               		.loc 1 265 0
+ 769 0246 5093 9900 		sts 153,r21
+ 266:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   	OCR3AL = (compare_value & 0xFF );
+ 770               		.loc 1 266 0
+ 771 024a 4093 9800 		sts 152,r20
+ 267:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	app_timer0_callback=callback_func;
+ 772               		.loc 1 267 0
+ 773 024e 3093 0000 		sts app_timer0_callback+1,r19
+ 774 0252 2093 0000 		sts app_timer0_callback,r18
+ 268:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	if(app_timer0_prescale==1) TCCR3B |= BM(CS30);  
+ 775               		.loc 1 268 0
+ 776 0256 8091 0000 		lds r24,app_timer0_prescale
+ 777 025a 8130      		cpi r24,lo8(1)
+ 778 025c 01F4      		brne .L40
+ 779               		.loc 1 268 0 is_stmt 0 discriminator 1
+ 780 025e 8091 9100 		lds r24,145
+ 781 0262 8160      		ori r24,lo8(1)
+ 782 0264 00C0      		rjmp .L46
+ 783               	.L40:
+ 269:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	// Divide by 1
+ 270:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	else if(app_timer0_prescale==2) TCCR3B |= BM(CS31); 
+ 784               		.loc 1 270 0 is_stmt 1
+ 785 0266 8230      		cpi r24,lo8(2)
+ 786 0268 01F4      		brne .L41
+ 787               		.loc 1 270 0 is_stmt 0 discriminator 1
+ 788 026a 8091 9100 		lds r24,145
+ 789 026e 8260      		ori r24,lo8(2)
+ 790 0270 00C0      		rjmp .L46
+ 791               	.L41:
+ 271:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	// Divide by 8
+ 272:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	else if(app_timer0_prescale==3) TCCR3B |= BM(CS31) | BM(CS30);  
+ 792               		.loc 1 272 0 is_stmt 1
+ 793 0272 8330      		cpi r24,lo8(3)
+ 794 0274 01F4      		brne .L42
+ 795               		.loc 1 272 0 is_stmt 0 discriminator 1
+ 796 0276 8091 9100 		lds r24,145
+ 797 027a 8360      		ori r24,lo8(3)
+ 798 027c 00C0      		rjmp .L46
+ 799               	.L42:
+ 273:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	// Divide by 64
+ 274:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	else if(app_timer0_prescale==4) TCCR3B |= BM(CS32) ;  
+ 800               		.loc 1 274 0 is_stmt 1
+ 801 027e 8430      		cpi r24,lo8(4)
+ 802 0280 01F4      		brne .L43
+ 803               		.loc 1 274 0 is_stmt 0 discriminator 1
+ 804 0282 8091 9100 		lds r24,145
+ 805 0286 8460      		ori r24,lo8(4)
+ 806               	.L46:
+ 807 0288 8093 9100 		sts 145,r24
+ 808 028c 00C0      		rjmp .L45
+ 809               	.L43:
+ 275:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	// Divide by 256 
+ 276:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	else if(app_timer0_prescale==5) TCCR3B |= BM(CS32) | BM(CS30);  
+ 810               		.loc 1 276 0 is_stmt 1
+ 811 028e 8530      		cpi r24,lo8(5)
+ 812 0290 01F4      		brne .L45
+ 813               		.loc 1 276 0 is_stmt 0 discriminator 1
+ 814 0292 8091 9100 		lds r24,145
+ 815 0296 8560      		ori r24,lo8(5)
+ 816 0298 00C0      		rjmp .L46
+ 817               	.LVL34:
+ 818               	.L44:
+ 277:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	// Divide by 1024
+ 278:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return NRK_OK;
+ 279:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	}
+ 280:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 281:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** return NRK_ERROR;
+ 819               		.loc 1 281 0 is_stmt 1
+ 820 029a 8FEF      		ldi r24,lo8(-1)
+ 821               	.LVL35:
+ 822 029c 0895      		ret
+ 823               	.L45:
+ 278:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return NRK_OK;
+ 824               		.loc 1 278 0
+ 825 029e 81E0      		ldi r24,lo8(1)
+ 282:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 826               		.loc 1 282 0
+ 827 02a0 0895      		ret
+ 828               		.cfi_endproc
+ 829               	.LFE23:
+ 831               	.global	_nrk_os_timer_get
+ 833               	_nrk_os_timer_get:
+ 834               	.LFB24:
+ 283:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 284:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 285:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** inline uint8_t _nrk_os_timer_get()
+ 286:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** {
+ 835               		.loc 1 286 0
+ 836               		.cfi_startproc
+ 837               	/* prologue: function */
+ 838               	/* frame size = 0 */
+ 839               	/* stack size = 0 */
+ 840               	.L__stack_usage = 0
+ 287:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****   return (volatile uint8_t)TCNT2;
+ 841               		.loc 1 287 0
+ 842 02a2 8091 B200 		lds r24,178
+ 288:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 843               		.loc 1 288 0
+ 844 02a6 0895      		ret
+ 845               		.cfi_endproc
+ 846               	.LFE24:
+ 848               	.global	__vector_default
+ 850               	__vector_default:
+ 851               	.LFB25:
+ 289:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 290:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** //--------------------------------------------------------------------------------------
+ 291:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** //  Default ISR 
+ 292:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** //--------------------------------------------------------------------------------------
+ 293:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** SIGNAL(__vector_default) {
+ 852               		.loc 1 293 0
+ 853               		.cfi_startproc
+ 854 02a8 1F92      		push r1
+ 855               	.LCFI16:
+ 856               		.cfi_def_cfa_offset 4
+ 857               		.cfi_offset 1, -3
+ 858 02aa 0F92      		push r0
+ 859               	.LCFI17:
+ 860               		.cfi_def_cfa_offset 5
+ 861               		.cfi_offset 0, -4
+ 862 02ac 0FB6      		in r0,__SREG__
+ 863 02ae 0F92      		push r0
+ 864 02b0 1124      		clr __zero_reg__
+ 865               	/* prologue: Signal */
+ 866               	/* frame size = 0 */
+ 867               	/* stack size = 3 */
+ 868               	.L__stack_usage = 3
+ 294:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	nrk_kernel_error_add(NRK_SEG_FAULT,0);
+ 869               		.loc 1 294 0
+ 870 02b2 60E0      		ldi r22,0
+ 871 02b4 8AE0      		ldi r24,lo8(10)
+ 872 02b6 0E94 0000 		call nrk_kernel_error_add
+ 873               	.LVL36:
+ 874               	.L49:
+ 875 02ba 00C0      		rjmp .L49
+ 876               		.cfi_endproc
+ 877               	.LFE25:
+ 879               	.global	__vector_15
+ 881               	__vector_15:
+ 882               	.LFB26:
+ 295:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	while(1);
+ 296:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 297:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 298:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void TIMER2_OVF_vect( void ) __attribute__ ( ( signal,naked ));
+ 299:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void TIMER2_OVF_vect(void) {
+ 883               		.loc 1 299 0
+ 884               		.cfi_startproc
+ 885               	/* prologue: naked */
+ 886               	/* frame size = 0 */
+ 887               	/* stack size = 0 */
+ 888               	.L__stack_usage = 0
+ 889               	/* epilogue start */
+ 300:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	#ifdef NRK_KERNEL_TEST
+ 301:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****         nrk_kernel_error_add(NRK_TIMER_OVERFLOW,0);
+ 302:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	#endif
+ 303:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 304:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return;  	
+ 305:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** } 
+ 890               		.loc 1 305 0
+ 891               		.cfi_endproc
+ 892               	.LFE26:
+ 894               	.global	__vector_13
+ 896               	__vector_13:
+ 897               	.LFB27:
+ 306:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 307:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 308:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** // This is the SUSPEND for the OS timer Tick
+ 309:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void TIMER2_COMPA_vect( void ) __attribute__ ( ( signal,naked ));
+ 310:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** void TIMER2_COMPA_vect(void) {
+ 898               		.loc 1 310 0
+ 899               		.cfi_startproc
+ 900               	/* prologue: naked */
+ 901               	/* frame size = 0 */
+ 902               	/* stack size = 0 */
+ 903               	.L__stack_usage = 0
+ 311:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 312:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** asm volatile (
+ 904               		.loc 1 312 0
+ 905               	/* #APP */
+ 906               	 ;  312 "/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c" 1
+ 907 02bc 0F92      		push    r0 
+ 908 02be 0FB6      		in      r0, __SREG__  
+ 909 02c0 0F92      		push    r0  
+ 910 02c2 1F92      		push    r1 
+ 911 02c4 2F92      		push    r2 
+ 912 02c6 3F92      		push    r3 
+ 913 02c8 4F92      		push    r4 
+ 914 02ca 5F92      		push    r5 
+ 915 02cc 6F92      		push    r6 
+ 916 02ce 7F92      		push    r7 
+ 917 02d0 8F92      		push    r8 
+ 918 02d2 9F92      		push    r9 
+ 919 02d4 AF92      		push    r10 
+ 920 02d6 BF92      		push    r11 
+ 921 02d8 CF92      		push    r12 
+ 922 02da DF92      		push    r13 
+ 923 02dc EF92      		push    r14 
+ 924 02de FF92      		push    r15 
+ 925 02e0 0F93      		push    r16 
+ 926 02e2 1F93      		push    r17 
+ 927 02e4 2F93      		push    r18 
+ 928 02e6 3F93      		push    r19 
+ 929 02e8 4F93      		push    r20 
+ 930 02ea 5F93      		push    r21 
+ 931 02ec 6F93      		push    r22 
+ 932 02ee 7F93      		push    r23 
+ 933 02f0 8F93      		push    r24 
+ 934 02f2 9F93      		push    r25 
+ 935 02f4 AF93      		push    r26 
+ 936 02f6 BF93      		push    r27 
+ 937 02f8 CF93      		push    r28 
+ 938 02fa DF93      		push    r29 
+ 939 02fc EF93      		push    r30 
+ 940 02fe FF93      		push    r31 
+ 941 0300 A091 0000 		lds r26,nrk_cur_task_TCB 
+ 942 0304 B091 0000 		lds r27,nrk_cur_task_TCB+1 
+ 943 0308 0DB6      		in r0,__SP_L__ 
+ 944 030a 0D92      		st x+, r0 
+ 945 030c 0EB6      		in r0,__SP_H__ 
+ 946 030e 0D92      		st x+, r0 
+ 947 0310 1F92      		push r1  
+ 948 0312 A091 0000 		lds r26,nrk_kernel_stk_ptr 
+ 949 0316 B091 0000 		lds r27,nrk_kernel_stk_ptr+1 
+ 950 031a 1E90      		ld r1,-x 
+ 951 031c BEBF      		out __SP_H__, r27 
+ 952 031e ADBF      		out __SP_L__, r26 
+ 953 0320 0895      		ret
+ 954               		
+ 955               	 ;  0 "" 2
+ 956               	/* epilogue start */
+ 313:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r0 \n\t" \
+ 314:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "in      r0, __SREG__  \n\t" \ 
+ 315:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r0  \n\t" \
+ 316:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r1 \n\t" \
+ 317:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r2 \n\t" \
+ 318:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r3 \n\t" \
+ 319:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r4 \n\t" \
+ 320:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r5 \n\t" \
+ 321:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r6 \n\t" \
+ 322:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r7 \n\t" \
+ 323:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r8 \n\t" \
+ 324:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r9 \n\t" \
+ 325:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r10 \n\t" \
+ 326:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r11 \n\t" \
+ 327:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r12 \n\t" \
+ 328:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r13 \n\t" \
+ 329:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r14 \n\t" \
+ 330:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r15 \n\t" \
+ 331:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r16 \n\t" \
+ 332:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r17 \n\t" \
+ 333:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r18 \n\t" \
+ 334:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r19 \n\t" \
+ 335:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r20 \n\t" \
+ 336:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r21 \n\t" \
+ 337:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r22 \n\t" \
+ 338:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r23 \n\t" \
+ 339:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r24 \n\t" \
+ 340:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r25 \n\t" \
+ 341:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r26 \n\t" \
+ 342:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r27 \n\t" \
+ 343:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r28 \n\t" \
+ 344:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r29 \n\t" \
+ 345:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r30 \n\t" \
+ 346:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push    r31 \n\t" \
+ 347:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "lds r26,nrk_cur_task_TCB \n\t" \
+ 348:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "lds r27,nrk_cur_task_TCB+1 \n\t" \
+ 349:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "in r0,__SP_L__ \n\t" \
+ 350:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "st x+, r0 \n\t" \
+ 351:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "in r0,__SP_H__ \n\t" \
+ 352:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "st x+, r0 \n\t" \
+ 353:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "push r1  \n\t" \
+ 354:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "lds r26,nrk_kernel_stk_ptr \n\t" \
+ 355:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "lds r27,nrk_kernel_stk_ptr+1 \n\t" \
+ 356:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "ld r1,-x \n\t" \
+ 357:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "out __SP_H__, r27 \n\t" \
+ 358:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "out __SP_L__, r26 \n\t" \
+ 359:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c ****    "ret\n\t" \
+ 360:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** );
+ 361:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 362:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 957               		.loc 1 362 0
+ 958               	/* #NOAPP */
+ 959               		.cfi_endproc
+ 960               	.LFE27:
+ 962               	.global	__vector_32
+ 964               	__vector_32:
+ 965               	.LFB28:
+ 363:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 364:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 365:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** SIGNAL(TIMER3_COMPA_vect) {
+ 966               		.loc 1 365 0
+ 967               		.cfi_startproc
+ 968 0322 1F92      		push r1
+ 969               	.LCFI18:
+ 970               		.cfi_def_cfa_offset 4
+ 971               		.cfi_offset 1, -3
+ 972 0324 0F92      		push r0
+ 973               	.LCFI19:
+ 974               		.cfi_def_cfa_offset 5
+ 975               		.cfi_offset 0, -4
+ 976 0326 0FB6      		in r0,__SREG__
+ 977 0328 0F92      		push r0
+ 978 032a 1124      		clr __zero_reg__
+ 979 032c 0BB6      		in r0,__RAMPZ__
+ 980 032e 0F92      		push r0
+ 981 0330 2F93      		push r18
+ 982               	.LCFI20:
+ 983               		.cfi_def_cfa_offset 6
+ 984               		.cfi_offset 18, -5
+ 985 0332 3F93      		push r19
+ 986               	.LCFI21:
+ 987               		.cfi_def_cfa_offset 7
+ 988               		.cfi_offset 19, -6
+ 989 0334 4F93      		push r20
+ 990               	.LCFI22:
+ 991               		.cfi_def_cfa_offset 8
+ 992               		.cfi_offset 20, -7
+ 993 0336 5F93      		push r21
+ 994               	.LCFI23:
+ 995               		.cfi_def_cfa_offset 9
+ 996               		.cfi_offset 21, -8
+ 997 0338 6F93      		push r22
+ 998               	.LCFI24:
+ 999               		.cfi_def_cfa_offset 10
+ 1000               		.cfi_offset 22, -9
+ 1001 033a 7F93      		push r23
+ 1002               	.LCFI25:
+ 1003               		.cfi_def_cfa_offset 11
+ 1004               		.cfi_offset 23, -10
+ 1005 033c 8F93      		push r24
+ 1006               	.LCFI26:
+ 1007               		.cfi_def_cfa_offset 12
+ 1008               		.cfi_offset 24, -11
+ 1009 033e 9F93      		push r25
+ 1010               	.LCFI27:
+ 1011               		.cfi_def_cfa_offset 13
+ 1012               		.cfi_offset 25, -12
+ 1013 0340 AF93      		push r26
+ 1014               	.LCFI28:
+ 1015               		.cfi_def_cfa_offset 14
+ 1016               		.cfi_offset 26, -13
+ 1017 0342 BF93      		push r27
+ 1018               	.LCFI29:
+ 1019               		.cfi_def_cfa_offset 15
+ 1020               		.cfi_offset 27, -14
+ 1021 0344 EF93      		push r30
+ 1022               	.LCFI30:
+ 1023               		.cfi_def_cfa_offset 16
+ 1024               		.cfi_offset 30, -15
+ 1025 0346 FF93      		push r31
+ 1026               	.LCFI31:
+ 1027               		.cfi_def_cfa_offset 17
+ 1028               		.cfi_offset 31, -16
+ 1029               	/* prologue: Signal */
+ 1030               	/* frame size = 0 */
+ 1031               	/* stack size = 16 */
+ 1032               	.L__stack_usage = 16
+ 366:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	if(app_timer0_callback!=NULL) app_timer0_callback();
+ 1033               		.loc 1 366 0
+ 1034 0348 E091 0000 		lds r30,app_timer0_callback
+ 1035 034c F091 0000 		lds r31,app_timer0_callback+1
+ 1036 0350 3097      		sbiw r30,0
+ 1037 0352 01F0      		breq .L53
+ 1038               		.loc 1 366 0 is_stmt 0 discriminator 1
+ 1039 0354 1995      		eicall
+ 1040               	.LVL37:
+ 1041 0356 00C0      		rjmp .L52
+ 1042               	.L53:
+ 367:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	else
+ 368:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	nrk_kernel_error_add(NRK_SEG_FAULT,0);
+ 1043               		.loc 1 368 0 is_stmt 1
+ 1044 0358 60E0      		ldi r22,0
+ 1045 035a 8AE0      		ldi r24,lo8(10)
+ 1046 035c 0E94 0000 		call nrk_kernel_error_add
+ 1047               	.LVL38:
+ 1048               	.L52:
+ 1049               	/* epilogue start */
+ 369:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return;  	
+ 370:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** }
+ 1050               		.loc 1 370 0
+ 1051 0360 FF91      		pop r31
+ 1052 0362 EF91      		pop r30
+ 1053 0364 BF91      		pop r27
+ 1054 0366 AF91      		pop r26
+ 1055 0368 9F91      		pop r25
+ 1056 036a 8F91      		pop r24
+ 1057 036c 7F91      		pop r23
+ 1058 036e 6F91      		pop r22
+ 1059 0370 5F91      		pop r21
+ 1060 0372 4F91      		pop r20
+ 1061 0374 3F91      		pop r19
+ 1062 0376 2F91      		pop r18
+ 1063 0378 0F90      		pop r0
+ 1064 037a 0BBE      		out __RAMPZ__,r0
+ 1065 037c 0F90      		pop r0
+ 1066 037e 0FBE      		out __SREG__,r0
+ 1067 0380 0F90      		pop r0
+ 1068 0382 1F90      		pop r1
+ 1069 0384 1895      		reti
+ 1070               		.cfi_endproc
+ 1071               	.LFE28:
+ 1073               	.global	SIG_OUTPUT_COMPARE1A
+ 1075               	SIG_OUTPUT_COMPARE1A:
+ 1076               	.LFB29:
+ 371:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 372:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** //--------------------------------------------------------------------------------------
+ 373:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** //  TIMER 1 COMPARE ISR
+ 374:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** //--------------------------------------------------------------------------------------
+ 375:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** SIGNAL(SIG_OUTPUT_COMPARE1A) {
+ 1077               		.loc 1 375 0
+ 1078               		.cfi_startproc
+ 1079 0386 1F92      		push r1
+ 1080               	.LCFI32:
+ 1081               		.cfi_def_cfa_offset 4
+ 1082               		.cfi_offset 1, -3
+ 1083 0388 0F92      		push r0
+ 1084               	.LCFI33:
+ 1085               		.cfi_def_cfa_offset 5
+ 1086               		.cfi_offset 0, -4
+ 1087 038a 0FB6      		in r0,__SREG__
+ 1088 038c 0F92      		push r0
+ 1089 038e 1124      		clr __zero_reg__
+ 1090               	/* prologue: Signal */
+ 1091               	/* frame size = 0 */
+ 1092               	/* stack size = 3 */
+ 1093               	.L__stack_usage = 3
+ 1094               	/* epilogue start */
+ 376:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 
+ 377:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** 	return;  	
+ 378:/home/agr/nano-RK/src/kernel/hal/atmega256rfr2/nrk_timer.c **** } 
+ 1095               		.loc 1 378 0
+ 1096 0390 0F90      		pop r0
+ 1097 0392 0FBE      		out __SREG__,r0
+ 1098 0394 0F90      		pop r0
+ 1099 0396 1F90      		pop r1
+ 1100 0398 1895      		reti
+ 1101               		.cfi_endproc
+ 1102               	.LFE29:
+ 1104               		.comm	error_num,1,1
+ 1105               		.comm	error_task,1,1
+ 1106               		.comm	app_timer0_prescale,1,1
+ 1107               		.comm	app_timer0_callback,2,1
+ 1108               		.comm	_nrk_time_trigger,1,1
+ 1109               		.comm	_nrk_prev_timer_val,1,1
+ 1110               		.comm	nrk_kernel_stk_ptr,2,1
+ 1111               		.comm	nrk_idle_task_stk,128,1
+ 1112               		.comm	_nrk_signal_list,4,1
+ 1113               	.Letext0:
+ 1114               		.file 2 "/home/agr/avr8-gnu-toolchain-linux_x86_64/avr/include/stdint.h"
+ 1115               		.file 3 "/home/agr/nano-RK/src/platform/firefly3_alps/include/hal.h"
+ 1116               		.file 4 "/home/agr/nano-RK/src/kernel/include/nrk_events.h"
+ 1117               		.file 5 "/home/agr/nano-RK/src/kernel/include/nrk.h"
+ 1118               		.file 6 "/home/agr/nano-RK/src/kernel/hal/include/nrk_timer.h"
+ 1119               		.file 7 "/home/agr/nano-RK/src/kernel/include/nrk_error.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 nrk_timer.c
+     /tmp/ccBgvMb3.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccBgvMb3.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccBgvMb3.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccBgvMb3.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccBgvMb3.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccBgvMb3.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccBgvMb3.s:13     .text:0000000000000000 nrk_spin_wait_us
+     /tmp/ccBgvMb3.s:99     .text:0000000000000020 _nrk_precision_os_timer_stop
+     /tmp/ccBgvMb3.s:115    .text:0000000000000026 _nrk_precision_os_timer_start
+     /tmp/ccBgvMb3.s:137    .text:000000000000003a _nrk_precision_os_timer_reset
+     /tmp/ccBgvMb3.s:154    .text:0000000000000044 _nrk_precision_os_timer_get
+     /tmp/ccBgvMb3.s:198    .text:000000000000006a _nrk_high_speed_timer_stop
+     /tmp/ccBgvMb3.s:214    .text:0000000000000070 _nrk_high_speed_timer_start
+     /tmp/ccBgvMb3.s:231    .text:0000000000000078 _nrk_high_speed_timer_reset
+     /tmp/ccBgvMb3.s:252    .text:0000000000000088 _nrk_high_speed_timer_get
+     /tmp/ccBgvMb3.s:296    .text:00000000000000ae nrk_high_speed_timer_wait
+     /tmp/ccBgvMb3.s:395    .text:000000000000010e _nrk_os_timer_stop
+     /tmp/ccBgvMb3.s:421    .text:0000000000000124 _nrk_os_timer_set
+     /tmp/ccBgvMb3.s:438    .text:000000000000012a _nrk_os_timer_start
+     /tmp/ccBgvMb3.s:461    .text:000000000000013c _nrk_os_timer_reset
+                            *COM*:0000000000000001 _nrk_time_trigger
+                            *COM*:0000000000000001 _nrk_prev_timer_val
+     /tmp/ccBgvMb3.s:485    .text:0000000000000150 _nrk_setup_timer
+     /tmp/ccBgvMb3.s:589    .text:00000000000001d6 _nrk_get_next_wakeup
+     /tmp/ccBgvMb3.s:607    .text:00000000000001de _nrk_set_next_wakeup
+     /tmp/ccBgvMb3.s:626    .text:00000000000001e6 nrk_timer_int_stop
+     /tmp/ccBgvMb3.s:650    .text:00000000000001f2 nrk_timer_int_reset
+     /tmp/ccBgvMb3.s:681    .text:0000000000000206 nrk_timer_int_read
+     /tmp/ccBgvMb3.s:711    .text:000000000000021a nrk_timer_int_start
+     /tmp/ccBgvMb3.s:742    .text:000000000000022c nrk_timer_int_configure
+                            *COM*:0000000000000001 app_timer0_prescale
+                            *COM*:0000000000000002 app_timer0_callback
+     /tmp/ccBgvMb3.s:833    .text:00000000000002a2 _nrk_os_timer_get
+     /tmp/ccBgvMb3.s:850    .text:00000000000002a8 __vector_default
+     /tmp/ccBgvMb3.s:881    .text:00000000000002bc __vector_15
+     /tmp/ccBgvMb3.s:896    .text:00000000000002bc __vector_13
+                            *COM*:0000000000000002 nrk_kernel_stk_ptr
+     /tmp/ccBgvMb3.s:964    .text:0000000000000322 __vector_32
+     /tmp/ccBgvMb3.s:1075   .text:0000000000000386 SIG_OUTPUT_COMPARE1A
+                            *COM*:0000000000000001 error_num
+                            *COM*:0000000000000001 error_task
+                            *COM*:0000000000000080 nrk_idle_task_stk
+                            *COM*:0000000000000004 _nrk_signal_list
+
+UNDEFINED SYMBOLS
+nrk_kernel_error_add
+nrk_cur_task_TCB
+__do_clear_bss

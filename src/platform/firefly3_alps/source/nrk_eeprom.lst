@@ -1,0 +1,529 @@
+   1               		.file	"nrk_eeprom.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+   8               		.text
+   9               	.Ltext0:
+  10               		.cfi_sections	.debug_frame
+  11               	.global	nrk_eeprom_read_byte
+  13               	nrk_eeprom_read_byte:
+  14               	.LFB2:
+  15               		.file 1 "/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c"
+   1:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** #include <nrk_eeprom.h>
+   2:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** #include <avr/eeprom.h>
+   3:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** #include <nrk_error.h>
+   4:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+   5:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** uint8_t nrk_eeprom_read_byte( uint16_t addr )
+   6:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+  16               		.loc 1 6 0
+  17               		.cfi_startproc
+  18               	.LVL0:
+  19               	/* prologue: function */
+  20               	/* frame size = 0 */
+  21               	/* stack size = 0 */
+  22               	.L__stack_usage = 0
+   7:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** uint8_t v;
+   8:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** v=eeprom_read_byte((uint8_t*)addr);
+  23               		.loc 1 8 0
+  24 0000 0C94 0000 		jmp __eerd_byte_EEPROM_SUFFIX
+  25               	.LVL1:
+  26               		.cfi_endproc
+  27               	.LFE2:
+  29               	.global	nrk_eeprom_write_byte
+  31               	nrk_eeprom_write_byte:
+  32               	.LFB3:
+   9:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** return v;
+  10:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+  11:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  12:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t nrk_eeprom_write_byte( uint16_t addr, uint8_t value )
+  13:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+  33               		.loc 1 13 0
+  34               		.cfi_startproc
+  35               	.LVL2:
+  36               	/* prologue: function */
+  37               	/* frame size = 0 */
+  38               	/* stack size = 0 */
+  39               	.L__stack_usage = 0
+  14:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** eeprom_write_byte( (uint8_t*)addr, value );
+  40               		.loc 1 14 0
+  41 0004 0E94 0000 		call __eewr_byte_EEPROM_SUFFIX
+  42               	.LVL3:
+  15:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+  43               		.loc 1 15 0
+  44 0008 0895      		ret
+  45               		.cfi_endproc
+  46               	.LFE3:
+  48               	.global	read_eeprom_mac_address
+  50               	read_eeprom_mac_address:
+  51               	.LFB4:
+  16:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  17:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t read_eeprom_mac_address(uint32_t *mac_addr)
+  18:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+  52               		.loc 1 18 0
+  53               		.cfi_startproc
+  54               	.LVL4:
+  55 000a EF92      		push r14
+  56               	.LCFI0:
+  57               		.cfi_def_cfa_offset 4
+  58               		.cfi_offset 14, -3
+  59 000c FF92      		push r15
+  60               	.LCFI1:
+  61               		.cfi_def_cfa_offset 5
+  62               		.cfi_offset 15, -4
+  63 000e 0F93      		push r16
+  64               	.LCFI2:
+  65               		.cfi_def_cfa_offset 6
+  66               		.cfi_offset 16, -5
+  67 0010 1F93      		push r17
+  68               	.LCFI3:
+  69               		.cfi_def_cfa_offset 7
+  70               		.cfi_offset 17, -6
+  71 0012 CF93      		push r28
+  72               	.LCFI4:
+  73               		.cfi_def_cfa_offset 8
+  74               		.cfi_offset 28, -7
+  75 0014 DF93      		push r29
+  76               	.LCFI5:
+  77               		.cfi_def_cfa_offset 9
+  78               		.cfi_offset 29, -8
+  79               	/* prologue: function */
+  80               	/* frame size = 0 */
+  81               	/* stack size = 6 */
+  82               	.L__stack_usage = 6
+  83 0016 EC01      		movw r28,r24
+  84               	.LVL5:
+  19:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** uint8_t checksum,ct;
+  20:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** uint8_t *buf;
+  21:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** buf=(uint8_t *)mac_addr;
+  22:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** checksum=buf[0]+buf[1]+buf[2]+buf[3];
+  23:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** buf[3]=eeprom_read_byte ((uint8_t*)EE_MAC_ADDR_0);
+  85               		.loc 1 23 0
+  86 0018 80E0      		ldi r24,0
+  87 001a 90E0      		ldi r25,0
+  88               	.LVL6:
+  89 001c 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+  90               	.LVL7:
+  91 0020 F82E      		mov r15,r24
+  92 0022 8B83      		std Y+3,r24
+  24:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** buf[2]=eeprom_read_byte ((uint8_t*)EE_MAC_ADDR_1);
+  93               		.loc 1 24 0
+  94 0024 81E0      		ldi r24,lo8(1)
+  95 0026 90E0      		ldi r25,0
+  96 0028 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+  97               	.LVL8:
+  98 002c E82E      		mov r14,r24
+  99 002e 8A83      		std Y+2,r24
+  25:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** buf[1]=eeprom_read_byte ((uint8_t*)EE_MAC_ADDR_2);
+ 100               		.loc 1 25 0
+ 101 0030 82E0      		ldi r24,lo8(2)
+ 102 0032 90E0      		ldi r25,0
+ 103 0034 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+ 104               	.LVL9:
+ 105 0038 082F      		mov r16,r24
+ 106 003a 8983      		std Y+1,r24
+  26:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** buf[0]=eeprom_read_byte ((uint8_t*)EE_MAC_ADDR_3);
+ 107               		.loc 1 26 0
+ 108 003c 83E0      		ldi r24,lo8(3)
+ 109 003e 90E0      		ldi r25,0
+ 110 0040 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+ 111               	.LVL10:
+ 112 0044 182F      		mov r17,r24
+ 113 0046 8883      		st Y,r24
+  27:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** checksum=eeprom_read_byte ((uint8_t*)EE_MAC_ADDR_CHKSUM);
+ 114               		.loc 1 27 0
+ 115 0048 84E0      		ldi r24,lo8(4)
+ 116 004a 90E0      		ldi r25,0
+ 117 004c 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+ 118               	.LVL11:
+  28:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** ct=buf[0];
+  29:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** ct+=buf[1];
+ 119               		.loc 1 29 0
+ 120 0050 9E2D      		mov r25,r14
+ 121 0052 9F0D      		add r25,r15
+  30:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** ct+=buf[2];
+ 122               		.loc 1 30 0
+ 123 0054 900F      		add r25,r16
+ 124               	.LVL12:
+  31:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** ct+=buf[3];
+ 125               		.loc 1 31 0
+ 126 0056 910F      		add r25,r17
+ 127               	.LVL13:
+  32:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** if(checksum==ct) return NRK_OK;
+ 128               		.loc 1 32 0
+ 129 0058 8913      		cpse r24,r25
+ 130 005a 00C0      		rjmp .L5
+ 131 005c 81E0      		ldi r24,lo8(1)
+ 132               	.LVL14:
+ 133 005e 00C0      		rjmp .L4
+ 134               	.LVL15:
+ 135               	.L5:
+  33:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  34:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** return NRK_ERROR;
+ 136               		.loc 1 34 0
+ 137 0060 8FEF      		ldi r24,lo8(-1)
+ 138               	.LVL16:
+ 139               	.L4:
+ 140               	/* epilogue start */
+  35:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+ 141               		.loc 1 35 0
+ 142 0062 DF91      		pop r29
+ 143 0064 CF91      		pop r28
+ 144               	.LVL17:
+ 145 0066 1F91      		pop r17
+ 146 0068 0F91      		pop r16
+ 147 006a FF90      		pop r15
+ 148 006c EF90      		pop r14
+ 149 006e 0895      		ret
+ 150               		.cfi_endproc
+ 151               	.LFE4:
+ 153               	.global	read_eeprom_channel
+ 155               	read_eeprom_channel:
+ 156               	.LFB5:
+  36:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  37:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t read_eeprom_channel(uint8_t *channel)
+  38:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+ 157               		.loc 1 38 0
+ 158               		.cfi_startproc
+ 159               	.LVL18:
+ 160 0070 CF93      		push r28
+ 161               	.LCFI6:
+ 162               		.cfi_def_cfa_offset 4
+ 163               		.cfi_offset 28, -3
+ 164 0072 DF93      		push r29
+ 165               	.LCFI7:
+ 166               		.cfi_def_cfa_offset 5
+ 167               		.cfi_offset 29, -4
+ 168               	/* prologue: function */
+ 169               	/* frame size = 0 */
+ 170               	/* stack size = 2 */
+ 171               	.L__stack_usage = 2
+ 172 0074 EC01      		movw r28,r24
+  39:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   *channel=eeprom_read_byte ((uint8_t*)EE_CHANNEL);
+ 173               		.loc 1 39 0
+ 174 0076 85E0      		ldi r24,lo8(5)
+ 175 0078 90E0      		ldi r25,0
+ 176               	.LVL19:
+ 177 007a 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+ 178               	.LVL20:
+ 179 007e 8883      		st Y,r24
+  40:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** return NRK_OK;
+  41:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+ 180               		.loc 1 41 0
+ 181 0080 81E0      		ldi r24,lo8(1)
+ 182               	/* epilogue start */
+ 183 0082 DF91      		pop r29
+ 184 0084 CF91      		pop r28
+ 185               	.LVL21:
+ 186 0086 0895      		ret
+ 187               		.cfi_endproc
+ 188               	.LFE5:
+ 190               	.global	write_eeprom_load_img_pages
+ 192               	write_eeprom_load_img_pages:
+ 193               	.LFB6:
+  42:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  43:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t write_eeprom_load_img_pages(uint8_t *load_pages)
+  44:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+ 194               		.loc 1 44 0
+ 195               		.cfi_startproc
+ 196               	.LVL22:
+ 197               	/* prologue: function */
+ 198               	/* frame size = 0 */
+ 199               	/* stack size = 0 */
+ 200               	.L__stack_usage = 0
+  45:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   eeprom_write_byte ((uint8_t*)EE_LOAD_IMG_PAGES, *load_pages);
+ 201               		.loc 1 45 0
+ 202 0088 FC01      		movw r30,r24
+ 203 008a 6081      		ld r22,Z
+ 204 008c 86E0      		ldi r24,lo8(6)
+ 205 008e 90E0      		ldi r25,0
+ 206               	.LVL23:
+ 207 0090 0E94 0000 		call __eewr_byte_EEPROM_SUFFIX
+ 208               	.LVL24:
+  46:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   return NRK_OK;
+  47:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+ 209               		.loc 1 47 0
+ 210 0094 81E0      		ldi r24,lo8(1)
+ 211 0096 0895      		ret
+ 212               		.cfi_endproc
+ 213               	.LFE6:
+ 215               	.global	read_eeprom_load_img_pages
+ 217               	read_eeprom_load_img_pages:
+ 218               	.LFB7:
+  48:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  49:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t read_eeprom_load_img_pages(uint8_t *load_pages)
+  50:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+ 219               		.loc 1 50 0
+ 220               		.cfi_startproc
+ 221               	.LVL25:
+ 222 0098 CF93      		push r28
+ 223               	.LCFI8:
+ 224               		.cfi_def_cfa_offset 4
+ 225               		.cfi_offset 28, -3
+ 226 009a DF93      		push r29
+ 227               	.LCFI9:
+ 228               		.cfi_def_cfa_offset 5
+ 229               		.cfi_offset 29, -4
+ 230               	/* prologue: function */
+ 231               	/* frame size = 0 */
+ 232               	/* stack size = 2 */
+ 233               	.L__stack_usage = 2
+ 234 009c EC01      		movw r28,r24
+  51:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   *load_pages=eeprom_read_byte ((uint8_t*)EE_LOAD_IMG_PAGES);
+ 235               		.loc 1 51 0
+ 236 009e 86E0      		ldi r24,lo8(6)
+ 237 00a0 90E0      		ldi r25,0
+ 238               	.LVL26:
+ 239 00a2 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+ 240               	.LVL27:
+ 241 00a6 8883      		st Y,r24
+  52:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   return NRK_OK;
+  53:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+ 242               		.loc 1 53 0
+ 243 00a8 81E0      		ldi r24,lo8(1)
+ 244               	/* epilogue start */
+ 245 00aa DF91      		pop r29
+ 246 00ac CF91      		pop r28
+ 247               	.LVL28:
+ 248 00ae 0895      		ret
+ 249               		.cfi_endproc
+ 250               	.LFE7:
+ 252               	.global	read_eeprom_aes_key
+ 254               	read_eeprom_aes_key:
+ 255               	.LFB8:
+  54:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  55:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t read_eeprom_aes_key(uint8_t *aes_key)
+  56:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+ 256               		.loc 1 56 0
+ 257               		.cfi_startproc
+ 258               	.LVL29:
+ 259 00b0 0F93      		push r16
+ 260               	.LCFI10:
+ 261               		.cfi_def_cfa_offset 4
+ 262               		.cfi_offset 16, -3
+ 263 00b2 1F93      		push r17
+ 264               	.LCFI11:
+ 265               		.cfi_def_cfa_offset 5
+ 266               		.cfi_offset 17, -4
+ 267 00b4 CF93      		push r28
+ 268               	.LCFI12:
+ 269               		.cfi_def_cfa_offset 6
+ 270               		.cfi_offset 28, -5
+ 271 00b6 DF93      		push r29
+ 272               	.LCFI13:
+ 273               		.cfi_def_cfa_offset 7
+ 274               		.cfi_offset 29, -6
+ 275               	/* prologue: function */
+ 276               	/* frame size = 0 */
+ 277               	/* stack size = 4 */
+ 278               	.L__stack_usage = 4
+ 279 00b8 8C01      		movw r16,r24
+ 280               	.LVL30:
+ 281               		.loc 1 56 0
+ 282 00ba C8E0      		ldi r28,lo8(8)
+ 283 00bc D0E0      		ldi r29,0
+ 284               	.LVL31:
+ 285               	.L12:
+  57:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** uint8_t i;
+  58:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** for(i=0; i<16; i++ )
+  59:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   aes_key[i]=eeprom_read_byte ((uint8_t*)(EE_AES_KEY+i));
+ 286               		.loc 1 59 0 discriminator 2
+ 287 00be CE01      		movw r24,r28
+ 288 00c0 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+ 289               	.LVL32:
+ 290 00c4 F801      		movw r30,r16
+ 291 00c6 8193      		st Z+,r24
+ 292 00c8 8F01      		movw r16,r30
+ 293               	.LVL33:
+ 294 00ca 2196      		adiw r28,1
+ 295               	.LVL34:
+  58:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** for(i=0; i<16; i++ )
+ 296               		.loc 1 58 0 discriminator 2
+ 297 00cc C831      		cpi r28,24
+ 298 00ce D105      		cpc r29,__zero_reg__
+ 299 00d0 01F4      		brne .L12
+  60:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   return NRK_OK;
+  61:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+ 300               		.loc 1 61 0
+ 301 00d2 81E0      		ldi r24,lo8(1)
+ 302               	/* epilogue start */
+ 303 00d4 DF91      		pop r29
+ 304 00d6 CF91      		pop r28
+ 305               	.LVL35:
+ 306 00d8 1F91      		pop r17
+ 307 00da 0F91      		pop r16
+ 308 00dc 0895      		ret
+ 309               		.cfi_endproc
+ 310               	.LFE8:
+ 312               	.global	write_eeprom_aes_key
+ 314               	write_eeprom_aes_key:
+ 315               	.LFB9:
+  62:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  63:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t write_eeprom_aes_key(uint8_t *aes_key)
+  64:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+ 316               		.loc 1 64 0
+ 317               		.cfi_startproc
+ 318               	.LVL36:
+ 319 00de 0F93      		push r16
+ 320               	.LCFI14:
+ 321               		.cfi_def_cfa_offset 4
+ 322               		.cfi_offset 16, -3
+ 323 00e0 1F93      		push r17
+ 324               	.LCFI15:
+ 325               		.cfi_def_cfa_offset 5
+ 326               		.cfi_offset 17, -4
+ 327 00e2 CF93      		push r28
+ 328               	.LCFI16:
+ 329               		.cfi_def_cfa_offset 6
+ 330               		.cfi_offset 28, -5
+ 331 00e4 DF93      		push r29
+ 332               	.LCFI17:
+ 333               		.cfi_def_cfa_offset 7
+ 334               		.cfi_offset 29, -6
+ 335               	/* prologue: function */
+ 336               	/* frame size = 0 */
+ 337               	/* stack size = 4 */
+ 338               	.L__stack_usage = 4
+ 339 00e6 8C01      		movw r16,r24
+ 340               	.LVL37:
+ 341               		.loc 1 64 0
+ 342 00e8 C8E0      		ldi r28,lo8(8)
+ 343 00ea D0E0      		ldi r29,0
+ 344               	.LVL38:
+ 345               	.L15:
+  65:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** uint8_t i;
+  66:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** for(i=0; i<16; i++ )
+  67:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   eeprom_write_byte ((uint8_t*)(EE_AES_KEY+i),aes_key[i]);
+ 346               		.loc 1 67 0 discriminator 2
+ 347 00ec F801      		movw r30,r16
+ 348 00ee 6191      		ld r22,Z+
+ 349 00f0 8F01      		movw r16,r30
+ 350 00f2 CE01      		movw r24,r28
+ 351 00f4 0E94 0000 		call __eewr_byte_EEPROM_SUFFIX
+ 352               	.LVL39:
+ 353 00f8 2196      		adiw r28,1
+ 354               	.LVL40:
+  66:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** for(i=0; i<16; i++ )
+ 355               		.loc 1 66 0 discriminator 2
+ 356 00fa C831      		cpi r28,24
+ 357 00fc D105      		cpc r29,__zero_reg__
+ 358 00fe 01F4      		brne .L15
+  68:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   return NRK_OK;
+  69:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+ 359               		.loc 1 69 0
+ 360 0100 81E0      		ldi r24,lo8(1)
+ 361               	/* epilogue start */
+ 362 0102 DF91      		pop r29
+ 363 0104 CF91      		pop r28
+ 364               	.LVL41:
+ 365 0106 1F91      		pop r17
+ 366 0108 0F91      		pop r16
+ 367 010a 0895      		ret
+ 368               		.cfi_endproc
+ 369               	.LFE9:
+ 371               	.global	read_eeprom_current_image_checksum
+ 373               	read_eeprom_current_image_checksum:
+ 374               	.LFB10:
+  70:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  71:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t read_eeprom_current_image_checksum(uint8_t *image_checksum)
+  72:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+ 375               		.loc 1 72 0
+ 376               		.cfi_startproc
+ 377               	.LVL42:
+ 378 010c CF93      		push r28
+ 379               	.LCFI18:
+ 380               		.cfi_def_cfa_offset 4
+ 381               		.cfi_offset 28, -3
+ 382 010e DF93      		push r29
+ 383               	.LCFI19:
+ 384               		.cfi_def_cfa_offset 5
+ 385               		.cfi_offset 29, -4
+ 386               	/* prologue: function */
+ 387               	/* frame size = 0 */
+ 388               	/* stack size = 2 */
+ 389               	.L__stack_usage = 2
+ 390 0110 EC01      		movw r28,r24
+  73:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   *image_checksum=eeprom_read_byte ((uint8_t*)EE_CURRENT_IMAGE_CHECKSUM);
+ 391               		.loc 1 73 0
+ 392 0112 87E0      		ldi r24,lo8(7)
+ 393 0114 90E0      		ldi r25,0
+ 394               	.LVL43:
+ 395 0116 0E94 0000 		call __eerd_byte_EEPROM_SUFFIX
+ 396               	.LVL44:
+ 397 011a 8883      		st Y,r24
+  74:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   return NRK_OK;
+  75:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+ 398               		.loc 1 75 0
+ 399 011c 81E0      		ldi r24,lo8(1)
+ 400               	/* epilogue start */
+ 401 011e DF91      		pop r29
+ 402 0120 CF91      		pop r28
+ 403               	.LVL45:
+ 404 0122 0895      		ret
+ 405               		.cfi_endproc
+ 406               	.LFE10:
+ 408               	.global	write_eeprom_current_image_checksum
+ 410               	write_eeprom_current_image_checksum:
+ 411               	.LFB11:
+  76:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** 
+  77:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** int8_t write_eeprom_current_image_checksum(uint8_t *image_checksum)
+  78:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** {
+ 412               		.loc 1 78 0
+ 413               		.cfi_startproc
+ 414               	.LVL46:
+ 415               	/* prologue: function */
+ 416               	/* frame size = 0 */
+ 417               	/* stack size = 0 */
+ 418               	.L__stack_usage = 0
+  79:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   eeprom_write_byte ((uint8_t*)EE_CURRENT_IMAGE_CHECKSUM, *image_checksum);
+ 419               		.loc 1 79 0
+ 420 0124 FC01      		movw r30,r24
+ 421 0126 6081      		ld r22,Z
+ 422 0128 87E0      		ldi r24,lo8(7)
+ 423 012a 90E0      		ldi r25,0
+ 424               	.LVL47:
+ 425 012c 0E94 0000 		call __eewr_byte_EEPROM_SUFFIX
+ 426               	.LVL48:
+  80:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c ****   return NRK_OK;
+  81:/home/agr/nano-RK/src/platform/firefly3_alps/source/nrk_eeprom.c **** }
+ 427               		.loc 1 81 0
+ 428 0130 81E0      		ldi r24,lo8(1)
+ 429 0132 0895      		ret
+ 430               		.cfi_endproc
+ 431               	.LFE11:
+ 433               		.comm	error_num,1,1
+ 434               		.comm	error_task,1,1
+ 435               		.comm	_nrk_signal_list,4,1
+ 436               	.Letext0:
+ 437               		.file 2 "/home/agr/avr8-gnu-toolchain-linux_x86_64/avr/include/stdint.h"
+ 438               		.file 3 "/home/agr/nano-RK/src/kernel/include/nrk_events.h"
+ 439               		.file 4 "/home/agr/nano-RK/src/kernel/include/nrk_error.h"
+ 440               		.file 5 "/home/agr/avr8-gnu-toolchain-linux_x86_64/avr/include/avr/eeprom.h"
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 nrk_eeprom.c
+     /tmp/ccK499ph.s:2      *ABS*:000000000000003e __SP_H__
+     /tmp/ccK499ph.s:3      *ABS*:000000000000003d __SP_L__
+     /tmp/ccK499ph.s:4      *ABS*:000000000000003f __SREG__
+     /tmp/ccK499ph.s:5      *ABS*:000000000000003b __RAMPZ__
+     /tmp/ccK499ph.s:6      *ABS*:0000000000000000 __tmp_reg__
+     /tmp/ccK499ph.s:7      *ABS*:0000000000000001 __zero_reg__
+     /tmp/ccK499ph.s:13     .text:0000000000000000 nrk_eeprom_read_byte
+     /tmp/ccK499ph.s:31     .text:0000000000000004 nrk_eeprom_write_byte
+     /tmp/ccK499ph.s:50     .text:000000000000000a read_eeprom_mac_address
+     /tmp/ccK499ph.s:155    .text:0000000000000070 read_eeprom_channel
+     /tmp/ccK499ph.s:192    .text:0000000000000088 write_eeprom_load_img_pages
+     /tmp/ccK499ph.s:217    .text:0000000000000098 read_eeprom_load_img_pages
+     /tmp/ccK499ph.s:254    .text:00000000000000b0 read_eeprom_aes_key
+     /tmp/ccK499ph.s:314    .text:00000000000000de write_eeprom_aes_key
+     /tmp/ccK499ph.s:373    .text:000000000000010c read_eeprom_current_image_checksum
+     /tmp/ccK499ph.s:410    .text:0000000000000124 write_eeprom_current_image_checksum
+                            *COM*:0000000000000001 error_num
+                            *COM*:0000000000000001 error_task
+                            *COM*:0000000000000004 _nrk_signal_list
+
+UNDEFINED SYMBOLS
+__eerd_byte_EEPROM_SUFFIX
+__eewr_byte_EEPROM_SUFFIX
+__do_clear_bss
