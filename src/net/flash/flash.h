@@ -54,8 +54,7 @@
 #define FLASH_MAX_PKT_LEN 33
 
 int8_t flash_init(uint8_t chan);
-void flash_disable();
-void flash_enable();
+void flash_enable(nrk_time_t* timeout, void (*edit_buf)(uint8_t* buf, nrk_time_t* rcv_time));
 int8_t flash_rf_power_set(uint8_t power);
 void flash_err_count_reset();
 uint32_t flash_err_count_get();
