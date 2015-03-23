@@ -588,14 +588,18 @@ int8_t rf_rx_packet_nonblock()
 	
 	uint8_t *frame_start = &TRXFBST;
 
-	if(!rf_ready)
+	if(!rf_ready){
+		printf("rf not ready\r\n");
 		return NRK_ERROR;
-
-   if(!rx_ready)
+	}
+   if(!rx_ready){
+	   printf("rx not ready\r\n");
       return 0;
-   else if((TST_RX_LENGTH - 2) > rfSettings.pRxInfo->max_length)
+   }
+   else if((TST_RX_LENGTH - 2) > rfSettings.pRxInfo->max_length){
+	   	printf("length too great\r\n");
 		return NRK_ERROR;
-
+	}
 
 	ieee_mac_frame_header_t *machead = frame_start;
 
@@ -606,8 +610,9 @@ int8_t rf_rx_packet_nonblock()
 	if((rfSettings.pRxInfo->length > rfSettings.pRxInfo->max_length)
 			|| (rfSettings.pRxInfo->length < 0)){
 		rx_ready = 0;
-      TRX_CTRL_2 &= ~(1 << RX_SAFE_MODE);
+      	TRX_CTRL_2 &= ~(1 << RX_SAFE_MODE);
 		TRX_CTRL_2 |= (1 << RX_SAFE_MODE);
+		printf("incorrect length setting in rf settings\r\n");
 		return NRK_ERROR;
 	}
 
