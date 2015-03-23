@@ -51,7 +51,7 @@
 #include <nrk_reserve.h>
 #include <nrk_cfg.h>
 
-#define FLASH_MAX_PKT_LEN 33
+#define FLASH_MAX_PKT_LEN 128
 
 int8_t flash_init(uint8_t chan);
 void flash_enable(nrk_time_t* timeout, void (*edit_buf)(uint8_t* buf, nrk_time_t* rcv_time));

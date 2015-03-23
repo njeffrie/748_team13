@@ -34,11 +34,15 @@
 #include <string.h>
 #include <flash.h>
 
+#define MAC_ADDR 0
+
 NRK_STK flood_stack[NRK_APP_STACKSIZE];
 nrk_task_type floodTask;
 void flood_task (void);
 
 void nrk_create_taskset();
+
+nrk_sig_t packet_rx_signal;
 
 int main()
 {
@@ -53,7 +57,9 @@ int main()
 
 	nrk_time_set(0,0);
 
+	packet_rx_signal = nrk_signal_create();
 	printf("initializing flash\r\n");
+	nrk_int_enable();
 	flash_init(13);
 	printf("configuring flash task\r\n");
 	flash_task_config();
@@ -62,42 +68,50 @@ int main()
 	return 1;
 }
 
-void flood_task()
+int cnt = 0;
+
+void flash_test_callback(uint8_t *buf, nrk_time_t *rx_time)
 {
-	flash_enable();
-	printf("flash error count after init = %d\r\n", (int)flash_err_count_get());
-	printf("currnent packet size = %d\r\n", (int)flash_msg_len_get());
-	flash_disable();
-	printf("flash disabled\r\n");
-	flash_enable();
-	printf("flash enabled\r\n");
-	flash_disable();
-	printf("flash disabled\r\n");
-	
-	char *buf = "this is a buffer";
-	while (1){
-		printf("transmitting packet [%s]\r\n", buf);
-		flash_tx_pkt((uint8_t *)buf, (uint8_t)strlen(buf));
-		printf("success...maybe!\r\n");
-		nrk_wait_until_next_period();
-	}
+	printf("calback received buffer %s with rx time %d seconds\r\n", buf, rx_time->secs);
+	sprintf(buf, "%d", cnt ++ );
+	nrk_event_signal(packet_rx_signal);
 }
 
+void flood_task()
+{
+	//printf("flash error count after init = %d\r\n", (int)flash_err_count_get());
+	//printf("current packet size = %d\r\n", (int)flash_msg_len_get());
+	
+	char *buf = "this is a buffer";
+	printf("transmitting packet [%s]\r\n", buf);
+	
+	flash_tx_pkt((uint8_t *)buf, (uint8_t)strlen(buf));
+	
+	//printf("success...maybe!\r\n");
+
+	flash_enable(NULL, flash_test_callback);
+	printf("waiting to propagate flood\r\n");
+	while (1){
+		flash_enable(NULL, flash_test_callback);
+		nrk_signal_register(packet_rx_signal);
+		nrk_event_wait(SIG(packet_rx_signal));
+	}
+}
 
 void
 nrk_create_taskset()
 {
-  nrk_task_set_entry_function( &floodTask, flood_task);
-  nrk_task_set_stk( &floodTask, flood_stack, NRK_APP_STACKSIZE);
-  floodTask.prio = 1;
-  floodTask.FirstActivation = TRUE;
-  floodTask.Type = BASIC_TASK;
-  floodTask.SchType = PREEMPTIVE;
-  floodTask.period.secs = 5;
-  floodTask.period.nano_secs = 0;
-  floodTask.cpu_reserve.secs = 0;
-  floodTask.cpu_reserve.nano_secs = 0;
-  floodTask.offset.secs = 0;
-  floodTask.offset.nano_secs= 0;
-  nrk_activate_task (&floodTask);
+	nrk_task_set_entry_function( &floodTask, flood_task);
+	nrk_task_set_stk( &floodTask, flood_stack, NRK_APP_STACKSIZE);
+	floodTask.prio = 1;
+	floodTask.FirstActivation = TRUE;
+	floodTask.Type = BASIC_TASK;
+	floodTask.SchType = PREEMPTIVE;
+	floodTask.period.secs = 5;
+	floodTask.period.nano_secs = 0;
+	floodTask.cpu_reserve.secs = 0;
+	floodTask.cpu_reserve.nano_secs = 0;
+	floodTask.offset.secs = 0;
+	floodTask.offset.nano_secs= 0;
+	nrk_activate_task (&floodTask);
 }

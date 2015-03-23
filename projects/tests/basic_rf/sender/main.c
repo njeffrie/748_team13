@@ -30,91 +30,48 @@
 #include <avr/wdt.h>
 #include <avr/eeprom.h>
 
-
-void my_callback(uint16_t global_slot );
-
 RF_TX_INFO rfTxInfo;
 RF_RX_INFO rfRxInfo;
 uint8_t tx_buf[RF_MAX_PAYLOAD_SIZE];
 uint8_t rx_buf[RF_MAX_PAYLOAD_SIZE];
-//------------------------------------------------------------------------------
-//      void main (void)
-//
-//      DESCRIPTION:
-//              Startup routine and main loop
-//------------------------------------------------------------------------------
+
+
 int main (void)
 {
-    uint8_t i,length;
-    uint32_t cnt;
+    uint8_t i;
 
     nrk_setup_ports(); 
     nrk_setup_uart (UART_BAUDRATE_115K2);
  
-    printf( "Basic TX...\r\n" ); 
-    nrk_led_set(0); 
-    nrk_led_set(1); 
-    nrk_led_clr(2); 
-    nrk_led_clr(3); 
-/*
-	    while(1) {
-		   
-				for(i=0; i<40; i++ )
-					halWait(10000);
-		    nrk_led_toggle(1);
-
-	    }
-
-*/
-
     rfRxInfo.pPayload = rx_buf;
     rfRxInfo.max_length = RF_MAX_PAYLOAD_SIZE;
-		nrk_int_enable();
-    rf_init (&rfRxInfo, 13, 0xffff, 0);
-    cnt=0;
-    while(1){
-	  		DPDS1 |= 0x3;
-			DDRG |= 0x1;
-			PORTG |= 0x1;
-			DDRE|=0xE0;
-			PORTE|=0xE0;
-    		rfTxInfo.pPayload=tx_buf;
-    		sprintf( tx_buf, "%lu", cnt); 
-    		rfTxInfo.length= strlen(tx_buf) + 1;
-				rfTxInfo.destAddr = 0x1215;
-				rfTxInfo.cca = 0;
-				rfTxInfo.ackRequest = 0;
-				
-				printf( "Sending\r\n" );
-	//			nrk_gpio_set(NRK_DEBUG_0);
-				if(rf_tx_packet(&rfTxInfo) != 1)
-					printf("--- RF_TX ERROR ---\r\n");
-	//			nrk_gpio_clr(NRK_DEBUG_0);
-				cnt++;
-		
-				for(i=0; i<10; i++ )
-					halWait(10000);
-				nrk_led_toggle(RED_LED);
-		}
+	nrk_int_enable();
+	rf_init (&rfRxInfo, 13, 0xffff, 0);
+	while(1){
+		DPDS1 |= 0x3;
+		rfTxInfo.pPayload=tx_buf;
+		sprintf( tx_buf, "%s", "this is a test message"); 
+		rfTxInfo.length= strlen(tx_buf) + 1;
+		rfTxInfo.destAddr = 0x0;
+		rfTxInfo.cca = 0;
+		rfTxInfo.ackRequest = 0;
+
+		printf( "Sending\r\n" );
+		if(rf_tx_packet(&rfTxInfo) != 1)
+			printf("--- RF_TX ERROR ---\r\n");
+
+		for(i=0; i<10; i++ )
+			halWait(10000);
+		nrk_led_toggle(RED_LED);
+	}
 
 }
-
-
-void my_callback(uint16_t global_slot )
-{
-		static uint16_t cnt;
-
-		printf( "callback %d %d\n",global_slot,cnt );
-		cnt++;
-}
-
-
 
 /**
  *  This is a callback if you require immediate response to a packet
  */
 RF_RX_INFO *rf_rx_callback (RF_RX_INFO * pRRI)
 {
-    // Any code here gets called the instant a packet is received from the interrupt   
-    return pRRI;
+	// Any code here gets called the instant a packet is received from the interrupt   
+	return pRRI;
 }
