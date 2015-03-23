@@ -44,7 +44,7 @@
 #include <nrk.h>
 #include <nrk_error.h>
 
-#include <flash.h>
+//#include <flash.h>
 
 // number of samples for regression line calculation
 #define MAX_SAMPLES 4
@@ -102,15 +102,17 @@ uint8_t psync_is_synced();
 void psync_get_time(nrk_time_t* global_time);
 
 // convert from local to global time
-void psync_convert_local_to_global(nrk_time_t* local_time, nrk_time_t* global_time);
+void psync_local_to_global(nrk_time_t* local_time, nrk_time_t* global_time);
 
 // convert from global to local time
-void psync_convert_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time);
+void psync_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time);
 
 // local time difference from global time difference
-void psync_get_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff);
+void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff);
 
 // initiate a pulsesynce flood cycle
 void psync_flood_wait(nrk_time_t* time);
+
+// functions prototyped here just for testing
 
 #endif

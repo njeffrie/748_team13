@@ -42,7 +42,7 @@ void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan) {
 	if (skew_lock != NULL)
 		nrk_sem_delete(skew_lock);
 	skew_lock = nrk_sem_create(1, high_prio);
-	flash_init(chan);
+	//flash_init(chan);
 	is_root = root;
 	loc_sum = 0;
 	loc_avg = 0;
@@ -144,38 +144,38 @@ void psync_get_time(nrk_time_t* global_time) {
 	nrk_time_get(global_time);
 	uint64_t full_time = get_full_time(*global_time);
 	nrk_sem_pend(skew_lock);
-	*global_time = get_pack_time(full_time + off_avg + (off_sq_sum * (int64_t)(full_time - loc_avg) / loc_sq_sum));
+	*global_time = get_pack_time(full_time + off_avg + ((off_sq_sum * (int64_t)(full_time - loc_avg) / loc_sq_sum) >> 10));
 	nrk_sem_post(skew_lock);
 }
 
 /*
  * function to convert a local time to a global time
  */
-void psync_convert_local_to_global(nrk_time_t* local_time, nrk_time_t* global_time) {
+void psync_local_to_global(nrk_time_t* local_time, nrk_time_t* global_time) {
 	uint64_t loc_time = get_full_time(*local_time);
 	nrk_sem_pend(skew_lock);
-	*global_time = get_pack_time(loc_time + off_avg + (off_sq_sum * (int64_t)(loc_time - loc_avg) / loc_sq_sum));
+	*global_time = get_pack_time(loc_time + off_avg + ((off_sq_sum * (int64_t)(loc_time - loc_avg) / loc_sq_sum) >> 10));
 	nrk_sem_post(skew_lock);
 }
 
 /*
  * function to convert a global time to a local time
  */
-void psync_convert_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time) {
+void psync_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time) {
 	uint64_t glob_time = get_full_time(*global_time);
 	nrk_sem_pend(skew_lock);
 	uint64_t approx_loc = glob_time - off_avg;
-	*local_time = get_pack_time(approx_loc - (off_sq_sum * (int64_t)(approx_loc - loc_avg) / loc_sq_sum));
+	*local_time = get_pack_time(approx_loc - ((off_sq_sum * (int64_t)(approx_loc - loc_avg) / loc_sq_sum) >> 10));
 	nrk_sem_post(skew_lock);
 }
 
 /* 
  * function to obtain local time difference from global time difference
  */
-void psync_get_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
+void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
 	uint64_t g_diff = get_full_time(*glob_diff);
 	nrk_sem_pend(skew_lock);
-	*loc_diff = get_pack_time(g_diff - ((int64_t)g_diff * off_sq_sum) / loc_sq_sum);
+	*loc_diff = get_pack_time(g_diff - (((int64_t)g_diff * off_sq_sum / loc_sq_sum) >> 10));
 	nrk_sem_post(skew_lock);
 }
 
@@ -185,14 +185,14 @@ void psync_get_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
 void psync_edit_buf(uint8_t* buf, nrk_time_t* rcv_time) {
 	nrk_time_t time;
 	nrk_time_get(&time);
-	new_loc = get_full_time(rcv_time);
+	new_loc = get_full_time(*rcv_time);
 	uint64_t diff = get_full_time(time) - new_loc + TX_DELAY;
 	uint64_t* buf64 = (uint64_t*)buf;
 	#ifdef COMPENSATED_FORWARDING
 	new_glob = buf64[1];
 	if (samples == MAX_SAMPLES) {
 		uint8_t ind = (curr_ind + 1) % MAX_SAMPLES;
-		buf64[1] += diff + lien_data[ind].skew_num * diff / line_data[ind].skew_den;
+		buf64[1] += diff + ((line_data[ind].skew_num * diff / line_data[ind].skew_den) >> 10);
 	}
 	else
 		buf64[1] += diff;
@@ -216,12 +216,12 @@ void psync_flood_wait(nrk_time_t* time) {
 	
 	// functionality to be executed if the node is set as the network global clock
 	if (is_root) {
-		nrk_time_get(&time);
-		buf[0] = get_full_time(time) + TX_DELAY;
+		nrk_time_get(time);
+		buf[0] = get_full_time(*time) + TX_DELAY;
 		#ifdef COMPENSATED_FORWARDING
 		buf[1] = buf[0];
 		#endif
-		flash_tx_pkt((uint8_t*)buf, PKT_SIZE);
+		//flash_tx_pkt((uint8_t*)buf, PKT_SIZE);
 	}
 	// functionality to be executed if the node is synchronizing to an external global clock
 	else {
@@ -230,7 +230,7 @@ void psync_flood_wait(nrk_time_t* time) {
 		nrk_time_get(&cur_time);
 		nrk_time_add(&time_after, cur_time, *time);
 		nrk_sem_pend(skew_lock);
-		flash_enable(time, psync_edit_buf);
+		//flash_enable(time, psync_edit_buf);
 		while (!edit && (get_full_time(cur_time) < get_full_time(time_after)))
 			nrk_time_get(&cur_time);
 		nrk_sem_post(skew_lock);
