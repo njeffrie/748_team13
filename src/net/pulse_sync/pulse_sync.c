@@ -199,7 +199,9 @@ void psync_edit_buf(uint8_t* buf, nrk_time_t* rcv_time) {
 	new_glob = buf64[1];
 	if (samples == MAX_SAMPLES) {
 		uint8_t ind = (curr_ind + 1) % MAX_SAMPLES;
-		int64_t skew_inv = off_sq_sum > 0 ? ~(loc_sq_sum / off_sq_sum) + 1 : loc_sq_sum / (~off_sq_sum + 1);
+		int64_t num = line_data[ind].skew_num;
+		uint64_t den = line_data[ind].skew_den;
+		int64_t skew_inv = num > 0 ? ~(den / num) + 1 : den / (~num + 1);
 		buf64[1] += diff + (int64_t)(diff / (skew_inv << 6));
 	}
 	else
