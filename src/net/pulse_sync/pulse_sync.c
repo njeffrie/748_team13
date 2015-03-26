@@ -42,7 +42,7 @@ void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan) {
 	if (skew_lock != NULL)
 		nrk_sem_delete(skew_lock);
 	skew_lock = nrk_sem_create(1, high_prio);
-	//flash_init(chan);
+	flash_init(chan);
 	is_root = root;
 	loc_sum = 0;
 	loc_avg = 0;
@@ -202,7 +202,7 @@ void psync_edit_buf(uint8_t* buf, nrk_time_t* rcv_time) {
 		int64_t num = line_data[ind].skew_num;
 		uint64_t den = line_data[ind].skew_den;
 		int64_t skew_inv = num > 0 ? ~(den / num) + 1 : den / (~num + 1);
-		buf64[1] += diff + (int64_t)(diff / (skew_inv << 6));
+		buf64[1] += diff - (int64_t)(diff / (skew_inv << 6));
 	}
 	else
 		buf64[1] += diff;
@@ -231,7 +231,7 @@ void psync_flood_wait(nrk_time_t* time) {
 		#ifdef COMPENSATED_FORWARDING
 		buf[1] = buf[0];
 		#endif
-		//flash_tx_pkt((uint8_t*)buf, PKT_SIZE);
+		flash_tx_pkt((uint8_t*)buf, PKT_SIZE);
 	}
 	// functionality to be executed if the node is synchronizing to an external global clock
 	else {
@@ -240,7 +240,7 @@ void psync_flood_wait(nrk_time_t* time) {
 		nrk_time_get(&cur_time);
 		nrk_time_add(&time_after, cur_time, *time);
 		nrk_sem_pend(skew_lock);
-		//flash_enable(16, time, psync_edit_buf);
+		flash_enable(16, time, psync_edit_buf);
 		while (!edit && (get_full_time(cur_time) < get_full_time(time_after)))
 			nrk_time_get(&cur_time);
 		nrk_sem_post(skew_lock);
