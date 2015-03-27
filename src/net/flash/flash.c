@@ -51,6 +51,7 @@ static uint32_t flash_err_count;
 static int8_t flash_chan;
 static int8_t is_enabled;
 static uint8_t flash_started;
+//static uint8_t *flash_buf;
 static uint8_t flash_buf[FLASH_MAX_PKT_LEN];
 
 //user supplied when flash_enable is called
@@ -61,6 +62,7 @@ nrk_time_t last_rx_time;
 
 //user function to modify buffer upon receive 
 void (*user_rx_callback)(uint8_t* buf, nrk_time_t* rcv_time);
+void(*flash_tx_callback)(uint16_t len, uint8_t *buf);
 
 RF_RX_INFO flash_rfRxInfo;
 RF_TX_INFO flash_rfTxInfo;
@@ -150,7 +152,8 @@ void flash_nw_task()
 			//get metadata about received packet
 			flash_message_len = flash_rfRxInfo.length;
 			memcpy(flash_buf, flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
-			
+			//flash_buf = flash_rfRxInfo.pPayload;
+
 			//call user callback function on buffer
 			if (user_rx_callback != NULL)
 				user_rx_callback(flash_buf, &last_rx_time);
@@ -167,6 +170,8 @@ void flash_nw_task()
 			flash_rfTxInfo.ackRequest = 0;
 			flash_rfTxInfo.cca = 0;
 			//rf_rx_on();
+			if (flash_tx_callback != NULL)
+				flash_tx_callback(flash_message_len, flash_buf);
 			rf_tx_packet(&flash_rfTxInfo);
 			//rf_rx_off();
 			nrk_event_signal(flash_tx_pkt_done_signal);
@@ -230,9 +235,14 @@ void flash_tx_pkt(uint8_t *buf, uint8_t len)
 {
 	memcpy(flash_buf, buf, len);
 	flash_message_len = len;
-	nrk_signal_register (flash_tx_pkt_done_signal);
 	nrk_event_signal (packetTxSignal);
+	nrk_signal_register (flash_tx_pkt_done_signal);
 	nrk_event_wait (SIG(flash_tx_pkt_done_signal));
+}
+
+void flash_tx_callback_set(void(*callback)(uint16_t, uint8_t *))
+{
+	flash_tx_callback = callback;
 }
 
 void flash_run_tests()
