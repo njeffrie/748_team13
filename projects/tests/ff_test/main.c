@@ -72,27 +72,23 @@ int cnt = 0;
 
 void flash_test_callback(uint8_t *buf, nrk_time_t *rx_time)
 {
-	printf("calback received buffer %s with rx time %d seconds\r\n", buf, rx_time->secs);
+	printf("calback received buffer %s with rx time %d seconds\r\n", (char *)buf, (int)rx_time->secs);
 	sprintf(buf, "%d", cnt ++ );
 	nrk_event_signal(packet_rx_signal);
 }
 
 void flood_task()
 {
-	//printf("flash error count after init = %d\r\n", (int)flash_err_count_get());
-	//printf("current packet size = %d\r\n", (int)flash_msg_len_get());
-	
 	char *buf = "this is a buffer";
+	int max_msg_len = strlen(buf) + 1;
 	printf("transmitting packet [%s]\r\n", buf);
 	
 	flash_tx_pkt((uint8_t *)buf, (uint8_t)strlen(buf));
 	
-	//printf("success...maybe!\r\n");
-
-	flash_enable(NULL, flash_test_callback);
+	flash_enable((uint8_t)max_msg_len, NULL, flash_test_callback);
 	printf("waiting to propagate flood\r\n");
 	while (1){
-		flash_enable(NULL, flash_test_callback);
+		flash_enable((uint8_t)max_msg_len, NULL, flash_test_callback);
 		nrk_signal_register(packet_rx_signal);
 		nrk_event_wait(SIG(packet_rx_signal));
 	}

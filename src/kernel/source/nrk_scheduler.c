@@ -57,7 +57,7 @@ void inline _nrk_scheduler()
     uint16_t next_wake;
     uint16_t start_time_stamp;
 
-    nrk_int_enable();   // this should be removed...  Not needed
+    //nrk_int_enable();   // this should be removed...  Not needed
 
 
 #ifndef NRK_NO_BOUNDED_CONTEXT_SWAP
