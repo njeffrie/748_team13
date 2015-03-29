@@ -24,8 +24,10 @@
 *******************************************************************************/
 
 /*
- * pulse_sync.c: PulseSync protocol implementation for Nano-RK
+ * PulseSync protocol implementation for Nano-RK
  * built on top of Flash network flooding protocol
+ *
+ * pulse_sync.c: implementation of PulseSync API
  *
  * 18-748 S15: Group 13
  * Madhav Iyengar
@@ -34,6 +36,33 @@
  */
 
 #include "pulse_sync.h"
+
+// stores previous sync data in table for compensated forwarding
+struct sync_point_info {
+	uint64_t glob_time;
+	uint64_t loc_time;
+	int64_t skew_inv;
+};
+
+// values to be saved between synchronizations for faster regression line calculation
+uint64_t loc_sum, loc_avg;
+int64_t off_sum, off_avg;
+uint64_t loc_sq_sum;
+int64_t off_sq_sum, skew_inv;
+uint8_t samples, curr_ind;
+
+// new times to be added to regression line
+uint64_t new_loc, new_glob;
+uint8_t edit;
+
+// semaphore (used as mutex) for using/changing current skew value
+nrk_sem_t* skew_lock;
+
+// circular buffer for recent regression line data
+struct sync_point_info line_data[MAX_SAMPLES];
+
+// whether or not this node is root, set on initialization
+uint8_t is_root;
 
 /*
  * function for initializing/reseting pulsesync
@@ -50,8 +79,19 @@ void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan) {
 	off_avg = 0;
 	loc_sq_sum = 1;
 	off_sq_sum = 0;
+	skew_inv = 0x7fffffffffffffffL;
 	samples = 0;
 	curr_ind = 0;
+}
+
+/*
+ * helper function to get current time without using nrk_time_get 
+ * and converting back to uint64_t
+ */
+inline uint64_t get_time_exp() {
+    uint64_t time = 1000000000L * (uint64_t)nrk_system_time.secs + nrk_system_time.nano_secs;
+    time += ((uint64_t)_nrk_precision_os_timer_get()) * (uint64_t)NANOS_PER_PRECISION_TICK;
+    return time + ((uint64_t)_nrk_os_timer_get()) * (uint64_t)NANOS_PER_TICK; 
 }
 
 /*
@@ -125,12 +165,14 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	//// save new data into next entry in circular buffer
 	curr_ind = next_ind;
 	samples = new_samples;
-	line_data[curr_ind] = (struct sync_point_info){glob_time, loc_time, off_sq_sum, loc_sq_sum};
-	// set skew to zero if skew fraction undefined
-	if (loc_sq_sum == 0) {
-		line_data[curr_ind].skew_num = 0;
-		line_data[curr_ind].skew_den = 1;
-	}
+	// check for divide-by-0 errors
+	if (!off_sq_sum)
+		skew_inv = 0x7fffffffffffffffL;
+	else if (!loc_sq_sum) 
+		skew_inv = off_sq_sum > 0 ? 1 : -1;
+	else
+		skew_inv = off_sq_sum > 0 ? ~(loc_sq_sum / off_sq_sum) + 1 : loc_sq_sum / (~off_sq_sum + 1);
+	line_data[curr_ind] = (struct sync_point_info){glob_time, loc_time, skew_inv};
 
 	// unlock skew values
 	nrk_sem_post(skew_lock);
@@ -147,8 +189,8 @@ uint8_t psync_is_synced() {
  * function to obtain current global time
  */
 void psync_get_time(nrk_time_t* global_time) {
-	nrk_time_get(global_time);
-	uint64_t full_time = get_full_time(*global_time);
+	//nrk_time_get(global_time);
+	uint64_t full_time = get_time_exp();//get_full_time(*global_time);
 	nrk_sem_pend(skew_lock);
 	*global_time = get_pack_time(full_time + off_avg + ((off_sq_sum * (full_time - loc_avg) / loc_sq_sum) >> 6));
 	nrk_sem_post(skew_lock);
@@ -181,36 +223,50 @@ void psync_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time) {
 void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
 	uint64_t g_diff = get_full_time(*glob_diff);
 	nrk_sem_pend(skew_lock);
-	int64_t skew_inv = off_sq_sum > 0 ? ~(loc_sq_sum / off_sq_sum) + 1 : loc_sq_sum / (~off_sq_sum + 1);
 	*loc_diff = get_pack_time(g_diff + (int64_t)(g_diff / (skew_inv << 6)));
 	nrk_sem_post(skew_lock);
 }
 
 /*
- * function applied to received timestamps before forwarding
+ * function to handle received PulseSync floods
+ * saves values to be added to regression table
  */
-void psync_edit_buf(uint8_t* buf, nrk_time_t* rcv_time) {
-	nrk_time_t time;
-	nrk_time_get(&time);
+void psync_rx_callback(uint8_t* buf, nrk_time_t* rcv_time) {
 	new_loc = get_full_time(*rcv_time);
-	uint64_t diff = get_full_time(time) - new_loc + TX_DELAY;
 	uint64_t* buf64 = (uint64_t*)buf;
-	#ifdef COMPENSATED_FORWARDING
+	#ifdef COMPENSATED FORWARDING
 	new_glob = buf64[1];
-	if (samples == MAX_SAMPLES) {
-		uint8_t ind = (curr_ind + 1) % MAX_SAMPLES;
-		int64_t num = line_data[ind].skew_num;
-		uint64_t den = line_data[ind].skew_den;
-		int64_t skew_inv = num > 0 ? ~(den / num) + 1 : den / (~num + 1);
-		buf64[1] += diff - (int64_t)(diff / (skew_inv << 6));
-	}
-	else
-		buf64[1] += diff;
 	#else
 	new_glob = buf64[0];
 	#endif
-	buf64[0] += diff;
-	edit = 1;
+}
+
+/*
+ * function to handle (re)transmission of PulseSynce floods
+ * sets/alters buffer for Rx-Tx time delta
+ */
+void psync_tx_callback(uint16_t len, uint8_t* buf) {
+	uint64_t* buf64 = (uint64_t*)buf;
+	if (is_root) { 
+		buf64[0] = get_time_exp();
+		#ifdef COMPENSATED_FORWARDING
+		buf64[1] = buf64[0];
+		#endif
+	}
+	else {
+		uint64_t diff = get_time_exp() - new_loc;
+	
+		#ifdef COMPENSATED_FORWARDING
+		if (samples == MAX_SAMPLES) {
+			uint8_t ind = (curr_ind + 1) % MAX_SAMPLES;
+			buf64[1] += diff - (int64_t)(diff / (line_data[ind].skew_num << 6));
+		}
+		else
+			buf64[1] += diff;
+		#endif
+		buf64[0] += diff;
+		edit = 1;
+	}
 }
 
 /*
@@ -226,11 +282,11 @@ void psync_flood_wait(nrk_time_t* time) {
 	
 	// functionality to be executed if the node is set as the network global clock
 	if (is_root) {
-		nrk_time_get(time);
-		buf[0] = get_full_time(*time) + TX_DELAY;
+		buf[0] = 0;
 		#ifdef COMPENSATED_FORWARDING
-		buf[1] = buf[0];
+		buf[1] = 0;
 		#endif
+		flash_tx_callback_set(psync_tx_callback);
 		flash_tx_pkt((uint8_t*)buf, PKT_SIZE);
 	}
 	// functionality to be executed if the node is synchronizing to an external global clock
@@ -239,11 +295,10 @@ void psync_flood_wait(nrk_time_t* time) {
 		nrk_time_t cur_time, time_after;
 		nrk_time_get(&cur_time);
 		nrk_time_add(&time_after, cur_time, *time);
-		nrk_sem_pend(skew_lock);
-		flash_enable(16, time, psync_edit_buf);
-		while (!edit && (get_full_time(cur_time) < get_full_time(time_after)))
+		flash_tx_callback_set(psync_tx_callback);
+		flash_enable(16, time, psync_rx_callback);
+		while (!edit && (nrk_time_compare(&cur_time, &time_after) < 0))
 			nrk_time_get(&cur_time);
-		nrk_sem_post(skew_lock);
 		if (edit) {
 			psync_add_point(new_loc, new_glob);
 			edit = 0;

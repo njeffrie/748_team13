@@ -24,8 +24,10 @@
 *******************************************************************************/
 
 /*
- * pulse_sync.h: PulseSync protocol implementation for Nano-RK
+ * PulseSync protocol implementation for Nano-RK
  * built on top of Flash network flooding protocol
+ *
+ * pulse_sync.h: function declarations for PulseSync API
  *
  * 18-748 S15: Group 13
  * Madhav Iyengar
@@ -41,10 +43,16 @@
 #include <stdio.h>
 #include <stdint.h>
 
+// enable precision timing
+#ifndef NRK_SUB_TICK_TIMING
+#define NRK_SUB_TICK_TIMING
+#endif
+
 #include <nrk.h>
 #include <nrk_error.h>
+#include <nrk_timer.h>
 
-//#include <flash.h>
+#include <flash.h>
 
 // number of samples for regression line calculation
 #define MAX_SAMPLES 4
@@ -59,35 +67,8 @@
 #endif
 
 // latency of physical transmission process
-#define TX_DELAY 100
-
-// stores previous sync data in table for compensated forwarding
-struct sync_point_info {
-	uint64_t glob_time;
-	uint64_t loc_time;
-	uint64_t skew_num;
-	uint64_t skew_den;
-};
-
-// values to be saved between synchronizations for faster regression line calculation
-uint64_t loc_sum, loc_avg;
-int64_t off_sum, off_avg;
-uint64_t loc_sq_sum;
-int64_t off_sq_sum;
-uint8_t samples, curr_ind;
-
-// new times to be added to regression line
-uint64_t new_loc, new_glob;
-uint8_t edit;
-
-// semaphore (used as mutex) for using/changing current skew value
-nrk_sem_t* skew_lock;
-
-// circular buffer for recent regression line data
-struct sync_point_info line_data[MAX_SAMPLES];
-
-// whether or not this node is root, set on initialization
-uint8_t is_root;
+#define RE_TX_DELAY 1223334
+#define TX_DELAY 
 
 // initiate/reset pulsesync
 void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan);
@@ -112,7 +93,5 @@ void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff);
 
 // initiate a pulsesynce flood cycle
 void psync_flood_wait(nrk_time_t* time);
-
-// functions prototyped here just for testing
 
 #endif
