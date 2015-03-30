@@ -47,8 +47,8 @@ struct sync_point_info {
 // values to be saved between synchronizations for faster regression line calculation
 uint64_t loc_sum, loc_avg;
 int64_t off_sum, off_avg;
-uint64_t loc_sq_sum;
-int64_t off_sq_sum, skew_inv;
+//uint64_t loc_sq_sum;
+int64_t /*off_sq_sum,*/ skew_inv;
 uint8_t samples, curr_ind;
 
 // new times to be added to regression line
@@ -82,6 +82,14 @@ void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan) {
 	skew_inv = 0x7fffffffffffffffL;
 	samples = 0;
 	curr_ind = 0;
+	flash_task_config();
+}
+
+/*
+ * set whether or not root node
+ */
+void psync_set_root(uint8_t root) {
+	is_root = root;
 }
 
 /*
@@ -234,7 +242,7 @@ void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
 void psync_rx_callback(uint8_t* buf, nrk_time_t* rcv_time) {
 	new_loc = get_full_time(*rcv_time);
 	uint64_t* buf64 = (uint64_t*)buf;
-	#ifdef COMPENSATED FORWARDING
+	#ifdef COMPENSATED_FORWARDING
 	new_glob = buf64[1];
 	#else
 	new_glob = buf64[0];
@@ -259,7 +267,7 @@ void psync_tx_callback(uint16_t len, uint8_t* buf) {
 		#ifdef COMPENSATED_FORWARDING
 		if (samples == MAX_SAMPLES) {
 			uint8_t ind = (curr_ind + 1) % MAX_SAMPLES;
-			buf64[1] += diff - (int64_t)(diff / (line_data[ind].skew_num << 6));
+			buf64[1] += diff - (int64_t)(diff / (line_data[ind].skew_inv << 6));
 		}
 		else
 			buf64[1] += diff;
@@ -282,6 +290,7 @@ void psync_flood_wait(nrk_time_t* time) {
 	
 	// functionality to be executed if the node is set as the network global clock
 	if (is_root) {
+		printf("Waiting to Transmit\r\n");
 		buf[0] = 0;
 		#ifdef COMPENSATED_FORWARDING
 		buf[1] = 0;
@@ -291,15 +300,24 @@ void psync_flood_wait(nrk_time_t* time) {
 	}
 	// functionality to be executed if the node is synchronizing to an external global clock
 	else {
+		printf("Waiting for Receive\r\n");
 		edit = 0;
-		nrk_time_t cur_time, time_after;
+		/*uint64_t time_after, cur_time;
+		cur_time = get_time_exp();
+		time_after = cur_time + get_full_time(*time);*/
+		nrk_signal_register(flash_tx_pkt_done_signal);
+		/*nrk_time_t cur_time, time_after;
 		nrk_time_get(&cur_time);
-		nrk_time_add(&time_after, cur_time, *time);
+		nrk_time_add(&time_after, cur_time, *time);*/
 		flash_tx_callback_set(psync_tx_callback);
 		flash_enable(16, time, psync_rx_callback);
-		while (!edit && (nrk_time_compare(&cur_time, &time_after) < 0))
-			nrk_time_get(&cur_time);
+		/*while (!edit && (cur_time < time_after))
+			cur_time = get_time_exp();*/
+		/*while (!edit && (nrk_time_compare(&cur_time, &time_after) < 0))
+			nrk_time_get(&cur_time);*/
+		nrk_event_wait(SIG(flash_tx_pkt_done_signal));
 		if (edit) {
+			printf("loc: %lu << 32 + %lu, glob: %lu << 32 + %lu\r\n", ((uint32_t*)&new_loc)[1], ((uint32_t*)&new_loc)[0], ((uint32_t*)&new_glob)[1], ((uint32_t*)&new_glob)[0]);
 			psync_add_point(new_loc, new_glob);
 			edit = 0;
 		}

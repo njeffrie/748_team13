@@ -69,7 +69,7 @@ RF_TX_INFO flash_rfTxInfo;
 
 //signals to allow predictable tx and rx turnarounds
 nrk_sig_t packetRxSignal;
-nrk_sig_t flash_tx_pkt_done_signal;
+//nrk_sig_t flash_tx_pkt_done_signal;
 nrk_sig_t packetTxSignal;
 
 /**

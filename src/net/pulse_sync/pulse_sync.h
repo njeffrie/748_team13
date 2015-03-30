@@ -58,7 +58,7 @@
 #define MAX_SAMPLES 4
 
 // define this if you desire compensated forwarding in addition to simple
-#define COMPENSATED_FORWARDING
+//#define COMPENSATED_FORWARDING
 
 #ifdef COMPENSATED_FORWARDING
 #define PKT_SIZE 16
@@ -70,8 +70,14 @@
 #define RE_TX_DELAY 1223334
 #define TX_DELAY 
 
+uint64_t loc_sq_sum;
+int64_t off_sq_sum;
+
 // initiate/reset pulsesync
 void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan);
+
+// set whether root or not
+void psync_set_root(uint8_t root);
 
 // add a synchronization data point for regression line calculation
 void psync_add_point(uint64_t loc_time, uint64_t glob_time);
