@@ -98,6 +98,11 @@ uint8_t use_glossy;
 volatile void (*rx_start_func)(void) = 0;
 volatile void (*rx_end_func)(void) = 0;
 
+// added for accessing buffer immediately before transmission for Flash implementation
+volatile void (*tx_start_func)(uint16_t, uint8_t*) = 0;
+uint16_t tx_len;
+uint8_t* tx_buf;
+
 /* AES encryption and decryption key buffers */
 uint8_t ekey[16];
 uint8_t dkey[16];
@@ -170,6 +175,9 @@ static void rf_cmd(uint8_t cmd)
 {
 	while((TRX_STATUS & 0x1F) == STATE_TRANSITION_IN_PROGRESS)
 		continue;
+	// added for accessing buffer immediately before transmission for Flash implementation
+	if ((cmd == 0x2) && tx_start_func)
+		tx_start_func(tx_len, tx_buf);
 	TRX_STATE = cmd;
 }
 
@@ -232,6 +240,9 @@ void rx_end_callback(void (*func)(void)){
 	rx_end_func = func;
 }
 
+void tx_start_callback(void (*func)(uint16_t, uint8_t*)) {
+	tx_start_func = func;
+}
 
 void rf_init(RF_RX_INFO *pRRI, uint8_t channel, uint16_t panId, uint16_t myAddr)
 { 
@@ -500,6 +511,12 @@ uint8_t rf_tx_packet(RF_TX_INFO *pRTI)
 #ifdef RADIO_CC2591
 		rf_cc2591_tx_on();
 #endif
+
+	// set arguments for calling tx_start_func
+	if (tx_start_func) {
+		tx_len = pRTI->length;
+		tx_buf = data_start;
+	}
 
    tx_done = 0;
    // Send packet. 0x2 is equivalent to TX_START

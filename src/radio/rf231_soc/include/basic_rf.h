@@ -355,6 +355,9 @@ void rf_set_rx(RF_RX_INFO *pRRI, uint8_t channel);
 void rx_start_callback(void (*func)(void));
 void rx_end_callback(void (*func)(void));
 
+// added for Flash flood implementation, to access buffer right before transmission
+void tx_start_callback(void (*func)(uint16_t, uint8_t*));
+
 
 void rf_cc2591_tx_on();
 void rf_cc2591_rx_on();

@@ -53,6 +53,8 @@
 
 #define FLASH_MAX_PKT_LEN 128
 
+nrk_sig_t flash_tx_pkt_done_signal;
+
 int8_t flash_init(uint8_t chan);
 void flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t* buf, nrk_time_t* rcv_time));
 int8_t flash_rf_power_set(uint8_t power);
