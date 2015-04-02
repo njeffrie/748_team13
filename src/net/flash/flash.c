@@ -62,14 +62,14 @@ nrk_time_t last_rx_time;
 
 //user function to modify buffer upon receive 
 void (*user_rx_callback)(uint8_t* buf, nrk_time_t* rcv_time);
-//void(*flash_tx_callback)(uint16_t len, uint8_t *buf);
+void(*flash_tx_callback)(uint16_t len, uint8_t *buf);
 
 RF_RX_INFO flash_rfRxInfo;
 RF_TX_INFO flash_rfTxInfo;
 
 //signals to allow predictable tx and rx turnarounds
 nrk_sig_t packetRxSignal;
-//nrk_sig_t flash_tx_pkt_done_signal;
+nrk_sig_t flash_tx_pkt_done_signal;
 nrk_sig_t packetTxSignal;
 
 /**
@@ -164,8 +164,8 @@ void flash_nw_task()
 			flash_rfTxInfo.ackRequest = 0;
 			flash_rfTxInfo.cca = 0;
 			//rf_rx_on();
-			//if (flash_tx_callback != NULL)
-				//flash_tx_callback(flash_message_len, flash_buf);
+			if (flash_tx_callback != NULL)
+				flash_tx_callback(flash_message_len, flash_buf);
 			rf_tx_packet(&flash_rfTxInfo);
 			//rf_rx_off();
 			nrk_event_signal(flash_tx_pkt_done_signal);
@@ -227,23 +227,20 @@ uint32_t flash_err_count_get()
 
 void flash_tx_pkt(uint8_t *buf, uint8_t len)
 {
-	/*
 	memcpy(flash_buf, buf, len);
 	flash_message_len = len;
-	*/
-	if(rf_tx_pkt_blocking(buf, len) == NRK_ERROR){
+	/*if(rf_tx_pkt_blocking(buf, len) == NRK_ERROR){
 		nrk_printf(PSTR("ERROR: TX timed out\r\n"));
-	}
-	/*nrk_event_signal (packetTxSignal);
+	}*/
+	nrk_event_signal (packetTxSignal);
 	nrk_signal_register (flash_tx_pkt_done_signal);
 	nrk_event_wait (SIG(flash_tx_pkt_done_signal));
-	*/
+	
 }
 
 void flash_tx_callback_set(void(*callback)(uint16_t, uint8_t *))
 {
-	//flash_tx_callback = callback;
-	tx_start_callback(callback);
+	flash_tx_callback = callback;
 }
 
 void flash_run_tests()
