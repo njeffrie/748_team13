@@ -33,6 +33,7 @@ void main(){
 	nrk_setup_ports();
 	nrk_setup_uart(UART_BAUDRATE_115K2);
 	nrk_init();
+	nrk_int_enable();
 	pRRI.ackRequest = 0;
 	pRRI.max_length = 100;
 	pRRI.pPayload = buf;
