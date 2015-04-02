@@ -521,6 +521,17 @@ uint8_t rf_tx_packet(RF_TX_INFO *pRTI)
 	return trx_error;
 }
 
+uint8_t rf_tx_pkt_blocking(RF_TX_INFO *pRTI)
+{
+	uint16_t count = 0;
+	rf_tx_packet(pRTI);
+	while (!tx_done){
+		count += 1;
+		if (count > 5000)//~1ms timeout
+			return NRK_ERROR;
+	}
+	return NRK_OK;
+}
 
 /* Resends the packet in the buffer */
 uint8_t rf_tx_packet_resend()

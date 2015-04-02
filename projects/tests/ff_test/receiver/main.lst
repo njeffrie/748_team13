@@ -1,0 +1,234 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 341               		.section	.rodata.str1.1,"aMS",@progbits,1
+ 342               	.LC0:
+ 343 0000 7265 6365 		.string	"received packet!\r"
+ 343      6976 6564 
+ 343      2070 6163 
+ 343      6B65 7421 
+ 343      0D00 
+ 344               		.text
+ 346               	.global	rf_start_callback
+ 348               	rf_start_callback:
+ 349               		.stabd	46,0,0
+   1:main.c        **** #include <basic_rf.h>
+   2:main.c        **** #include <nrk.h>
+   3:main.c        **** #include <include.h>
+   4:main.c        **** #include <ulib.h>
+   5:main.c        **** #include <stdio.h>
+   6:main.c        **** #include <avr/sleep.h>
+   7:main.c        **** #include <hal.h>
+   8:main.c        **** #include <nrk_error.h>
+   9:main.c        **** #include <nrk_time.h>
+  10:main.c        **** #include <avr/eeprom.h>
+  11:main.c        **** #include <nrk_eeprom.h>
+  12:main.c        **** #include <string.h>
+  13:main.c        **** #include <flash.h>
+  14:main.c        **** 
+  15:main.c        **** RF_RX_INFO pRRI;
+  16:main.c        **** char buf[100];
+  17:main.c        **** 
+  18:main.c        **** void rf_start_callback()
+  19:main.c        **** {
+ 351               	.LM0:
+ 352               	.LFBB1:
+ 353               	/* prologue: function */
+ 354               	/* frame size = 0 */
+ 355               	/* stack size = 0 */
+ 356               	.L__stack_usage = 0
+  20:main.c        **** 	printf("received packet!\r\n");
+ 358               	.LM1:
+ 359 0000 80E0      		ldi r24,lo8(.LC0)
+ 360 0002 90E0      		ldi r25,hi8(.LC0)
+ 361 0004 0E94 0000 		call puts
+  21:main.c        **** 	nrk_led_toggle(BLUE_LED);
+ 363               	.LM2:
+ 364 0008 83E0      		ldi r24,lo8(3)
+ 365 000a 90E0      		ldi r25,0
+ 366 000c 0C94 0000 		jmp nrk_led_toggle
+ 368               	.Lscope1:
+ 370               		.stabd	78,0,0
+ 371               		.section	.rodata.str1.1
+ 372               	.LC1:
+ 373 0012 6661 696C 		.string	"failed to receive packet\r"
+ 373      6564 2074 
+ 373      6F20 7265 
+ 373      6365 6976 
+ 373      6520 7061 
+ 374               		.text
+ 376               	.global	rf_finish_callback
+ 378               	rf_finish_callback:
+ 379               		.stabd	46,0,0
+  22:main.c        **** }
+  23:main.c        **** 
+  24:main.c        **** void rf_finish_callback()
+  25:main.c        **** {
+ 381               	.LM3:
+ 382               	.LFBB2:
+ 383               	/* prologue: function */
+ 384               	/* frame size = 0 */
+ 385               	/* stack size = 0 */
+ 386               	.L__stack_usage = 0
+  26:main.c        **** 	if (rf_rx_packet_nonblock() != NRK_OK)
+ 388               	.LM4:
+ 389 0010 0E94 0000 		call rf_rx_packet_nonblock
+ 390 0014 8130      		cpi r24,lo8(1)
+ 391 0016 01F0      		breq .L3
+  27:main.c        **** 		printf("failed to receive packet\r\n");
+ 393               	.LM5:
+ 394 0018 80E0      		ldi r24,lo8(.LC1)
+ 395 001a 90E0      		ldi r25,hi8(.LC1)
+ 396 001c 0E94 0000 		call puts
+ 397               	.L3:
+  28:main.c        **** 	rf_rx_off();
+ 399               	.LM6:
+ 400 0020 0E94 0000 		call rf_rx_off
+  29:main.c        **** 	rf_rx_on();
+ 402               	.LM7:
+ 403 0024 0C94 0000 		jmp rf_rx_on
+ 405               	.Lscope2:
+ 407               		.stabd	78,0,0
+ 408               		.section	.rodata.str1.1
+ 409               	.LC2:
+ 410 002c 6669 6E69 		.string	"finished initialization\r"
+ 410      7368 6564 
+ 410      2069 6E69 
+ 410      7469 616C 
+ 410      697A 6174 
+ 411               		.section	.text.startup,"ax",@progbits
+ 413               	.global	main
+ 415               	main:
+ 416               		.stabd	46,0,0
+  30:main.c        **** }
+  31:main.c        **** 
+  32:main.c        **** void main(){
+ 418               	.LM8:
+ 419               	.LFBB3:
+ 420               	/* prologue: function */
+ 421               	/* frame size = 0 */
+ 422               	/* stack size = 0 */
+ 423               	.L__stack_usage = 0
+  33:main.c        **** 	nrk_setup_ports();
+ 425               	.LM9:
+ 426 0000 0E94 0000 		call nrk_setup_ports
+  34:main.c        **** 	nrk_setup_uart(UART_BAUDRATE_115K2);
+ 428               	.LM10:
+ 429 0004 80E1      		ldi r24,lo8(16)
+ 430 0006 90E0      		ldi r25,0
+ 431 0008 0E94 0000 		call nrk_setup_uart
+  35:main.c        **** 	nrk_init();
+ 433               	.LM11:
+ 434 000c 0E94 0000 		call nrk_init
+  36:main.c        **** 	pRRI.ackRequest = 0;
+ 436               	.LM12:
+ 437 0010 1092 0000 		sts pRRI+7,__zero_reg__
+  37:main.c        **** 	pRRI.max_length = 100;
+ 439               	.LM13:
+ 440 0014 84E6      		ldi r24,lo8(100)
+ 441 0016 8093 0000 		sts pRRI+4,r24
+  38:main.c        **** 	pRRI.pPayload = buf;
+ 443               	.LM14:
+ 444 001a 80E0      		ldi r24,lo8(buf)
+ 445 001c 90E0      		ldi r25,hi8(buf)
+ 446 001e 9093 0000 		sts pRRI+5+1,r25
+ 447 0022 8093 0000 		sts pRRI+5,r24
+  39:main.c        **** 	rf_power_up();
+ 449               	.LM15:
+ 450 0026 0E94 0000 		call rf_power_up
+  40:main.c        **** 	rf_init(&pRRI, 13, 0xFFFF, 0x0);
+ 452               	.LM16:
+ 453 002a 20E0      		ldi r18,0
+ 454 002c 30E0      		ldi r19,0
+ 455 002e 4FEF      		ldi r20,lo8(-1)
+ 456 0030 5FEF      		ldi r21,lo8(-1)
+ 457 0032 6DE0      		ldi r22,lo8(13)
+ 458 0034 80E0      		ldi r24,lo8(pRRI)
+ 459 0036 90E0      		ldi r25,hi8(pRRI)
+ 460 0038 0E94 0000 		call rf_init
+  41:main.c        **** 	rx_start_callback(rf_start_callback);
+ 462               	.LM17:
+ 463 003c 80E0      		ldi r24,lo8(gs(rf_start_callback))
+ 464 003e 90E0      		ldi r25,hi8(gs(rf_start_callback))
+ 465 0040 0E94 0000 		call rx_start_callback
+  42:main.c        **** 	rx_end_callback(rf_finish_callback);
+ 467               	.LM18:
+ 468 0044 80E0      		ldi r24,lo8(gs(rf_finish_callback))
+ 469 0046 90E0      		ldi r25,hi8(gs(rf_finish_callback))
+ 470 0048 0E94 0000 		call rx_end_callback
+  43:main.c        **** 	rf_rx_on();
+ 472               	.LM19:
+ 473 004c 0E94 0000 		call rf_rx_on
+  44:main.c        **** 	printf("finished initialization\r\n");
+ 475               	.LM20:
+ 476 0050 80E0      		ldi r24,lo8(.LC2)
+ 477 0052 90E0      		ldi r25,hi8(.LC2)
+ 478 0054 0E94 0000 		call puts
+ 479               	.L9:
+  45:main.c        **** 	while (1){
+  46:main.c        **** 		continue;
+  47:main.c        **** 	}
+ 481               	.LM21:
+ 482 0058 00C0      		rjmp .L9
+ 484               	.Lscope3:
+ 486               		.stabd	78,0,0
+ 487               		.comm	buf,100,1
+ 488               		.comm	pRRI,12,1
+ 489               		.comm	app_timer0_prescale,1,1
+ 490               		.comm	app_timer0_callback,2,1
+ 491               		.comm	_nrk_time_trigger,1,1
+ 492               		.comm	_nrk_prev_timer_val,1,1
+ 493               		.comm	error_num,1,1
+ 494               		.comm	error_task,1,1
+ 495               		.comm	nrk_kernel_stk_ptr,2,1
+ 496               		.comm	nrk_idle_task_stk,128,1
+ 497               		.comm	_nrk_signal_list,4,1
+ 509               		.text
+ 511               	.Letext0:
+ 512               		.ident	"GCC: (GNU) 4.9.2"
+ 513               	.global __do_copy_data
+ 514               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:5      *ABS*:000000000000003b __RAMPZ__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:6      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:7      *ABS*:0000000000000001 __zero_reg__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:348    .text:0000000000000000 rf_start_callback
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:378    .text:0000000000000010 rf_finish_callback
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccrcE40Y.s:415    .text.startup:0000000000000000 main
+                            *COM*:000000000000000c pRRI
+                            *COM*:0000000000000064 buf
+                            *COM*:0000000000000001 app_timer0_prescale
+                            *COM*:0000000000000002 app_timer0_callback
+                            *COM*:0000000000000001 _nrk_time_trigger
+                            *COM*:0000000000000001 _nrk_prev_timer_val
+                            *COM*:0000000000000001 error_num
+                            *COM*:0000000000000001 error_task
+                            *COM*:0000000000000002 nrk_kernel_stk_ptr
+                            *COM*:0000000000000080 nrk_idle_task_stk
+                            *COM*:0000000000000004 _nrk_signal_list
+
+UNDEFINED SYMBOLS
+puts
+nrk_led_toggle
+rf_rx_packet_nonblock
+rf_rx_off
+rf_rx_on
+nrk_setup_ports
+nrk_setup_uart
+nrk_init
+rf_power_up
+rf_init
+rx_start_callback
+rx_end_callback
+__do_copy_data
+__do_clear_bss

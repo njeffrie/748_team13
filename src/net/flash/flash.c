@@ -130,12 +130,6 @@ void flash_nw_task()
 		nrk_kprintf( PSTR("failed to register packet tx signal"));
 	
 	while(1){
-		/*
-		if (nrk_signal_register(packetRxSignal) != NRK_OK)
-			nrk_kprintf( PSTR("failed to register packet rx signal"));
-		if (nrk_signal_register(packetTxSignal) != NRK_OK)
-			nrk_kprintf( PSTR("failed to register packet tx signal"));
-		*/
 		//wait for either tx or rx to be ready for processing
 		mask = nrk_event_wait(SIG(packetRxSignal) | SIG(packetTxSignal));
 		
@@ -233,11 +227,17 @@ uint32_t flash_err_count_get()
 
 void flash_tx_pkt(uint8_t *buf, uint8_t len)
 {
+	/*
 	memcpy(flash_buf, buf, len);
 	flash_message_len = len;
-	nrk_event_signal (packetTxSignal);
+	*/
+	if(rf_tx_pkt_blocking(buf, len) == NRK_ERROR){
+		nrk_printf(PSTR("ERROR: TX timed out\r\n"));
+	}
+	/*nrk_event_signal (packetTxSignal);
 	nrk_signal_register (flash_tx_pkt_done_signal);
 	nrk_event_wait (SIG(flash_tx_pkt_done_signal));
+	*/
 }
 
 void flash_tx_callback_set(void(*callback)(uint16_t, uint8_t *))

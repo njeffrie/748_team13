@@ -1,0 +1,189 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 341               		.section	.text.startup,"ax",@progbits
+ 343               	.global	main
+ 345               	main:
+ 346               		.stabd	46,0,0
+   1:main.c        **** #include <basic_rf.h>
+   2:main.c        **** #include <nrk.h>
+   3:main.c        **** #include <include.h>
+   4:main.c        **** #include <ulib.h>
+   5:main.c        **** #include <stdio.h>
+   6:main.c        **** #include <avr/sleep.h>
+   7:main.c        **** #include <hal.h>
+   8:main.c        **** #include <nrk_error.h>
+   9:main.c        **** #include <nrk_time.h>
+  10:main.c        **** #include <avr/eeprom.h>
+  11:main.c        **** #include <nrk_eeprom.h>
+  12:main.c        **** #include <string.h>
+  13:main.c        **** #include <flash.h>
+  14:main.c        **** 
+  15:main.c        **** RF_RX_INFO pRRI;
+  16:main.c        **** char *tx_buf = "wazzzup";
+  17:main.c        **** RF_TX_INFO send_pkt;
+  18:main.c        **** 
+  19:main.c        **** char buf[100];
+  20:main.c        **** 
+  21:main.c        **** void main(){
+ 348               	.LM0:
+ 349               	.LFBB1:
+ 350               	/* prologue: function */
+ 351               	/* frame size = 0 */
+ 352               	/* stack size = 0 */
+ 353               	.L__stack_usage = 0
+  22:main.c        **** 	
+  23:main.c        **** 	nrk_setup_ports();
+ 355               	.LM1:
+ 356 0000 0E94 0000 		call nrk_setup_ports
+  24:main.c        **** 	nrk_setup_uart(UART_BAUDRATE_115K2);
+ 358               	.LM2:
+ 359 0004 80E1      		ldi r24,lo8(16)
+ 360 0006 90E0      		ldi r25,0
+ 361 0008 0E94 0000 		call nrk_setup_uart
+  25:main.c        **** 	nrk_init();
+ 363               	.LM3:
+ 364 000c 0E94 0000 		call nrk_init
+  26:main.c        **** 	pRRI.pPayload = buf;
+ 366               	.LM4:
+ 367 0010 80E0      		ldi r24,lo8(buf)
+ 368 0012 90E0      		ldi r25,hi8(buf)
+ 369 0014 9093 0000 		sts pRRI+5+1,r25
+ 370 0018 8093 0000 		sts pRRI+5,r24
+  27:main.c        **** 	pRRI.ackRequest = 0;
+ 372               	.LM5:
+ 373 001c 1092 0000 		sts pRRI+7,__zero_reg__
+  28:main.c        **** 	pRRI.max_length = 100;
+ 375               	.LM6:
+ 376 0020 84E6      		ldi r24,lo8(100)
+ 377 0022 8093 0000 		sts pRRI+4,r24
+  29:main.c        **** 	rf_power_up();
+ 379               	.LM7:
+ 380 0026 0E94 0000 		call rf_power_up
+  30:main.c        **** 	rf_init(&pRRI, 13, 0xFFFF, 0x0);
+ 382               	.LM8:
+ 383 002a 20E0      		ldi r18,0
+ 384 002c 30E0      		ldi r19,0
+ 385 002e 4FEF      		ldi r20,lo8(-1)
+ 386 0030 5FEF      		ldi r21,lo8(-1)
+ 387 0032 6DE0      		ldi r22,lo8(13)
+ 388 0034 80E0      		ldi r24,lo8(pRRI)
+ 389 0036 90E0      		ldi r25,hi8(pRRI)
+ 390 0038 0E94 0000 		call rf_init
+  31:main.c        **** 	send_pkt.length = 8;
+ 392               	.LM9:
+ 393 003c 88E0      		ldi r24,lo8(8)
+ 394 003e 8093 0000 		sts send_pkt+2,r24
+  32:main.c        **** 	send_pkt.pPayload = tx_buf;
+ 396               	.LM10:
+ 397 0042 8091 0000 		lds r24,tx_buf
+ 398 0046 9091 0000 		lds r25,tx_buf+1
+ 399 004a 9093 0000 		sts send_pkt+3+1,r25
+ 400 004e 8093 0000 		sts send_pkt+3,r24
+  33:main.c        **** 	send_pkt.cca = 0;
+ 402               	.LM11:
+ 403 0052 1092 0000 		sts send_pkt+5,__zero_reg__
+  34:main.c        **** 	send_pkt.destAddr = 0;
+ 405               	.LM12:
+ 406 0056 1092 0000 		sts send_pkt+1,__zero_reg__
+ 407 005a 1092 0000 		sts send_pkt,__zero_reg__
+  35:main.c        **** 	send_pkt.ackRequest = 0;
+ 409               	.LM13:
+ 410 005e 1092 0000 		sts send_pkt+6,__zero_reg__
+ 411               	.L3:
+ 412               	.LBB2:
+  36:main.c        **** 	while (1){
+  37:main.c        **** 		nrk_led_toggle(GREEN_LED);
+ 414               	.LM14:
+ 415 0062 81E0      		ldi r24,lo8(1)
+ 416 0064 90E0      		ldi r25,0
+ 417 0066 0E94 0000 		call nrk_led_toggle
+  38:main.c        **** 		rf_tx_packet(&send_pkt);
+ 419               	.LM15:
+ 420 006a 80E0      		ldi r24,lo8(send_pkt)
+ 421 006c 90E0      		ldi r25,hi8(send_pkt)
+ 422 006e 0E94 0000 		call rf_tx_packet
+ 423 0072 C4E1      		ldi r28,lo8(20)
+ 424 0074 D0E0      		ldi r29,0
+ 425               	.L2:
+  39:main.c        **** 		
+  40:main.c        **** 		int i;
+  41:main.c        **** 		for (i=0; i<20; i++){
+  42:main.c        **** 			nrk_spin_wait_us(50000);
+ 427               	.LM16:
+ 428 0076 80E5      		ldi r24,lo8(80)
+ 429 0078 93EC      		ldi r25,lo8(-61)
+ 430 007a 0E94 0000 		call nrk_spin_wait_us
+ 431 007e 2197      		sbiw r28,1
+  41:main.c        **** 			nrk_spin_wait_us(50000);
+ 433               	.LM17:
+ 434 0080 01F4      		brne .L2
+ 435 0082 00C0      		rjmp .L3
+ 436               	.LBE2:
+ 438               	.Lscope1:
+ 440               		.stabd	78,0,0
+ 441               		.comm	buf,100,1
+ 442               		.comm	send_pkt,7,1
+ 443               	.global	tx_buf
+ 444               		.section	.rodata.str1.1,"aMS",@progbits,1
+ 445               	.LC0:
+ 446 0000 7761 7A7A 		.string	"wazzzup"
+ 446      7A75 7000 
+ 447               		.data
+ 450               	tx_buf:
+ 451 0000 0000      		.word	.LC0
+ 452               		.comm	pRRI,12,1
+ 453               		.comm	app_timer0_prescale,1,1
+ 454               		.comm	app_timer0_callback,2,1
+ 455               		.comm	_nrk_time_trigger,1,1
+ 456               		.comm	_nrk_prev_timer_val,1,1
+ 457               		.comm	error_num,1,1
+ 458               		.comm	error_task,1,1
+ 459               		.comm	nrk_kernel_stk_ptr,2,1
+ 460               		.comm	nrk_idle_task_stk,128,1
+ 461               		.comm	_nrk_signal_list,4,1
+ 475               		.text
+ 477               	.Letext0:
+ 478               		.ident	"GCC: (GNU) 4.9.2"
+ 479               	.global __do_copy_data
+ 480               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cc8OB2O4.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cc8OB2O4.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cc8OB2O4.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cc8OB2O4.s:5      *ABS*:000000000000003b __RAMPZ__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cc8OB2O4.s:6      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cc8OB2O4.s:7      *ABS*:0000000000000001 __zero_reg__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cc8OB2O4.s:345    .text.startup:0000000000000000 main
+                            *COM*:0000000000000064 buf
+                            *COM*:000000000000000c pRRI
+                            *COM*:0000000000000007 send_pkt
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cc8OB2O4.s:450    .data:0000000000000000 tx_buf
+                            *COM*:0000000000000001 app_timer0_prescale
+                            *COM*:0000000000000002 app_timer0_callback
+                            *COM*:0000000000000001 _nrk_time_trigger
+                            *COM*:0000000000000001 _nrk_prev_timer_val
+                            *COM*:0000000000000001 error_num
+                            *COM*:0000000000000001 error_task
+                            *COM*:0000000000000002 nrk_kernel_stk_ptr
+                            *COM*:0000000000000080 nrk_idle_task_stk
+                            *COM*:0000000000000004 _nrk_signal_list
+
+UNDEFINED SYMBOLS
+nrk_setup_ports
+nrk_setup_uart
+nrk_init
+rf_power_up
+rf_init
+nrk_led_toggle
+rf_tx_packet
+nrk_spin_wait_us
+__do_copy_data
+__do_clear_bss
