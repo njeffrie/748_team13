@@ -47,6 +47,7 @@
 #include <nrk.h>
 #include <nrk_events.h>
 #include <nrk_timer.h>
+#include <nrk_time.h>
 #include <nrk_error.h>
 #include <nrk_reserve.h>
 #include <nrk_cfg.h>
@@ -56,7 +57,7 @@
 nrk_sig_t flash_tx_pkt_done_signal;
 
 int8_t flash_init(uint8_t chan);
-void flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t* buf, nrk_time_t* rcv_time));
+void flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t* buf, uint64_t rcv_time));
 int8_t flash_rf_power_set(uint8_t power);
 void flash_err_count_reset();
 uint32_t flash_err_count_get();
@@ -65,6 +66,6 @@ uint16_t flash_msg_len_get();
 void flash_tx_pkt(uint8_t *buffer, uint8_t len);
 void flash_tx_callback_set(void(*callback)(uint16_t len, uint8_t *buf));
 
-void flash_task_config();
+//void flash_task_config();
 
 #endif

@@ -188,6 +188,7 @@ void rf_set_cca_thresh(int8_t t);
 //-------------------------------------------------------------------------------------------------------
 
 uint8_t rf_tx_packet(RF_TX_INFO *pRTI);
+uint8_t rf_tx_packet_blocking(RF_TX_INFO *pRTI);
 uint8_t rf_tx_packet_resend();
 int8_t rf_cca_check();
 void rf_pll_on();

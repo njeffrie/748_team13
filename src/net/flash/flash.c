@@ -27,23 +27,9 @@
 
 #define DEBUG
 
-#ifndef FLASH_STACKSIZE
-#define FLASH_STACKSIZE 256
-#endif
-
-#ifndef FLASH_TASK_PRIORITY
-#define FLASH_TASK_PRIORITY 20
-#endif
-
 #ifndef MAC_ADDR
 #define MAC_ADDR 0
 #endif
-
-static nrk_task_type flash_task;
-static NRK_STK flash_task_stack[FLASH_STACKSIZE];
-
-static nrk_task_type timeout_task;
-static NRK_STK timeout_task_stack[FLASH_STACKSIZE];
 
 // flash related flags
 static uint16_t flash_message_len;
@@ -58,10 +44,12 @@ static uint8_t flash_buf[FLASH_MAX_PKT_LEN];
 nrk_time_t *listen_timeout;
 
 //first rx'd packet is automatically timestamped
-nrk_time_t last_rx_time;
+uint64_t last_rx_time;
+
+volatile bool flash_pkt_received;
 
 //user function to modify buffer upon receive 
-void (*user_rx_callback)(uint8_t* buf, nrk_time_t* rcv_time);
+void (*user_rx_callback)(uint8_t* buf, uint64_t rcv_time);
 void(*flash_tx_callback)(uint16_t len, uint8_t *buf);
 
 RF_RX_INFO flash_rfRxInfo;
@@ -83,16 +71,17 @@ RF_RX_INFO *rf_rx_callback (RF_RX_INFO * pRRI)
 
 void rx_started_callback()
 {
-	nrk_time_get(&last_rx_time);
+	//printf("received packet\r\n");
+	last_rx_time = nrk_full_time_get();
 }
 
 /* this will be called whenver flash listening is on */
 void rx_finished_callback()
 {
-	//printf("flash received a packet\r\n");
-	nrk_event_signal(packetRxSignal);
-}
-	
+	//receive the packet
+	nrk_led_set(ORANGE_LED);
+	flash_pkt_received = 1;
+}	
 
 // return 1 if a > b
 // return 0 if a == b
@@ -113,89 +102,6 @@ int8_t nrk_time_compare(nrk_time_t *a, nrk_time_t *b)
 			return -1;
 	}
 	return 0;
-}
-
-void flash_nw_task()
-{
-	uint32_t mask;
-	// wait until flash has been initialized	
-	//nrk_kprintf(PSTR("flash nw task waiting until flash starts\r\n"));
-	while(!flash_started) 
-		nrk_wait_until_next_period();
-	//nrk_kprintf(PSTR("flash started\r\n"));
-	
-	if (nrk_signal_register(packetRxSignal) != NRK_OK)
-		nrk_kprintf( PSTR("failed to register packet rx signal"));
-	if (nrk_signal_register(packetTxSignal) != NRK_OK)
-		nrk_kprintf( PSTR("failed to register packet tx signal"));
-	
-	while(1){
-		//wait for either tx or rx to be ready for processing
-		mask = nrk_event_wait(SIG(packetRxSignal) | SIG(packetTxSignal));
-		
-		if ((mask & SIG(packetRxSignal)) > 0){
-			nrk_led_set(ORANGE_LED);
-
-			//gets most recently received buffer and puts rx data into falsh_rfRxInfo
-			if (rf_rx_packet_nonblock() != NRK_OK)
-				printf("failed to correctly receive nonblocking packet\r\n");
-
-			//ensure that rf rx if off after message has been received
-			rf_rx_off();
-			
-			//get metadata about received packet
-			flash_message_len = flash_rfRxInfo.length;
-			memcpy(flash_buf, flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
-			//flash_buf = flash_rfRxInfo.pPayload;
-
-			//call user callback function on buffer
-			if (user_rx_callback != NULL)
-				user_rx_callback(flash_buf, &last_rx_time);
-			nrk_led_clr(ORANGE_LED);
-		}
-		if ((mask & (SIG(packetRxSignal) | SIG(packetTxSignal))) > 0){
-			nrk_led_set(BLUE_LED);
-
-			//set packet to be transmitted
-			flash_rfTxInfo.pPayload = flash_buf;
-			
-			//get this right
-			flash_rfTxInfo.length = flash_message_len;
-			flash_rfTxInfo.ackRequest = 0;
-			flash_rfTxInfo.cca = 0;
-			//rf_rx_on();
-			if (flash_tx_callback != NULL)
-				flash_tx_callback(flash_message_len, flash_buf);
-			rf_tx_packet(&flash_rfTxInfo);
-			//rf_rx_off();
-			nrk_event_signal(flash_tx_pkt_done_signal);
-			nrk_led_clr(BLUE_LED);
-		}
-		else {
-			nrk_kprintf(PSTR("woke up due to wrong signal\r\n"));
-		}
-		//nrk_kprintf(PSTR("finished cycle of flash nw task\r\n"));
-	}
-}
-
-void flash_timeout_task()
-{
-	nrk_time_t cur_time;
-	//printf("timeout task started\r\n");
-	while (1){
-		// wait until a timeout is set
-		while(listen_timeout == NULL) nrk_wait_until_next_period();
-		//printf("timeout has been set... checking\r\n");
-		nrk_time_get(&cur_time);
-		//check if timeout condition has occurred
-		if (nrk_time_compare(&cur_time, listen_timeout) < 0){
-			//printf("flash receive timed out!\r\n");
-			is_enabled = 0;
-			rf_rx_off();
-			listen_timeout = NULL;
-		}
-		nrk_wait_until_next_period();
-	}
 }
 
 void flash_msg_len_set(uint16_t msg_len)
@@ -227,15 +133,13 @@ uint32_t flash_err_count_get()
 
 void flash_tx_pkt(uint8_t *buf, uint8_t len)
 {
-	memcpy(flash_buf, buf, len);
-	flash_message_len = len;
-	/*if(rf_tx_pkt_blocking(buf, len) == NRK_ERROR){
-		nrk_printf(PSTR("ERROR: TX timed out\r\n"));
-	}*/
-	nrk_event_signal (packetTxSignal);
-	nrk_signal_register (flash_tx_pkt_done_signal);
-	nrk_event_wait (SIG(flash_tx_pkt_done_signal));
-	
+	nrk_led_set(BLUE_LED);
+	flash_rfTxInfo.pPayload = buf;
+	flash_rfTxInfo.length = len;
+	if(rf_tx_packet_blocking(&flash_rfTxInfo) == NRK_ERROR){
+		printf("ERROR: TX timed out\r\n");
+	}
+	nrk_led_clr(BLUE_LED);
 }
 
 void flash_tx_callback_set(void(*callback)(uint16_t, uint8_t *))
@@ -273,34 +177,29 @@ void flash_run_tests()
 
 int8_t flash_init (uint8_t chan)
 {	
-	// Setup flash signal handler
-	packetRxSignal = nrk_signal_create();
-	flash_tx_pkt_done_signal = nrk_signal_create();
-	packetTxSignal = nrk_signal_create();
-
 	// tests to ensure proper performance of sub-modules
 #ifdef DEBUG 
 	flash_run_tests(); 
 #endif
 	// 16 byte payload and 1 byte header for flash id and re tx number
 	flash_message_len = RF_MAX_PAYLOAD_SIZE;
-	if (packetRxSignal == NRK_ERROR)
-	{
-		nrk_kprintf(PSTR("FLASH ERROR: creating re-transmit signal failed\r\n"));
-		nrk_kernel_error_add(NRK_SIGNAL_CREATE_ERROR, nrk_cur_task_TCB->task_ID);
-		return NRK_ERROR;
-	}
+	
 	flash_err_count = 0;
 	flash_rfRxInfo.pPayload = flash_buf;
 	flash_rfRxInfo.max_length = RF_MAX_PAYLOAD_SIZE;
 	flash_rfRxInfo.ackRequest = 0;
 	
+	flash_rfTxInfo.ackRequest = 0;
+	flash_rfTxInfo.destAddr = 0;
+	flash_rfTxInfo.cca = 0;
+
 	//set callback functions for start and end of packet reception
 	rx_start_callback(rx_started_callback);
 	rx_end_callback(rx_finished_callback);
     
 	rf_power_up();
 	rf_init (&flash_rfRxInfo, chan, 0xffff, 0);
+	nrk_int_enable();
 
 	// Setup channel number
 	flash_chan = chan;
@@ -309,9 +208,10 @@ int8_t flash_init (uint8_t chan)
 }
 
 void 
-flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf, nrk_time_t* rcv_time))
+flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf, uint64_t rcv_time))
 {
     is_enabled=1;
+	flash_pkt_received = 0;
 	flash_message_len = msg_len;
 	if (timeout != NULL){
 		nrk_time_t current_time;
@@ -320,36 +220,42 @@ flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf
 		nrk_time_add(listen_timeout, *timeout, current_time);
 	}
 	user_rx_callback = edit_buf;
+	nrk_int_enable();
 	rf_rx_on();
-}
-
-void flash_task_config()
-{
-	nrk_task_set_entry_function( &flash_task, flash_nw_task);
-	nrk_task_set_stk( &flash_task, flash_task_stack, FLASH_STACKSIZE);
-	flash_task.prio = FLASH_TASK_PRIORITY;
-	flash_task.FirstActivation = TRUE;
-	flash_task.Type = BASIC_TASK;
-	flash_task.SchType = NONPREEMPTIVE;
-	flash_task.period.secs = 0;
-	flash_task.period.nano_secs = 10 * NANOS_PER_MS;
-	flash_task.cpu_reserve.secs = 0;
-	flash_task.cpu_reserve.nano_secs = 0;
-	flash_task.offset.secs = 0;
-	flash_task.offset.nano_secs = 0;
-	nrk_activate_task (&flash_task);
+	//while (!flash_pkt_received);
 	
-	nrk_task_set_entry_function( &timeout_task, flash_timeout_task);
-	nrk_task_set_stk( &timeout_task, timeout_task_stack, FLASH_STACKSIZE);
-	timeout_task.prio = FLASH_TASK_PRIORITY - 1;
-	timeout_task.FirstActivation = TRUE;
-	timeout_task.Type = BASIC_TASK;
-	timeout_task.SchType = NONPREEMPTIVE;
-	timeout_task.period.secs = 0;
-	timeout_task.period.nano_secs = 10 * NANOS_PER_MS;
-	timeout_task.cpu_reserve.secs = 0;
-	timeout_task.cpu_reserve.nano_secs = 0;
-	timeout_task.offset.secs = 0;
-	timeout_task.offset.nano_secs = 0;
-	nrk_activate_task (&timeout_task);
+	//gets most recently received buffer and puts rx data into falsh_rfRxInfo
+	while (rf_rx_packet_nonblock() == NRK_ERROR)
+		continue;
+
+		//printf("failed to correctly receive nonblocking packet\r\n");
+
+	//ensure that rf rx if off after message has been received
+	rf_rx_off();
+
+	//get metadata about received packet
+	flash_message_len = flash_rfRxInfo.length;
+	memcpy(flash_buf, flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
+	//flash_buf = flash_rfRxInfo.pPayload;
+
+	//call user callback function on buffer
+	if (user_rx_callback != NULL)
+		user_rx_callback(flash_buf, last_rx_time);
+	nrk_led_clr(ORANGE_LED);
+
+	//re transmission of packet
+	nrk_led_set(BLUE_LED);
+
+	//set packet to be transmitted
+	flash_rfTxInfo.pPayload = flash_buf;
+
+	//set tx structure
+	flash_rfTxInfo.length = flash_message_len;
+	flash_rfTxInfo.ackRequest = 0;
+	flash_rfTxInfo.cca = 0;
+	if (flash_tx_callback != NULL)
+		flash_tx_callback(flash_message_len, flash_buf);
+	rf_tx_packet(&flash_rfTxInfo);
+	nrk_event_signal(flash_tx_pkt_done_signal);
+	nrk_led_clr(BLUE_LED);
 }
