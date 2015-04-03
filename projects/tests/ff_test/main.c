@@ -73,7 +73,7 @@ int cnt = 0;
 void flash_test_callback(uint8_t *buf, uint64_t rx_time)
 {
 	//printf("calback received buffer %s with rx time %d seconds\r\n", (char *)buf, (int)rx_time);
-	//if (!(cnt % 100))
-	printf("%d\r\n", cnt);
+	if (!(cnt % 100))
+		printf("%d\r\n", cnt);
 	sprintf(buf, "%d", cnt ++ );
 }
