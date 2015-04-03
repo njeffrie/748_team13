@@ -96,11 +96,14 @@ void psync_set_root(uint8_t root) {
  * helper function to get current time without using nrk_time_get 
  * and converting back to uint64_t
  */
-inline uint64_t get_time_exp() {
-    uint64_t time = 1000000000L * (uint64_t)nrk_system_time.secs + nrk_system_time.nano_secs;
-    time += ((uint64_t)_nrk_precision_os_timer_get()) * (uint64_t)NANOS_PER_PRECISION_TICK;
-    return time + ((uint64_t)_nrk_os_timer_get()) * (uint64_t)NANOS_PER_TICK; 
-}
+/*inline uint64_t nrk_full_time_get() {
+	uint64_t prec_ticks = (uint64_t)_nrk_precision_os_timer_get();
+	uint64_t ticks = (uint64_t)_nrk_os_timer_get();
+	nrk_time_t sys_time = nrk_system_time;
+    uint64_t time = 1000000000L * sys_time.secs + sys_time.nano_secs;
+    time += prec_ticks * (uint64_t)NANOS_PER_PRECISION_TICK;
+    return time + ticks * (uint64_t)NANOS_PER_TICK; 
+}*/
 
 /*
  * helper function to change nrk_time_t to uint64_t
@@ -198,7 +201,7 @@ uint8_t psync_is_synced() {
  */
 void psync_get_time(nrk_time_t* global_time) {
 	//nrk_time_get(global_time);
-	uint64_t full_time = get_time_exp();//get_full_time(*global_time);
+	uint64_t full_time = nrk_full_time_get();//get_full_time(*global_time);
 	nrk_sem_pend(skew_lock);
 	*global_time = get_pack_time(full_time + off_avg + ((off_sq_sum * (full_time - loc_avg) / loc_sq_sum) >> 6));
 	nrk_sem_post(skew_lock);
@@ -236,11 +239,21 @@ void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
 }
 
 /*
+ * function to obtain global time difference from local time difference
+ */
+void psync_global_diff(nrk_time_t* loc_diff, nrk_time_t* glob_diff) {
+	uint64_t l_diff = get_full_time(*loc_diff);
+	nrk_sem_pend(skew_lock);
+	*glob_diff = get_pack_time(l_diff - (int64_t)(l_diff / (skew_inv << 6)));
+	nrk_sem_post(skew_lock);
+}
+
+/*
  * function to handle received PulseSync floods
  * saves values to be added to regression table
  */
-void psync_rx_callback(uint8_t* buf, nrk_time_t* rcv_time) {
-	new_loc = get_full_time(*rcv_time);
+void psync_rx_callback(uint8_t* buf, uint64_t rcv_time) {
+	new_loc = rcv_time - RX_DELAY;
 	uint64_t* buf64 = (uint64_t*)buf;
 	#ifdef COMPENSATED_FORWARDING
 	new_glob = buf64[1];
@@ -256,13 +269,13 @@ void psync_rx_callback(uint8_t* buf, nrk_time_t* rcv_time) {
 void psync_tx_callback(uint16_t len, uint8_t* buf) {
 	uint64_t* buf64 = (uint64_t*)buf;
 	if (is_root) { 
-		buf64[0] = get_time_exp();
+		buf64[0] = nrk_full_time_get() + TX_DELAY;
 		#ifdef COMPENSATED_FORWARDING
 		buf64[1] = buf64[0];
 		#endif
 	}
 	else {
-		uint64_t diff = get_time_exp() - new_loc;
+		uint64_t diff = nrk_full_time_get() - new_loc + TX_DELAY;
 	
 		#ifdef COMPENSATED_FORWARDING
 		if (samples == MAX_SAMPLES) {
@@ -302,20 +315,23 @@ void psync_flood_wait(nrk_time_t* time) {
 	else {
 		printf("Waiting for Receive\r\n");
 		edit = 0;
-		/*uint64_t time_after, cur_time;
-		cur_time = get_time_exp();
-		time_after = cur_time + get_full_time(*time);*/
-		nrk_signal_register(flash_tx_pkt_done_signal);
+		uint64_t time_after, cur_time;
+		cur_time = nrk_full_time_get();
+		if (time)
+			time_after = cur_time + get_full_time(*time);
+		else
+			time_after = (uint64_t)_nrk_get_next_wakeup() * (uint64_t)NANOS_PER_TICK;
+		//nrk_signal_register(flash_tx_pkt_done_signal);
 		/*nrk_time_t cur_time, time_after;
 		nrk_time_get(&cur_time);
 		nrk_time_add(&time_after, cur_time, *time);*/
 		flash_tx_callback_set(psync_tx_callback);
 		flash_enable(16, time, psync_rx_callback);
-		/*while (!edit && (cur_time < time_after))
-			cur_time = get_time_exp();*/
+		while (!edit && (cur_time < time_after))
+			cur_time = nrk_full_time_get();
 		/*while (!edit && (nrk_time_compare(&cur_time, &time_after) < 0))
 			nrk_time_get(&cur_time);*/
-		nrk_event_wait(SIG(flash_tx_pkt_done_signal));
+		//nrk_event_wait(SIG(flash_tx_pkt_done_signal));
 		if (edit) {
 			printf("loc: %lu << 32 + %lu, glob: %lu << 32 + %lu\r\n", ((uint32_t*)&new_loc)[1], ((uint32_t*)&new_loc)[0], ((uint32_t*)&new_glob)[1], ((uint32_t*)&new_glob)[0]);
 			psync_add_point(new_loc, new_glob);

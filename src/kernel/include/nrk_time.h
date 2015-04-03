@@ -59,6 +59,6 @@ int8_t nrk_time_sub(nrk_time_t *result,nrk_time_t high, nrk_time_t low);
 int8_t nrk_time_add(nrk_time_t *result,nrk_time_t a, nrk_time_t b);
 inline void nrk_time_compact_nanos(nrk_time_t *t);
 
-inline uint64_t nrk_full_time_get();
+uint64_t nrk_full_time_get();
 
 #endif

@@ -67,8 +67,15 @@
 #endif
 
 // latency of physical transmission process
-#define RE_TX_DELAY 1223334
-#define TX_DELAY 
+#define TIME_STAMP_DELAY 585
+#define TS_EARLY_DELAY 55
+#define TS_END_DELAY 530
+#define PLL_ON_TX_BUSY_DELAY 256
+#define SHR_PHR_DELAY 3072
+#define TX_TICK_DELAY (TS_END_DELAY + PLL_ON_TX_BUSY_DELAY + SHR_PHR_DELAY)
+#define TX_DELAY ((uint64_t)TX_TICK_DELAY * 62L + (uint64_t)(TX_TICK_DELAY >> 1))
+#define RX_TICK_DELAY (5 + TS_EARLY_DELAY)
+#define RX_DELAY ((uint64_t)RX_TICK_DELAY * 62L + (uint64_t)(RX_TICK_DELAY >> 1))
 
 uint64_t loc_sq_sum;
 int64_t off_sq_sum;

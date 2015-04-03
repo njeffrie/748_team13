@@ -41,12 +41,12 @@
 #include <nrk_timer.h>
 #include <nrk_error.h>
 
-inline uint64_t nrk_full_time_get() {
-    uint64_t prec_ticks = (uint64_t)_nrk_precision_os_timer_get();
-    uint64_t ticks = (uint64_t)_nrk_os_timer_get();
+uint64_t nrk_full_time_get() {
+    uint64_t prec_ticks = (uint64_t)TCNT5/*_nrk_precision_os_timer_get()*/;
+    uint64_t ticks = (uint64_t)TCNT2/*_nrk_os_timer_get()*/;
     nrk_time_t sys_time = nrk_system_time;
     uint64_t time = 1000000000L * sys_time.secs + sys_time.nano_secs;
-    time += prec_ticks * (uint64_t)NANOS_PER_PRECISION_TICK;
+    time += prec_ticks * (uint64_t)NANOS_PER_PRECISION_TICK - (prec_ticks >> 1)/* actually 62.5 not 63 */;
     return time + ticks * (uint64_t)NANOS_PER_TICK; 
 }
 
