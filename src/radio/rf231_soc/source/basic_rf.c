@@ -439,8 +439,10 @@ uint8_t rf_tx_packet(RF_TX_INFO *pRTI)
 	uint8_t trx_status, trx_error, *data_start, *frame_start = &TRXFBST;
 	uint16_t i;
 
-	if(!rf_ready) 
+	if(!rf_ready){
+		nrk_kprintf(PSTR("Failed to tx packet - rf not ready\r\n"));
 		return NRK_ERROR;
+	}
 	
 	ieee_mac_frame_header_t *machead = frame_start + 1;
 	ieee_mac_fcf_t fcf;
@@ -490,6 +492,7 @@ uint8_t rf_tx_packet(RF_TX_INFO *pRTI)
 	/* Return error if radio not in a tx-ready state */
 	if((trx_status != TRX_OFF) && (trx_status != RX_ON) 
 			&& (trx_status != RX_AACK_ON) && (trx_status != PLL_ON)){
+		nrk_kprintf(PSTR("tx failed due to incorrect trx status\r\n"));
 		return NRK_ERROR;
 	}
 
@@ -538,10 +541,11 @@ uint8_t rf_tx_packet(RF_TX_INFO *pRTI)
 	return trx_error;
 }
 
-uint8_t rf_tx_pkt_blocking(RF_TX_INFO *pRTI)
+uint8_t rf_tx_packet_blocking(RF_TX_INFO *pRTI)
 {
 	uint16_t count = 0;
-	rf_tx_packet(pRTI);
+	if (rf_tx_packet(pRTI) == NRK_ERROR)
+		nrk_kprintf(PSTR("failed to send packet\r\n"));
 	while (!tx_done){
 		count += 1;
 		if (count > 5000)//~1ms timeout

@@ -35,16 +35,9 @@
 #include <flash.h>
 
 #define MAC_ADDR 0
+void flash_test_callback();
 
-NRK_STK flood_stack[NRK_APP_STACKSIZE];
-nrk_task_type floodTask;
-void flood_task (void);
-
-void nrk_create_taskset();
-
-nrk_sig_t packet_rx_signal;
-
-int main()
+void main()
 {
 	nrk_setup_ports();
 	nrk_setup_uart(UART_BAUDRATE_115K2);
@@ -57,29 +50,11 @@ int main()
 
 	nrk_time_set(0,0);
 
-	packet_rx_signal = nrk_signal_create();
 	printf("initializing flash\r\n");
-	nrk_int_enable();
 	flash_init(13);
 	printf("configuring flash task\r\n");
-	flash_task_config();
-	nrk_create_taskset();
-	nrk_start();
-	return 1;
-}
-
-int cnt = 0;
-
-void flash_test_callback(uint8_t *buf, nrk_time_t *rx_time)
-{
-	printf("calback received buffer %s with rx time %d seconds\r\n", (char *)buf, (int)rx_time->secs);
-	sprintf(buf, "%d", cnt ++ );
-	nrk_event_signal(packet_rx_signal);
-}
-
-void flood_task()
-{
-	char *buf = "this is a buffer";
+	
+	char *buf = "0";
 	int max_msg_len = strlen(buf) + 1;
 	printf("transmitting packet [%s]\r\n", buf);
 	
@@ -87,27 +62,18 @@ void flood_task()
 	
 	flash_enable((uint8_t)max_msg_len, NULL, flash_test_callback);
 	printf("waiting to propagate flood\r\n");
+	
 	while (1){
 		flash_enable((uint8_t)max_msg_len, NULL, flash_test_callback);
-		nrk_signal_register(packet_rx_signal);
-		nrk_event_wait(SIG(packet_rx_signal));
 	}
 }
 
-void
-nrk_create_taskset()
+int cnt = 0;
+
+void flash_test_callback(uint8_t *buf, uint64_t rx_time)
 {
-	nrk_task_set_entry_function( &floodTask, flood_task);
-	nrk_task_set_stk( &floodTask, flood_stack, NRK_APP_STACKSIZE);
-	floodTask.prio = 1;
-	floodTask.FirstActivation = TRUE;
-	floodTask.Type = BASIC_TASK;
-	floodTask.SchType = PREEMPTIVE;
-	floodTask.period.secs = 5;
-	floodTask.period.nano_secs = 0;
-	floodTask.cpu_reserve.secs = 0;
-	floodTask.cpu_reserve.nano_secs = 0;
-	floodTask.offset.secs = 0;
-	floodTask.offset.nano_secs= 0;
-	nrk_activate_task (&floodTask);
+	//printf("calback received buffer %s with rx time %d seconds\r\n", (char *)buf, (int)rx_time);
+	//if (!(cnt % 100))
+	printf("%d\r\n", cnt);
+	sprintf(buf, "%d", cnt ++ );
 }

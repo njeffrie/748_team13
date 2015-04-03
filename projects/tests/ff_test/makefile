@@ -7,9 +7,9 @@ TARGET = main
 
 # Set the Port that you programmer is connected to 
 ##PROGRAMMING_PORT = /dev/ttyUSB1 # programmer connected to serial device
-#PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y3E
-#PROGRAMMING_PORT = /dev/tty.usbserial-AE00BUMF
 PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y3E
+#PROGRAMMING_PORT = /dev/tty.usbserial-AE00BUMF
+#PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y4H
 # Set this such that the nano-RK directory is the base path
 ROOT_DIR = ../../..
 
