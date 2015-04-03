@@ -440,7 +440,7 @@ uint8_t rf_tx_packet(RF_TX_INFO *pRTI)
 	uint16_t i;
 
 	if(!rf_ready){
-		nrk_kprintf(PSTR("Failed to tx packet - rf not ready\r\n"));
+		//nrk_kprintf(PSTR("Failed to tx packet - rf not ready\r\n"));
 		return NRK_ERROR;
 	}
 	
@@ -625,7 +625,7 @@ int8_t rf_rx_packet_nonblock()
 		return NRK_ERROR;
 	}
    if(!rx_ready){
-	   printf("rx not ready\r\n");
+	   //printf("rx not ready\r\n");
       return 0;
    }
    else if((TST_RX_LENGTH - 2) > rfSettings.pRxInfo->max_length){
