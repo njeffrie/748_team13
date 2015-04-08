@@ -33,7 +33,7 @@
 void nrk_spin_wait_us(uint16_t timeout)
 {
 
-    // This sequence uses exactly 8 clock cycle for each round
+    // This sequence uses exactly 16 clock cycles for each round
     do {
         NOP();
         NOP();
@@ -262,8 +262,10 @@ if(timer==NRK_APP_TIMER_0)
 	if(prescaler>0 && prescaler<6 ) app_timer0_prescale=prescaler;
 	TCCR3A = 0;  
 	TCCR3B = BM(WGM32);  // Automatic restart on compare, count up
-        OCR3AH = (compare_value >> 8) & 0xFF;	
+	
+	OCR3AH = (compare_value >> 8) & 0xFF;	
   	OCR3AL = (compare_value & 0xFF );
+	
 	app_timer0_callback=callback_func;
 	if(app_timer0_prescale==1) TCCR3B |= BM(CS30);  
 	// Divide by 1
@@ -360,7 +362,6 @@ asm volatile (
 );
 
 }
-
 
 SIGNAL(TIMER3_COMPA_vect) {
 	if(app_timer0_callback!=NULL) app_timer0_callback();

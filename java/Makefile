@@ -9,12 +9,14 @@ JLOC = -sourcepath gr13
 
 #   Macro for each of the java source files.
 CLASSES = \
+	$(DIR)/NetworkGraph.java \
 	$(DIR)/JGui.java \
-	$(DIR)/SerialComm.java
+	$(DIR)/SerialComm.java \
+	$(DIR)/NodeInfo.java
 
 # Dependencies in lib/ to load
  JDEP = \
- 	lib/jssc.jar
+ 	lib/jssc.jar:lib/orgjson.jar
 
 # Name of class with main function
 MAIN = $(DIR)/JGui
@@ -25,7 +27,7 @@ classes:
 	$(JC) $(JFLAGS) $(JLOC) -cp .:$(JDEP) $(CLASSES)
 
 run: classes
-	$(JVM) -classpath  .:$(JDEP) $(MAIN) 
+	$(JVM) -classpath  .:$(JDEP) $(MAIN) -p /dev/tty.usbserial-AM017Y3D 
 
 clean:
 	$(RM) $(DIR)/*.class
