@@ -61,21 +61,25 @@
 //#define COMPENSATED_FORWARDING
 
 #ifdef COMPENSATED_FORWARDING
+//#define PKT_SIZE 35
 #define PKT_SIZE 16
 #else
 #define PKT_SIZE 8
+//#define PKT_SIZE 27
 #endif
 
 // latency of physical transmission process
-#define TIME_STAMP_DELAY 585
+/*#define TIME_STAMP_DELAY 585
 #define TS_EARLY_DELAY 55
-#define TS_END_DELAY 530
+#define TS_END_DELAY 530 (in testing appears to be 652 cycles)
 #define PLL_ON_TX_BUSY_DELAY 256
 #define SHR_PHR_DELAY 3072
 #define TX_TICK_DELAY (TS_END_DELAY + PLL_ON_TX_BUSY_DELAY + SHR_PHR_DELAY)
-#define TX_DELAY ((uint64_t)TX_TICK_DELAY * 62L + (uint64_t)(TX_TICK_DELAY >> 1))
+#define PSYNC_TX_DELAY ((uint32_t)TX_TICK_DELAY * 62L + (uint32_t)(TX_TICK_DELAY >> 1))
 #define RX_TICK_DELAY (5 + TS_EARLY_DELAY)
-#define RX_DELAY ((uint64_t)RX_TICK_DELAY * 62L + (uint64_t)(RX_TICK_DELAY >> 1))
+#define PSYNC_RX_DELAY ((uint32_t)RX_TICK_DELAY * 62L + (uint32_t)(RX_TICK_DELAY >> 1))*/
+#define PSYNC_TX_DELAY 241247
+#define PSYNC_RX_DELAY 3750
 
 uint64_t loc_sq_sum;
 int64_t off_sq_sum;
