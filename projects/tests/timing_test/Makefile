@@ -1,4 +1,4 @@
-# Platform name  cc2420DK, firefly2_1, firefly2_2, micaZ
+# Platform name  cc2420DK, firefly2_1, firefly2_2, micaZ 
 PLATFORM = firefly3
 
 
