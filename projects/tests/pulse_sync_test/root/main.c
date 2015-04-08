@@ -71,14 +71,17 @@ int main() {
 }
 
 void test_task() {
-	printf("starting PulseSync flood\r\n");
+	//printf("starting PulseSync flood\r\n");
+	printf("S\r\n");
+	printf("TX_DELAY: %lu, RX_DELAY: %lu\r\n", PSYNC_TX_DELAY, PSYNC_RX_DELAY);
 
 	// send initial message
 	psync_flood_wait(NULL);
 
 	// set to non-root node to propagate flood
 	psync_set_root(0);
-	printf("waiting to receive PulseSync flood\r\n");
+	//printf("waiting to receive PulseSync flood\r\n");
+	printf("W\r\n");
 
 	// loop receiving to measure determinacy in sync floods
 	while (1) {
