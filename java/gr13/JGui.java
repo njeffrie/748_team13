@@ -32,7 +32,7 @@ public class JGui extends JFrame  implements Runnable{
 	/***********************************************
 	 * 	Declarations							   
 	 ***********************************************/
-	private static String port = "/dev/ttyUSB0";
+	private static String port = "/dev/tty.usbserial-AM017Y3D";
 	private Map<Integer, NodeInfo> node_map;
 	
 	/***********************************************

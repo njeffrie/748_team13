@@ -1,17 +1,15 @@
-# Platform name  cc2420DK, firefly, micaZ
-#PLATFORM = firefly2_2
+# Platform name  cc2420DK, firefly2_1, firefly2_2, micaZ
 PLATFORM = firefly3
-#PLATFORM = firefly2_3
 
 
 # Target file name (without extension).
 TARGET = main
 
 # Set the Port that you programmer is connected to 
-#PROGRAMMING_PORT = /dev/ttyUSB0 # Default FireFly port 
-PROGRAMMING_PORT = /dev/tty.usbserial-AE00BULD # Default micaZ port 
-#PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y4H
-
+##PROGRAMMING_PORT = /dev/ttyUSB1 # programmer connected to serial device
+#PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y3E
+#PROGRAMMING_PORT = /dev/tty.usbserial-AE00BUMF
+PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y4H
 # Set this such that the nano-RK directory is the base path
 ROOT_DIR = ../../..
 
@@ -22,21 +20,16 @@ ROOT_DIR = ../../..
 # RADIO (e.g. cc2420)
 include $(ROOT_DIR)/include/platform.mk
 
-
 SRC = $(TARGET).c
 
 # Add extra source files. 
 # For example:
-SRC += $(ROOT_DIR)/src/net/bmac/$(RADIO)/bmac.c
-SRC += $(ROOT_DIR)/src/net/flash/flash.c
-SRC += $(ROOT_DIR)/src/net/pulse_sync/pulse_sync.c
+SRC += $(ROOT_DIR)/src/net/pulse_sync/pulse_sync_timer.c
 
 # Add extra includes files. 
 # For example:
 EXTRAINCDIRS =
-EXTRAINCDIRS += $(ROOT_DIR)/src/net/bmac
 EXTRAINCDIRS += $(ROOT_DIR)/src/net/pulse_sync
-EXTRAINCDIRS += $(ROOT_DIR)/src/net/flash
 
 
 #  This is where the final compile and download happens
