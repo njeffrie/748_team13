@@ -9,7 +9,7 @@
 #include <nrk_timer.h>
 #include <nrk_error.h>
 
-uint64_t current_time_ms;
+volatile uint64_t current_time_ms;
 void timer_0_callback();
 
 /* reset current time in microseconds and initialize the timer interrupt */
@@ -23,14 +23,18 @@ uint8_t pulse_sync_timer_setup(){
 	return nrk_timer_int_start(timer);
 }
 
-/* this will overflow after 2^32uS (4000 seconds... 1h 6m 40s) */
 void timer_0_callback(){
 	current_time_ms += 1;
 }
 
 uint64_t pulse_sync_get_current_time(){
+	/* protect from case where timer 3 output compare interrupt occurs between
+	 * reading offset_ticks and current_time_ms */
+	asm volatile( "CLI \n\n" );
 	uint32_t offset_ticks = TCNT3;
-	return (current_time_ms * 1000000L) + offset_ticks * 62 + (offset_ticks >> 1);
+	uint64_t result = (current_time_ms * 1000000L) + (offset_ticks * 62) + (offset_ticks >> 1);
+	asm volatile( "SEI \n\n" );
+	return result;
 }
 
 void pulse_sync_reset_timer(){
