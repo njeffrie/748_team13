@@ -66,6 +66,8 @@ uint16_t flash_msg_len_get();
 void flash_tx_pkt(uint8_t *buffer, uint8_t len);
 void flash_tx_callback_set(void(*callback)(uint16_t len, uint8_t *buf));
 
-//void flash_task_config();
+uint8_t flash_timer_setup();
+uint64_t flash_get_current_time();
+void flash_reset_timer(); 
 
 #endif
