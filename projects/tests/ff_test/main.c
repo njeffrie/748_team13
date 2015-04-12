@@ -58,10 +58,10 @@ void main()
 	int max_msg_len = strlen(buf) + 1;
 	printf("transmitting packet [%s]\r\n", buf);
 	
+	printf("waiting to propagate flood\r\n");
 	flash_tx_pkt((uint8_t *)buf, (uint8_t)strlen(buf));
 	
 	flash_enable((uint8_t)max_msg_len, NULL, flash_test_callback);
-	printf("waiting to propagate flood\r\n");
 	
 	while (1){
 		flash_enable((uint8_t)max_msg_len, NULL, flash_test_callback);

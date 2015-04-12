@@ -548,7 +548,7 @@ uint8_t rf_tx_packet_blocking(RF_TX_INFO *pRTI)
 		nrk_kprintf(PSTR("failed to send packet\r\n"));
 	while (!tx_done){
 		count += 1;
-		if (count > 5000)//~1ms timeout
+		if (count > 65000)//some somewhat arbitrary timeout i am too lazy to calculate
 			return NRK_ERROR;
 	}
 	return NRK_OK;

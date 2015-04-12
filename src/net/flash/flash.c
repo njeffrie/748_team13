@@ -80,7 +80,7 @@ void rx_finished_callback()
 {
 	//receive the packet
 	nrk_led_set(ORANGE_LED);
-	flash_pkt_received = 1;
+	flash_pkt_received = true;
 }	
 
 // return 1 if a > b
@@ -139,6 +139,14 @@ void flash_tx_pkt(uint8_t *buf, uint8_t len)
 	if(rf_tx_packet_blocking(&flash_rfTxInfo) == NRK_ERROR){
 		printf("ERROR: TX timed out\r\n");
 	}
+
+#ifdef FLASH2_ENABLED
+	flash_rfTxInfo.cca = true;
+	if (rf_tx_packet_blocking(&flash_rfTxInfo) == NRK_ERROR){
+		printf("ERROR: TX timed out\r\n");
+	}
+#endif
+	
 	nrk_led_clr(BLUE_LED);
 }
 
@@ -210,25 +218,36 @@ int8_t flash_init (uint8_t chan)
 void 
 flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf, uint64_t rcv_time))
 {
-    is_enabled=1;
+    nrk_led_set(ORANGE_LED);
+	is_enabled=1;
 	flash_pkt_received = 0;
 	flash_message_len = msg_len;
+	/*
 	if (timeout != NULL){
 		nrk_time_t current_time;
 		nrk_time_get(&current_time);
 		//calculate time
 		nrk_time_add(listen_timeout, *timeout, current_time);
 	}
+	*/
 	user_rx_callback = edit_buf;
 	nrk_int_enable();
 	rf_rx_on();
-	//while (!flash_pkt_received);
 	
 	//gets most recently received buffer and puts rx data into falsh_rfRxInfo
-	while (rf_rx_packet_nonblock() == NRK_ERROR)
-		continue;
+	uint8_t resp;
+	//int count = 0;
+	while ((resp = (rf_rx_packet_nonblock())) == 0){
+		//count ++;
+		/*if (count > 10000){
+			count = 0;
+			printf("failed to receive packet... giving up!\r\n");
+			break;
+		}*/
+	}
 
-		//printf("failed to correctly receive nonblocking packet\r\n");
+	if (!flash_pkt_received)
+		printf("failed to correctly receive nonblocking packet\r\n");
 
 	//ensure that rf rx if off after message has been received
 	rf_rx_off();
@@ -253,9 +272,8 @@ flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf
 	flash_rfTxInfo.length = flash_message_len;
 	flash_rfTxInfo.ackRequest = 0;
 	flash_rfTxInfo.cca = 0;
-	if (flash_tx_callback != NULL)
-		flash_tx_callback(flash_message_len, flash_buf);
+	//if (flash_tx_callback != NULL)
+		//flash_tx_callback(flash_message_len, flash_buf);
 	rf_tx_packet(&flash_rfTxInfo);
-	nrk_event_signal(flash_tx_pkt_done_signal);
 	nrk_led_clr(BLUE_LED);
 }
