@@ -48,6 +48,10 @@ uint64_t last_rx_time;
 
 volatile bool flash_pkt_received;
 
+// flash timer functions and variables
+uint64_t current_time_ms;
+void timer_3_callback();
+
 //user function to modify buffer upon receive 
 void (*user_rx_callback)(uint8_t* buf, uint64_t rcv_time);
 void(*flash_tx_callback)(uint16_t len, uint8_t *buf);
@@ -276,4 +280,32 @@ flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf
 		//flash_tx_callback(flash_message_len, flash_buf);
 	rf_tx_packet(&flash_rfTxInfo);
 	nrk_led_clr(BLUE_LED);
+}
+
+/* reset current time in microseconds and initialize the timer interrupt */
+uint8_t flash_timer_setup(){
+    uint8_t timer = NRK_APP_TIMER_0;
+
+    current_time_ms = 0;
+    /* inc counter every ms */
+    if (nrk_timer_int_configure(timer, 1, 0x3E80, timer_3_callback) != NRK_OK)
+        return NRK_ERROR;
+    return nrk_timer_int_start(timer);
+}
+
+/* this will overflow after 2^32uS (4000 seconds... 1h 6m 40s) */
+void timer_3_callback(){
+    current_time_ms += 1;
+}
+
+uint64_t flash_get_current_time(){
+	DISABLE_GLOBAL_INT();
+    uint32_t offset_ticks = TCNT3;
+	uint64_t ticks = current_time_ms;
+	ENABLE_GLOBAL_INT();
+    return (ticks * 1000000L) + offset_ticks * 62 + (offset_ticks >> 1);
+}
+
+void flash_reset_timer(){
+    current_time_ms = 0;
 }
