@@ -176,9 +176,11 @@ static void rf_cmd(uint8_t cmd)
 	while((TRX_STATUS & 0x1F) == STATE_TRANSITION_IN_PROGRESS)
 		continue;
 	// added for accessing buffer immediately before transmission for Flash implementation
+	DISABLE_GLOBAL_INT();
 	if ((cmd == 0x2) && tx_start_func)
 		tx_start_func(tx_len, tx_buf);
 	TRX_STATE = cmd;
+	ENABLE_GLOBAL_INT();
 }
 
 void rf_pll_on()
