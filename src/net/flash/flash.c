@@ -289,7 +289,9 @@ uint8_t flash_timer_setup(){
 
     current_time_ms = 0;
     /* inc counter every ms */
-    if (nrk_timer_int_configure(timer, 1, 0x3E80, timer_3_callback) != NRK_OK)
+	/* use 0x3E80 for 16MHz */
+	/* 0x3F12 experimentally returns correct result when compared to nrk_spin_wait_us()*/
+    if (nrk_timer_int_configure(timer, 1, 0x3F12, timer_3_callback) != NRK_OK)
         return NRK_ERROR;
     return nrk_timer_int_start(timer);
 }
@@ -304,7 +306,7 @@ uint64_t flash_get_current_time(){
     uint32_t offset_ticks = TCNT3;
 	uint64_t ticks = current_time_ms;
 	ENABLE_GLOBAL_INT();
-    return (ticks * 1000000L) + offset_ticks * 62 + (offset_ticks >> 1);
+    return (ticks * 1000) + (offset_ticks >> 4);
 }
 
 void flash_reset_timer(){

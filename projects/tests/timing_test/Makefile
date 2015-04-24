@@ -25,12 +25,12 @@ SRC = $(TARGET).c
 
 # Add extra source files. 
 # For example:
-SRC += $(ROOT_DIR)/src/net/pulse_sync/pulse_sync_timer.c
+SRC += $(ROOT_DIR)/src/net/flash/flash.c
 
 # Add extra includes files. 
 # For example:
 EXTRAINCDIRS =
-EXTRAINCDIRS += $(ROOT_DIR)/src/net/pulse_sync
+EXTRAINCDIRS += $(ROOT_DIR)/src/net/flash
 
 
 #  This is where the final compile and download happens

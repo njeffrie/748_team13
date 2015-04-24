@@ -32,7 +32,7 @@
 #include <avr/eeprom.h>
 #include <nrk_eeprom.h>
 #include <string.h>
-#include <pulse_sync_timer.h>
+#include <flash.h>
 #define MAC_ADDR 0
 
 
@@ -47,7 +47,7 @@ int main()
 	nrk_led_clr(GREEN_LED);
 	nrk_led_clr(RED_LED);
 	
-	if (pulse_sync_timer_setup() != NRK_OK){
+	if (flash_timer_setup() != NRK_OK){
 		nrk_led_set(RED_LED);//printf("failed to properly setup timer3");
 		while(1){
 			nrk_led_toggle(RED_LED);
@@ -64,12 +64,12 @@ int main()
 	uint32_t temp3 = 0;
 	while(1){
 		
-		temp1 = (uint32_t)pulse_sync_get_current_time();
+		temp1 = (uint32_t)flash_get_current_time();
 		//for (i=0; i<1000; i++){
 			nrk_spin_wait_us(10000);
 		//}
-		temp2 = (uint32_t)pulse_sync_get_current_time();
-		temp3 = (uint32_t)pulse_sync_get_current_time();
+		temp2 = (uint32_t)flash_get_current_time();
+		temp3 = (uint32_t)flash_get_current_time();
 		
 
 		printf("1ms time diff: %lu\r\n", temp2-temp1);
