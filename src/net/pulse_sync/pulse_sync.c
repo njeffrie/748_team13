@@ -29,7 +29,7 @@
  *
  * pulse_sync.c: implementation of PulseSync API
  *
- * 18-748 S15: Group 13
+ * 16-748 S15: Group 14
  * Madhav Iyengar
  * Nat Jeffries
  * Miguel Sotolongo
@@ -41,14 +41,16 @@
 struct sync_point_info {
 	uint64_t glob_time;
 	uint64_t loc_time;
-	int64_t skew_inv;
+	//int64_t skew_inv;
+	//uint8_t skew_sign; 
+	float skew;
 };
 
 // values to be saved between synchronizations for faster regression line calculation
 uint64_t loc_sum, loc_avg;
 int64_t off_sum, off_avg;
 //uint64_t loc_sq_sum;
-int64_t /*off_sq_sum,*/ skew_inv;
+//int64_t /*off_sq_sum,*/ skew_inv;
 uint8_t samples, curr_ind;
 
 // new times to be added to regression line
@@ -80,11 +82,13 @@ void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan) {
 	loc_sq_sum = 1;
 	off_sq_sum = 0;
 	skew_inv = 0x7fffffffffffffffLL;
+	skew = 0.0;
 	samples = 0;
 	curr_ind = 0;
 	//_nrk_setup_timer();
 	//nrk_time_set(0, 0);
-	nrk_setup_precision_time();
+	//nrk_setup_precision_time();
+	flash_timer_setup();
 }
 
 /*
@@ -134,14 +138,14 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	nrk_sem_pend(skew_lock);
 
 	// remove terms in local time deviation squared sum containing old mean local time
-	loc_sq_sum += (loc_avg >> 3) * ((int64_t)(2 * loc_sum - samples * loc_avg) >> 3);
+	loc_sq_sum += (loc_avg >> 20) * ((int64_t)(2 * loc_sum - samples * loc_avg) >> 20);
 	// overwrite old local time in square with new local time
-	loc_sq_sum += ((loc_time - prev_loc) >> 3) * ((loc_time + prev_loc) >> 3);
+	loc_sq_sum += ((loc_time - prev_loc) >> 20) * ((loc_time + prev_loc) >> 20);
 
 	// remove terms in offset deviation squared sum containing old mean local time and offset
-	off_sq_sum += (off_avg >> 0) * ((loc_sum - samples * loc_avg) >> 0) + (loc_avg >> 0) * (off_sum >> 0);
+	off_sq_sum += (off_avg >> 10) * ((int64_t)(loc_sum - samples * loc_avg) >> 20) + (loc_avg >> 20) * (off_sum >> 10);
 	// overwrite old local time and offset terms with new local time and offset terms
-	off_sq_sum += (loc_time >> 0) * (off_time >> 0) - (prev_loc >> 0) * (prev_off >> 0);
+	off_sq_sum += (loc_time >> 20) * (off_time >> 10) - (prev_loc >> 20) * (prev_off >> 10);
 
 	//// calculate new mean local time and local time deviation squared
 	loc_sum += loc_time - prev_loc;
@@ -150,7 +154,7 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	loc_avg = tmp_avg + (tmp_rem + new_samples / 2) / new_samples;
 
 	// add terms in square containing new mean local time
-	loc_sq_sum += (loc_avg >> 3) * ((int64_t)(new_samples * loc_avg - 2 * loc_sum) >> 3);
+	loc_sq_sum += (loc_avg >> 20) * ((int64_t)(new_samples * loc_avg - 2 * loc_sum) >> 20);
 
 	//// calculate new mean global-local time offset and offset deviation squared
 	tmp_avg = line_data[curr_ind].glob_time - line_data[curr_ind].loc_time;
@@ -160,19 +164,22 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	off_avg = tmp_avg + (tmp_rem + new_samples / 2) / new_samples;
 
 	// add terms to square containing new mean local time and offset
-	off_sq_sum += (off_avg >> 0) * ((new_samples * loc_avg - loc_sum) >> 0) - (loc_avg >> 0) * (off_sum >> 0);
+	off_sq_sum += (off_avg >> 10) * ((int64_t)(new_samples * loc_avg - loc_sum) >> 20) - (loc_avg >> 20) * (off_sum >> 10);
 
 	//// save new data into next entry in circular buffer
 	curr_ind = next_ind;
 	samples = new_samples;
 	// check for divide-by-0 errors
-	if (!off_sq_sum)
+	/*if (!off_sq_sum)
 		skew_inv = 0x7fffffffffffffffL;
 	else if (!loc_sq_sum) 
 		skew_inv = off_sq_sum > 0 ? 1 : -1;
-	else
-		skew_inv = off_sq_sum > 0 ? ~(loc_sq_sum / off_sq_sum) + 1 : loc_sq_sum / (~off_sq_sum + 1);
-	line_data[curr_ind] = (struct sync_point_info){glob_time, loc_time, skew_inv};
+	else*/
+	if (off_sq_sum && loc_sq_sum)
+		//skew_inv = off_sq_sum > 0 ? loc_sq_sum / off_sq_sum : loc_sq_sum / (~off_sq_sum + 1);
+		skew = ((float)off_sq_sum / (float)loc_sq_sum) / 1024;
+	//line_data[curr_ind] = (struct sync_point_info){glob_time, loc_time, skew_inv, (uint8_t)(off_sq_sum > 0)};
+	line_data[curr_ind] = (struct sync_point_info){glob_time, loc_time, skew};
 
 	// unlock skew values
 	nrk_sem_post(skew_lock);
@@ -189,9 +196,10 @@ uint8_t psync_is_synced() {
  * function to obtain current global time
  */
 void psync_get_time(nrk_time_t* global_time) {
-	uint64_t full_time = nrk_get_precision_time();
+	uint64_t full_time = flash_get_current_time();
 	nrk_sem_pend(skew_lock);
-	*global_time = get_pack_time(full_time + off_avg + ((off_sq_sum * (full_time - loc_avg) / loc_sq_sum) >> 6));
+	//*global_time = get_pack_time(full_time + (off_avg << 0) + ((int64_t)(off_sq_sum * (full_time - (loc_avg << 0)) / loc_sq_sum) >> 10));
+	*global_time = get_pack_time(full_time + off_avg + (int64_t)(skew * (int64_t)(full_time - loc_avg)));
 	nrk_sem_post(skew_lock);
 }
 
@@ -201,7 +209,8 @@ void psync_get_time(nrk_time_t* global_time) {
 void psync_local_to_global(nrk_time_t* local_time, nrk_time_t* global_time) {
 	uint64_t loc_time = get_full_time(*local_time);
 	nrk_sem_pend(skew_lock);
-	*global_time = get_pack_time(loc_time + off_avg + ((off_sq_sum * (loc_time - loc_avg) / loc_sq_sum) >> 6));
+	//*global_time = get_pack_time(loc_time + (off_avg << 0) + ((int64_t)(off_sq_sum * (loc_time - (loc_avg << 0)) / loc_sq_sum) >> 10));
+	*global_time = get_pack_time(loc_time + off_avg + (int64_t)(skew * (int64_t)(loc_time - loc_avg)));
 	nrk_sem_post(skew_lock);
 }
 
@@ -211,8 +220,9 @@ void psync_local_to_global(nrk_time_t* local_time, nrk_time_t* global_time) {
 void psync_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time) {
 	uint64_t glob_time = get_full_time(*global_time);
 	nrk_sem_pend(skew_lock);
-	uint64_t approx_loc = glob_time - off_avg;
-	*local_time = get_pack_time(approx_loc - ((off_sq_sum * (approx_loc - loc_avg) / loc_sq_sum) >> 6));
+	uint64_t approx_loc = glob_time - (off_avg << 0);
+	//*local_time = get_pack_time(approx_loc - ((int64_t)(off_sq_sum * (approx_loc - (loc_avg << 0)) / loc_sq_sum) >> 10));
+	*local_time = get_pack_time(approx_loc - (int64_t)(skew * (int64_t)(approx_loc - loc_avg)));
 	nrk_sem_post(skew_lock);
 }
 
@@ -222,7 +232,9 @@ void psync_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time) {
 void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
 	uint64_t g_diff = get_full_time(*glob_diff);
 	nrk_sem_pend(skew_lock);
-	*loc_diff = get_pack_time(g_diff + (int64_t)(g_diff / (skew_inv << 6)));
+	//int64_t skew_comp = off_sq_sum < 0 ? g_diff / (skew_inv << 10) : ~(g_diff / (skew_inv << 10)) + 1;
+	//*loc_diff = get_pack_time(g_diff + skew_comp);
+	*loc_diff = get_pack_time(g_diff - (int64_t)(skew * g_diff));
 	nrk_sem_post(skew_lock);
 }
 
@@ -232,7 +244,9 @@ void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff) {
 void psync_global_diff(nrk_time_t* loc_diff, nrk_time_t* glob_diff) {
 	uint64_t l_diff = get_full_time(*loc_diff);
 	nrk_sem_pend(skew_lock);
-	*glob_diff = get_pack_time(l_diff - (int64_t)(l_diff / (skew_inv << 6)));
+	//int64_t skew_comp = off_sq_sum < 0 ? l_diff / (skew_inv << 10) : ~(l_diff / (skew_inv << 10)) + 1;
+	//*glob_diff = get_pack_time(l_diff - skew_comp);
+	*glob_diff = get_pack_time(l_diff + (int64_t)(skew * l_diff));
 	nrk_sem_post(skew_lock);
 }
 
@@ -263,18 +277,20 @@ void psync_rx_callback(uint8_t* buf, uint64_t rcv_time) {
 void psync_tx_callback(uint16_t len, uint8_t* buf) {
 	uint64_t* buf64 = (uint64_t*)buf;
 	if (is_root) { 
-		buf64[0] = nrk_get_precision_time() + PSYNC_TX_DELAY;
+		buf64[0] = flash_get_current_time() + PSYNC_TX_DELAY;
 		#ifdef COMPENSATED_FORWARDING
 		buf64[1] = buf64[0];
 		#endif
 	}
 	else {
-		uint64_t diff = nrk_get_precision_time() - new_loc + PSYNC_TX_DELAY;
+		uint64_t diff = flash_get_current_time() - new_loc + PSYNC_TX_DELAY;
 	
 		#ifdef COMPENSATED_FORWARDING
 		if (samples == MAX_SAMPLES) {
 			uint8_t ind = (curr_ind + 1) % MAX_SAMPLES;
-			buf64[1] += diff - (int64_t)(diff / (line_data[ind].skew_inv << 6));
+			//int64_t skew_comp = line_data[ind].skew_sign ? ~(diff / (line_data[ind].skew_inv << 8)) + 1 : diff / (line_data[ind].skew_inv << 8);
+			//buf64[1] += diff - skew_comp;
+			buf64[1] += diff + (int64_t)(line_data[ind].skew * diff);
 		}
 		else
 			buf64[1] += diff;
@@ -313,7 +329,7 @@ void psync_flood_wait(nrk_time_t* time) {
 		//printf("Waiting for Receive\r\n");
 		edit = 0;
 		/*uint64_t time_after, cur_time;
-		cur_time = nrk_get_precision_time();
+		cur_time = flash_get_current_time();
 		if (time)
 			time_after = cur_time + get_full_time(*time);
 		else
@@ -321,7 +337,7 @@ void psync_flood_wait(nrk_time_t* time) {
 		//flash_tx_callback_set(psync_tx_callback);
 		flash_enable(PKT_SIZE, time, psync_rx_callback);
 		/*while (!edit && (cur_time < time_after))
-			cur_time = nrk_get_precision_time();*/
+			cur_time = flash_get_current_time();*/
 		if (edit) {
 			//printf("loc: %lu << 32 + %lu, glob: %lu << 32 + %lu\r\n", ((uint32_t*)&new_loc)[1], ((uint32_t*)&new_loc)[0], ((uint32_t*)&new_glob)[1], ((uint32_t*)&new_glob)[0]);
 			printf("loc: %luns, glob: %luns\r\n", (uint32_t)(new_loc % 1000000000), (uint32_t)(new_glob % 1000000000));
