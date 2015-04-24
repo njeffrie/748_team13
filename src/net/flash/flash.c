@@ -283,6 +283,8 @@ flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf
 	nrk_led_clr(BLUE_LED);
 }
 
+#define TICKS_PER_MS 0x3F74
+
 /* reset current time in microseconds and initialize the timer interrupt */
 uint8_t flash_timer_setup(){
     uint8_t timer = NRK_APP_TIMER_0;
@@ -291,20 +293,31 @@ uint8_t flash_timer_setup(){
     /* inc counter every ms */
 	/* use 0x3E80 for 16MHz */
 	/* 0x3F12 experimentally returns correct result when compared to nrk_spin_wait_us()*/
-    if (nrk_timer_int_configure(timer, 1, 0x3F12, timer_3_callback) != NRK_OK)
+    if (nrk_timer_int_configure(timer, 1, TICKS_PER_MS, timer_3_callback) != NRK_OK)
         return NRK_ERROR;
     return nrk_timer_int_start(timer);
 }
 
+
 /* this will overflow after 2^32uS (4000 seconds... 1h 6m 40s) */
 void timer_3_callback(){
-    current_time_ms += 1;
+	DISABLE_GLOBAL_INT();
+    //current_time_ms += 1;
+	while (TCNT3 > TICKS_PER_MS){
+		TCNT3 -= TICKS_PER_MS;
+		current_time_ms += 1;
+	}
+	ENABLE_GLOBAL_INT();
 }
 
 uint64_t flash_get_current_time(){
 	DISABLE_GLOBAL_INT();
-    uint32_t offset_ticks = TCNT3;
+	while (TCNT3 > TICKS_PER_MS){
+		TCNT3 -= TICKS_PER_MS;
+		current_time_ms += 1;
+	}
 	uint64_t ticks = current_time_ms;
+    uint32_t offset_ticks = TCNT3;
 	ENABLE_GLOBAL_INT();
     return (ticks * 1000) + (offset_ticks >> 4);
 }

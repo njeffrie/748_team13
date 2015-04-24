@@ -261,7 +261,7 @@ if(timer==NRK_APP_TIMER_0)
 	{
 	if(prescaler>0 && prescaler<6 ) app_timer0_prescale=prescaler;
 	TCCR3A = 0;  
-	TCCR3B = BM(WGM32);  // Automatic restart on compare, count up
+	TCCR3B = 0;//BM(WGM32);  // Automatic restart on compare, count up
 	
 	OCR3AH = (compare_value >> 8) & 0xFF;	
   	OCR3AL = (compare_value & 0xFF );

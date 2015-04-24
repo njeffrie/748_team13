@@ -63,17 +63,24 @@ int main()
 	uint32_t temp2 = 0;
 	uint32_t temp3 = 0;
 	while(1){
-		
 		temp1 = (uint32_t)flash_get_current_time();
-		//for (i=0; i<1000; i++){
-			nrk_spin_wait_us(10000);
-		//}
+
+		nrk_spin_wait_us(10000);
+		
 		temp2 = (uint32_t)flash_get_current_time();
 		temp3 = (uint32_t)flash_get_current_time();
-		
-
-		printf("1ms time diff: %lu\r\n", temp2-temp1);
-		printf("back-to-back time diff: %lu\r\n", temp3-temp2);
+	
+		//if (temp3-temp2 > 10000){
+			printf("current time: %lums\r\n", temp1/1000);
+			printf("back-to-back time diff: %lu\r\n", temp3-temp2);
+			printf("1ms time diff: %lu\r\n\r\n", temp2-temp1);
+		/*
+		 * }
+		if (temp2-temp1 < 10000){
+			printf("current time: %lums\r\n", temp1/1000);
+			printf("back-to-back time diff: %lu\r\n", temp3-temp2);
+			printf("1ms time diff: %lu\r\n\r\n", temp2-temp1);
+		}*/
 
 		nrk_led_clr(RED_LED);
 		nrk_led_clr(ORANGE_LED);
@@ -84,7 +91,6 @@ int main()
 		nrk_led_toggle(BLUE_LED);
 		for (i=0; i<1000; i++)
 			nrk_spin_wait_us(1000);
-
 	}
 	return 1;
 }
