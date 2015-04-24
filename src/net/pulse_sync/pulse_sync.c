@@ -81,7 +81,7 @@ void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan) {
 	off_avg = 0;
 	loc_sq_sum = 1;
 	off_sq_sum = 0;
-	skew_inv = 0x7fffffffffffffffLL;
+	//skew_inv = 0x7fffffffffffffffLL;
 	skew = 0.0;
 	samples = 0;
 	curr_ind = 0;
@@ -102,7 +102,7 @@ void psync_set_root(uint8_t root) {
  * helper function to change nrk_time_t to uint64_t
  */
 inline uint64_t get_full_time(nrk_time_t time) {
-	return (uint64_t)(time.secs) * 1000000000L + time.nano_secs;
+	return (uint64_t)(time.secs) * 1000000L + time.nano_secs / 1000;
 }
 
 /*
@@ -110,8 +110,8 @@ inline uint64_t get_full_time(nrk_time_t time) {
  */
 inline nrk_time_t get_pack_time(uint64_t time) {
 	nrk_time_t nrk_time;
-	nrk_time.secs = time / 1000000000;
-	nrk_time.nano_secs = time - 1000000000L * (uint64_t)nrk_time.secs;
+	nrk_time.secs = time / 1000000L;
+	nrk_time.nano_secs = 1000 * (uint32_t)(time - 1000000L * (uint64_t)nrk_time.secs);
 	return nrk_time;
 }
 
@@ -138,14 +138,14 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	nrk_sem_pend(skew_lock);
 
 	// remove terms in local time deviation squared sum containing old mean local time
-	loc_sq_sum += (loc_avg >> 20) * ((int64_t)(2 * loc_sum - samples * loc_avg) >> 20);
+	loc_sq_sum += (loc_avg >> 10) * ((int64_t)(2 * loc_sum - samples * loc_avg) >> 10);
 	// overwrite old local time in square with new local time
-	loc_sq_sum += ((loc_time - prev_loc) >> 20) * ((loc_time + prev_loc) >> 20);
+	loc_sq_sum += ((loc_time - prev_loc) >> 10) * ((loc_time + prev_loc) >> 10);
 
 	// remove terms in offset deviation squared sum containing old mean local time and offset
-	off_sq_sum += (off_avg >> 10) * ((int64_t)(loc_sum - samples * loc_avg) >> 20) + (loc_avg >> 20) * (off_sum >> 10);
+	off_sq_sum += (off_avg >> 0) * ((int64_t)(loc_sum - samples * loc_avg) >> 10) + (loc_avg >> 10) * (off_sum >> 0);
 	// overwrite old local time and offset terms with new local time and offset terms
-	off_sq_sum += (loc_time >> 20) * (off_time >> 10) - (prev_loc >> 20) * (prev_off >> 10);
+	off_sq_sum += (loc_time >> 10) * (off_time >> 0) - (prev_loc >> 10) * (prev_off >> 0);
 
 	//// calculate new mean local time and local time deviation squared
 	loc_sum += loc_time - prev_loc;
@@ -154,7 +154,7 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	loc_avg = tmp_avg + (tmp_rem + new_samples / 2) / new_samples;
 
 	// add terms in square containing new mean local time
-	loc_sq_sum += (loc_avg >> 20) * ((int64_t)(new_samples * loc_avg - 2 * loc_sum) >> 20);
+	loc_sq_sum += (loc_avg >> 10) * ((int64_t)(new_samples * loc_avg - 2 * loc_sum) >> 10);
 
 	//// calculate new mean global-local time offset and offset deviation squared
 	tmp_avg = line_data[curr_ind].glob_time - line_data[curr_ind].loc_time;
@@ -164,7 +164,7 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	off_avg = tmp_avg + (tmp_rem + new_samples / 2) / new_samples;
 
 	// add terms to square containing new mean local time and offset
-	off_sq_sum += (off_avg >> 10) * ((int64_t)(new_samples * loc_avg - loc_sum) >> 20) - (loc_avg >> 20) * (off_sum >> 10);
+	off_sq_sum += (off_avg >> 0) * ((int64_t)(new_samples * loc_avg - loc_sum) >> 10) - (loc_avg >> 10) * (off_sum >> 0);
 
 	//// save new data into next entry in circular buffer
 	curr_ind = next_ind;
@@ -220,7 +220,7 @@ void psync_local_to_global(nrk_time_t* local_time, nrk_time_t* global_time) {
 void psync_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time) {
 	uint64_t glob_time = get_full_time(*global_time);
 	nrk_sem_pend(skew_lock);
-	uint64_t approx_loc = glob_time - (off_avg << 0);
+	uint64_t approx_loc = glob_time - off_avg;
 	//*local_time = get_pack_time(approx_loc - ((int64_t)(off_sq_sum * (approx_loc - (loc_avg << 0)) / loc_sq_sum) >> 10));
 	*local_time = get_pack_time(approx_loc - (int64_t)(skew * (int64_t)(approx_loc - loc_avg)));
 	nrk_sem_post(skew_lock);

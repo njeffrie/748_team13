@@ -79,12 +79,12 @@
 #define PSYNC_TX_DELAY ((uint32_t)TX_TICK_DELAY * 62L + (uint32_t)(TX_TICK_DELAY >> 1))
 #define RX_TICK_DELAY (5 + TS_EARLY_DELAY)
 #define PSYNC_RX_DELAY ((uint32_t)RX_TICK_DELAY * 62L + (uint32_t)(RX_TICK_DELAY >> 1))*/
-#define PSYNC_TX_DELAY 241247
-#define PSYNC_RX_DELAY 3750
+#define PSYNC_TX_DELAY 241
+#define PSYNC_RX_DELAY 4
 
 uint64_t loc_sq_sum;
 int64_t off_sq_sum;
-int64_t skew_inv;
+//int64_t skew_inv;
 float skew;
 
 // initiate/reset pulsesync
