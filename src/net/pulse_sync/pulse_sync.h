@@ -52,6 +52,7 @@
 #include <nrk_error.h>
 #include <nrk_timer.h>
 
+//#include <pulse_sync_timer.h>
 #include <flash.h>
 
 // number of samples for regression line calculation
@@ -83,6 +84,8 @@
 
 uint64_t loc_sq_sum;
 int64_t off_sq_sum;
+int64_t skew_inv;
+float skew;
 
 // initiate/reset pulsesync
 void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan);
