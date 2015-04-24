@@ -59,36 +59,22 @@ int main()
 
 	nrk_int_enable();
 	int i;
-	uint64_t temp1 = 0;
-	uint64_t temp2 = 0;
+	uint32_t temp1 = 0;
+	uint32_t temp2 = 0;
+	uint32_t temp3 = 0;
 	while(1){
-		//nrk_int_disable();
 		
-		/*asm volatile(
-			"CLI \n\t" \
-		);*/
+		temp1 = (uint32_t)pulse_sync_get_current_time();
+		//for (i=0; i<1000; i++){
+			nrk_spin_wait_us(10000);
+		//}
+		temp2 = (uint32_t)pulse_sync_get_current_time();
+		temp3 = (uint32_t)pulse_sync_get_current_time();
+		
 
-		temp1 = pulse_sync_get_current_time();
-		nrk_spin_wait_us(1000); //wait 1ms
-		temp2 = pulse_sync_get_current_time();
-		/*asm volatile(
-			"SEI \n\t" \
-		);*/
-		uint32_t t1_low = (temp1 & 0xFFFF);
-		uint32_t t1_high = (temp1 >> 32) & 0xFFFF;
-		uint32_t t2_low = (temp2 & 0xFFFF);
-		uint32_t t2_high = (temp2 >> 32) & 0xFFFF;
+		printf("1ms time diff: %lu\r\n", temp2-temp1);
+		printf("back-to-back time diff: %lu\r\n", temp3-temp2);
 
-		uint64_t diff = temp2-temp1;
-		uint32_t diff_low = (diff & 0xFFFF);
-		uint32_t diff_high = (diff >> 32) & 0xFFFF;
-
-		printf("time1 = %lu, %lu, time 2 = %lu, %lu, difference = %lu, %lu\r\n", t1_high, t1_low, t2_high, t2_low, diff_high, diff_low);
-	
-		//if ((diff_low < 40000) || (diff_low > 41000))
-		//	printf("time diff unexpected: %lu\r\n", diff_low);
-		//if (diff_high != 0)
-		//	printf("terrible terrible terrible! %lu\r\n", diff_high);
 		nrk_led_clr(RED_LED);
 		nrk_led_clr(ORANGE_LED);
 		nrk_led_clr(GREEN_LED);
@@ -96,7 +82,7 @@ int main()
 		else if (temp2-temp1 < 10) nrk_led_set(GREEN_LED);
 		else nrk_led_set(ORANGE_LED);
 		nrk_led_toggle(BLUE_LED);
-		for (i=0; i<100; i++)
+		for (i=0; i<1000; i++)
 			nrk_spin_wait_us(1000);
 
 	}
