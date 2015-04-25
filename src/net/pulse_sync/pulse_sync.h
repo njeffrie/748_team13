@@ -56,10 +56,10 @@
 #include <flash.h>
 
 // number of samples for regression line calculation
-#define MAX_SAMPLES 4
+#define MAX_SAMPLES 3
 
 // define this if you desire compensated forwarding in addition to simple
-//#define COMPENSATED_FORWARDING
+#define COMPENSATED_FORWARDING
 
 #ifdef COMPENSATED_FORWARDING
 //#define PKT_SIZE 35
@@ -79,12 +79,12 @@
 #define PSYNC_TX_DELAY ((uint32_t)TX_TICK_DELAY * 62L + (uint32_t)(TX_TICK_DELAY >> 1))
 #define RX_TICK_DELAY (5 + TS_EARLY_DELAY)
 #define PSYNC_RX_DELAY ((uint32_t)RX_TICK_DELAY * 62L + (uint32_t)(RX_TICK_DELAY >> 1))*/
-#define PSYNC_TX_DELAY 241
+#define PSYNC_TX_DELAY 2260
 #define PSYNC_RX_DELAY 4
 
 uint64_t loc_sq_sum;
 int64_t off_sq_sum;
-//int64_t skew_inv;
+int64_t skew_inv;
 float skew;
 
 // initiate/reset pulsesync
