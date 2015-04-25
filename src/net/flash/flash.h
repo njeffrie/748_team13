@@ -67,11 +67,12 @@ void flash_msg_len_set(uint16_t msg_len);
 uint16_t flash_msg_len_get();
 void flash_tx_pkt(uint8_t *buffer, uint8_t len);
 void flash_tx_callback_set(void(*callback)(uint16_t len, uint8_t *buf));
-void set_auto_re_tx(uint8_t retransmit_flag);
+void flash_set_retransmit(uint8_t retransmit_flag);
 
 /* deterministic timer for accurate and precise timestamping */
 uint8_t flash_timer_setup();
 uint64_t flash_get_current_time();
+void flash_set_time(uint64_t time_us);
 void flash_reset_timer(); 
 
 #endif
