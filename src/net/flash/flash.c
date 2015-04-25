@@ -40,6 +40,8 @@ static uint8_t flash_started;
 //static uint8_t *flash_buf;
 static uint8_t flash_buf[FLASH_MAX_PKT_LEN];
 
+uint8_t auto_re_tx;
+
 //user supplied when flash_enable is called
 nrk_time_t *listen_timeout;
 
@@ -67,16 +69,16 @@ nrk_sig_t packetTxSignal;
 /**
  *  This is a callback if you require immediate response to a packet
  */
-RF_RX_INFO *rf_rx_callback (RF_RX_INFO * pRRI)
+/*RF_RX_INFO *rf_rx_callback (RF_RX_INFO * pRRI)
 {
     //code here appears to never run under current setup
 	return pRRI;
 }
-
+*/
 void rx_started_callback()
 {
 	//printf("received packet\r\n");
-	last_rx_time = nrk_full_time_get();
+	last_rx_time = flash_get_current_time();//nrk_full_time_get();
 }
 
 /* this will be called whenver flash listening is on */
@@ -217,7 +219,12 @@ int8_t flash_init (uint8_t chan)
 	// Setup channel number
 	flash_chan = chan;
 	flash_started = 1;
+	auto_re_tx = 0;
     return NRK_OK;
+}
+
+void set_auto_re_tx(uint8_t retransmit_flag){
+	auto_re_tx = retransmit_flag;
 }
 
 void 
@@ -267,42 +274,44 @@ flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf
 		user_rx_callback(flash_buf, last_rx_time);
 	nrk_led_clr(ORANGE_LED);
 
-	//re transmission of packet
-	nrk_led_set(BLUE_LED);
+	if (auto_re_tx){
+		//re transmission of packet
+		nrk_led_set(BLUE_LED);
 
-	//set packet to be transmitted
-	flash_rfTxInfo.pPayload = flash_buf;
+		//set packet to be transmitted
+		flash_rfTxInfo.pPayload = flash_buf;
 
-	//set tx structure
-	flash_rfTxInfo.length = flash_message_len;
-	flash_rfTxInfo.ackRequest = 0;
-	flash_rfTxInfo.cca = 0;
-	//if (flash_tx_callback != NULL)
+		//set tx structure
+		flash_rfTxInfo.length = flash_message_len;
+		flash_rfTxInfo.ackRequest = 0;
+		flash_rfTxInfo.cca = 0;
+		//if (flash_tx_callback != NULL)
 		//flash_tx_callback(flash_message_len, flash_buf);
-	rf_tx_packet(&flash_rfTxInfo);
-	nrk_led_clr(BLUE_LED);
+		rf_tx_packet(&flash_rfTxInfo);
+		nrk_led_clr(BLUE_LED);
+	}
 }
 
 #define TICKS_PER_MS 0x3F74
 
 /* reset current time in microseconds and initialize the timer interrupt */
 uint8_t flash_timer_setup(){
-    uint8_t timer = NRK_APP_TIMER_0;
+	uint8_t timer = NRK_APP_TIMER_0;
 
-    current_time_ms = 0;
-    /* inc counter every ms */
+	current_time_ms = 0;
+	/* inc counter every ms */
 	/* use 0x3E80 for 16MHz */
 	/* 0x3F12 experimentally returns correct result when compared to nrk_spin_wait_us()*/
-    if (nrk_timer_int_configure(timer, 1, TICKS_PER_MS, timer_3_callback) != NRK_OK)
-        return NRK_ERROR;
-    return nrk_timer_int_start(timer);
+	if (nrk_timer_int_configure(timer, 1, TICKS_PER_MS, timer_3_callback) != NRK_OK)
+		return NRK_ERROR;
+	return nrk_timer_int_start(timer);
 }
 
 
 /* this will overflow after 2^32uS (4000 seconds... 1h 6m 40s) */
 void timer_3_callback(){
 	DISABLE_GLOBAL_INT();
-    //current_time_ms += 1;
+	//current_time_ms += 1;
 	while (TCNT3 > TICKS_PER_MS){
 		TCNT3 -= TICKS_PER_MS;
 		current_time_ms += 1;
@@ -317,11 +326,11 @@ uint64_t flash_get_current_time(){
 		current_time_ms += 1;
 	}
 	uint64_t ticks = current_time_ms;
-    uint32_t offset_ticks = TCNT3;
+	uint32_t offset_ticks = TCNT3;
 	ENABLE_GLOBAL_INT();
-    return (ticks * 1000) + (offset_ticks >> 4);
+	return (ticks * 1000) + (offset_ticks >> 4);
 }
 
 void flash_reset_timer(){
-    current_time_ms = 0;
+	current_time_ms = 0;
 }

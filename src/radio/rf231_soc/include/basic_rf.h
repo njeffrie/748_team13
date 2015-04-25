@@ -351,7 +351,7 @@ extern volatile RF_SETTINGS rfSettings;
 //			unique 32-bit identifier to avoid addressing conflicts. Normally, in a 802.15.4 network, the
 //			short address will be given to associated nodes by the PAN coordinator.
 //-------------------------------------------------------------------------------------------------------
-void rf_init(RF_RX_INFO *pRRI, uint8_t channel, uint16_t panId, uint16_t myAddr);
+foid rf_init(RF_RX_INFO *pRRI, uint8_t channel, uint16_t panId, uint16_t myAddr);
 void rf_set_rx(RF_RX_INFO *pRRI, uint8_t channel);
 void rx_start_callback(void (*func)(void));
 void rx_end_callback(void (*func)(void));

@@ -340,7 +340,7 @@ void psync_flood_wait(nrk_time_t* time) {
 			cur_time = flash_get_current_time();*/
 		if (edit) {
 			//printf("loc: %lu << 32 + %lu, glob: %lu << 32 + %lu\r\n", ((uint32_t*)&new_loc)[1], ((uint32_t*)&new_loc)[0], ((uint32_t*)&new_glob)[1], ((uint32_t*)&new_glob)[0]);
-			printf("loc: %luns, glob: %luns\r\n", (uint32_t)(new_loc % 1000000000), (uint32_t)(new_glob % 1000000000));
+			printf("loc: %luns, glob: %luns\r\n", (uint32_t)(new_loc % 1000000), (uint32_t)(new_glob % 1000000));
 			psync_add_point(new_loc, new_glob);
 			edit = 0;
 		}

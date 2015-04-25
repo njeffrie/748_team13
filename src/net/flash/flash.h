@@ -26,9 +26,10 @@
 /**
  * The Flash Flooding protocol exploits the capture effect observed in radio
  * reception, which allows some packets to be received correctly despite
- * concurrent transmissions on the same channel. This Flash Flood
+ * concurrent transmissions on the same channel. The simplest Flash Flood
  * implementation (Flash I) immediately re-transmits when a packet is received by the
- * CC2420 radio. 
+ * CC2420 radio. Flash II also transmits a second packet after a cca to ensure full
+ * network coverage
 */
 
 
@@ -57,7 +58,8 @@
 nrk_sig_t flash_tx_pkt_done_signal;
 
 int8_t flash_init(uint8_t chan);
-void flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t* buf, uint64_t rcv_time));
+void flash_enable(uint8_t msg_len, nrk_time_t* timeout, 
+		void (*edit_buf)(uint8_t* buf, uint64_t rcv_time));
 int8_t flash_rf_power_set(uint8_t power);
 void flash_err_count_reset();
 uint32_t flash_err_count_get();
@@ -65,7 +67,9 @@ void flash_msg_len_set(uint16_t msg_len);
 uint16_t flash_msg_len_get();
 void flash_tx_pkt(uint8_t *buffer, uint8_t len);
 void flash_tx_callback_set(void(*callback)(uint16_t len, uint8_t *buf));
+void set_auto_re_tx(uint8_t retransmit_flag);
 
+/* deterministic timer for accurate and precise timestamping */
 uint8_t flash_timer_setup();
 uint64_t flash_get_current_time();
 void flash_reset_timer(); 

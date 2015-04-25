@@ -8,8 +8,8 @@ PLATFORM = firefly3
 TARGET = main
 
 # Set the Port that you programmer is connected to 
-PROGRAMMING_PORT = /dev/ttyUSB0 # Default FireFly port 
-#PROGRAMMING_PORT = /dev/tty.usbserial-AE00BULD # Default micaZ port 
+#PROGRAMMING_PORT = /dev/ttyUSB0 # Default FireFly port 
+PROGRAMMING_PORT = /dev/tty.usbserial-AE00BULD # Default micaZ port 
 #PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y4H
 
 # Set this such that the nano-RK directory is the base path

@@ -135,29 +135,25 @@
  366               	.global	callback2
  368               	callback2:
  369               		.stabd	46,0,0
-  95:main.c        ****   	//rx_start_callback(callback1);	
-  96:main.c        **** }
-  97:main.c        **** 
-  98:main.c        **** void callback2()
-  99:main.c        **** {
+  95:main.c        **** }
+  96:main.c        **** 
+  97:main.c        **** void callback2()
+  98:main.c        **** {
  371               	.LM2:
  372               	.LFBB2:
  373               	/* prologue: function */
  374               	/* frame size = 0 */
  375               	/* stack size = 0 */
  376               	.L__stack_usage = 0
- 100:main.c        **** 	printf("finished packet rx\r\n");
+  99:main.c        **** 	printf("finished packet rx\r\n");
  378               	.LM3:
  379 0008 80E0      		ldi r24,lo8(.LC1)
  380 000a 90E0      		ldi r25,hi8(.LC1)
  381 000c 0E94 0000 		call puts
- 101:main.c        **** 	//rf_rx_off();
- 102:main.c        **** 	//rx_end_callback(callback2);
- 103:main.c        **** 	//rf_set_rx(&rfRxInfo, 13);
- 104:main.c        **** 	rf_rx_off();
+ 100:main.c        **** 	rf_rx_off();
  383               	.LM4:
  384 0010 0E94 0000 		call rf_rx_off
- 105:main.c        **** 	rf_rx_on();
+ 101:main.c        **** 	rf_rx_on();
  386               	.LM5:
  387 0014 0C94 0000 		jmp rf_rx_on
  389               	.Lscope2:
@@ -173,35 +169,35 @@
  397               	.global	rx_task
  399               	rx_task:
  400               		.stabd	46,0,0
- 106:main.c        **** }
- 107:main.c        **** 
- 108:main.c        **** void rx_task ()
- 109:main.c        **** {
+ 102:main.c        **** }
+ 103:main.c        **** 
+ 104:main.c        **** void rx_task ()
+ 105:main.c        **** {
  402               	.LM6:
  403               	.LFBB3:
  404               	/* prologue: function */
  405               	/* frame size = 0 */
  406               	/* stack size = 0 */
  407               	.L__stack_usage = 0
- 110:main.c        ****   uint8_t cnt,i,length,n;
- 111:main.c        ****  
- 112:main.c        ****   rfRxInfo.pPayload = rx_buf;
+ 106:main.c        ****   uint8_t cnt,i,length,n;
+ 107:main.c        ****  
+ 108:main.c        ****   rfRxInfo.pPayload = rx_buf;
  409               	.LM7:
  410 0018 80E0      		ldi r24,lo8(rx_buf)
  411 001a 90E0      		ldi r25,hi8(rx_buf)
  412 001c 9093 0000 		sts rfRxInfo+5+1,r25
  413 0020 8093 0000 		sts rfRxInfo+5,r24
- 113:main.c        ****   rfRxInfo.max_length = RF_MAX_PAYLOAD_SIZE;
+ 109:main.c        ****   rfRxInfo.max_length = RF_MAX_PAYLOAD_SIZE;
  415               	.LM8:
  416 0024 84E7      		ldi r24,lo8(116)
  417 0026 8093 0000 		sts rfRxInfo+4,r24
- 114:main.c        ****   rfRxInfo.ackRequest= 0;
+ 110:main.c        ****   rfRxInfo.ackRequest= 0;
  419               	.LM9:
  420 002a 1092 0000 		sts rfRxInfo+7,__zero_reg__
- 115:main.c        ****   nrk_int_enable();
+ 111:main.c        ****   nrk_int_enable();
  422               	.LM10:
  423 002e 0E94 0000 		call nrk_int_enable
- 116:main.c        ****   rf_init (&rfRxInfo, 13, 0xffff, 0x0);
+ 112:main.c        ****   rf_init (&rfRxInfo, 13, 0xffff, 0x0);
  425               	.LM11:
  426 0032 20E0      		ldi r18,0
  427 0034 30E0      		ldi r19,0
@@ -211,63 +207,63 @@
  431 003c 80E0      		ldi r24,lo8(rfRxInfo)
  432 003e 90E0      		ldi r25,hi8(rfRxInfo)
  433 0040 0E94 0000 		call rf_init
- 117:main.c        ****   printf( "Waiting for packet...\r\n" );
+ 113:main.c        ****   printf( "Waiting for packet...\r\n" );
  435               	.LM12:
  436 0044 80E0      		ldi r24,lo8(.LC2)
  437 0046 90E0      		ldi r25,hi8(.LC2)
  438 0048 0E94 0000 		call puts
- 118:main.c        **** 
- 119:main.c        ****   rx_start_callback(callback1);
+ 114:main.c        **** 
+ 115:main.c        ****   rx_start_callback(callback1);
  440               	.LM13:
  441 004c 80E0      		ldi r24,lo8(gs(callback1))
  442 004e 90E0      		ldi r25,hi8(gs(callback1))
  443 0050 0E94 0000 		call rx_start_callback
- 120:main.c        ****   rx_end_callback(callback2);
+ 116:main.c        ****   rx_end_callback(callback2);
  445               	.LM14:
  446 0054 80E0      		ldi r24,lo8(gs(callback2))
  447 0056 90E0      		ldi r25,hi8(gs(callback2))
  448 0058 0E94 0000 		call rx_end_callback
  449               	.L4:
- 121:main.c        ****   while(1){
- 122:main.c        **** 	  rf_rx_on();
+ 117:main.c        ****   while(1){
+ 118:main.c        **** 	  rf_rx_on();
  451               	.LM15:
  452 005c 0E94 0000 		call rf_rx_on
- 123:main.c        **** 	  nrk_wait_until_next_period();
+ 119:main.c        **** 	  nrk_wait_until_next_period();
  454               	.LM16:
  455 0060 0E94 0000 		call nrk_wait_until_next_period
- 124:main.c        **** 	
- 125:main.c        **** 	/*
- 126:main.c        **** 	rf_polling_rx_on();
- 127:main.c        **** 	while ((n = rf_rx_check_sfd()) == 0)
- 128:main.c        **** 	  continue; 
- 129:main.c        **** 	if (n != 0) {
- 130:main.c        **** 	  n = 0;
- 131:main.c        **** 	  // Packet on its way
- 132:main.c        **** 	  cnt=0;
- 133:main.c        **** 	  while ((n = rf_polling_rx_packet ()) == 0) {
- 134:main.c        **** 		if (cnt > 50) {
- 135:main.c        **** 		  //printf( "PKT Timeout\r\n" );
- 136:main.c        **** 		  break;		// huge timeout as failsafe
- 137:main.c        **** 		}
- 138:main.c        **** 		halWait(4000);
- 139:main.c        **** 		cnt++;
- 140:main.c        **** 	  }
- 141:main.c        **** 	}
- 142:main.c        **** 
- 143:main.c        **** 	//rf_rx_off();
- 144:main.c        **** 	if (n == 1) {
- 145:main.c        **** 	  nrk_led_toggle(RED_LED);
- 146:main.c        **** 	  nrk_led_toggle(GREEN_LED);
- 147:main.c        **** 	  // CRC and checksum passed
- 148:main.c        **** 	  //printf("packet received\r\n");
- 149:main.c        **** 	  for(i=0; i<rfRxInfo.length; i++ )
- 150:main.c        **** 		printf( "%c", rfRxInfo.pPayload[i]);
- 151:main.c        **** 	  printf(",%d\r\n",rfRxInfo.rssi);
- 152:main.c        **** 	} 
- 153:main.c        **** 	else if(n != 0){ 
- 154:main.c        **** 	  //printf( "CRC failed!\r\n" ); nrk_led_set(RED_LED); 
- 155:main.c        **** 	}*/
- 156:main.c        ****   }
+ 120:main.c        **** 	
+ 121:main.c        **** 	/*
+ 122:main.c        **** 	rf_polling_rx_on();
+ 123:main.c        **** 	while ((n = rf_rx_check_sfd()) == 0)
+ 124:main.c        **** 	  continue; 
+ 125:main.c        **** 	if (n != 0) {
+ 126:main.c        **** 	  n = 0;
+ 127:main.c        **** 	  // Packet on its way
+ 128:main.c        **** 	  cnt=0;
+ 129:main.c        **** 	  while ((n = rf_polling_rx_packet ()) == 0) {
+ 130:main.c        **** 		if (cnt > 50) {
+ 131:main.c        **** 		  //printf( "PKT Timeout\r\n" );
+ 132:main.c        **** 		  break;		// huge timeout as failsafe
+ 133:main.c        **** 		}
+ 134:main.c        **** 		halWait(4000);
+ 135:main.c        **** 		cnt++;
+ 136:main.c        **** 	  }
+ 137:main.c        **** 	}
+ 138:main.c        **** 
+ 139:main.c        **** 	//rf_rx_off();
+ 140:main.c        **** 	if (n == 1) {
+ 141:main.c        **** 	  nrk_led_toggle(RED_LED);
+ 142:main.c        **** 	  nrk_led_toggle(GREEN_LED);
+ 143:main.c        **** 	  // CRC and checksum passed
+ 144:main.c        **** 	  //printf("packet received\r\n");
+ 145:main.c        **** 	  for(i=0; i<rfRxInfo.length; i++ )
+ 146:main.c        **** 		printf( "%c", rfRxInfo.pPayload[i]);
+ 147:main.c        **** 	  printf(",%d\r\n",rfRxInfo.rssi);
+ 148:main.c        **** 	} 
+ 149:main.c        **** 	else if(n != 0){ 
+ 150:main.c        **** 	  //printf( "CRC failed!\r\n" ); nrk_led_set(RED_LED); 
+ 151:main.c        **** 	}*/
+ 152:main.c        ****   }
  457               	.LM17:
  458 0064 00C0      		rjmp .L4
  460               	.Lscope3:
@@ -290,11 +286,11 @@
  484               	.global	nrk_create_taskset
  486               	nrk_create_taskset:
  487               		.stabd	46,0,0
- 157:main.c        **** }
- 158:main.c        **** 
- 159:main.c        **** void
- 160:main.c        **** nrk_create_taskset()
- 161:main.c        **** {
+ 153:main.c        **** }
+ 154:main.c        **** 
+ 155:main.c        **** void
+ 156:main.c        **** nrk_create_taskset()
+ 157:main.c        **** {
  489               	.LM20:
  490               	.LFBB5:
  491 0068 CF93      		push r28
@@ -303,7 +299,7 @@
  494               	/* frame size = 0 */
  495               	/* stack size = 2 */
  496               	.L__stack_usage = 2
- 162:main.c        ****   RX_TASK.task = rx_task;
+ 158:main.c        ****   RX_TASK.task = rx_task;
  498               	.LM21:
  499 006c C0E0      		ldi r28,lo8(RX_TASK)
  500 006e D0E0      		ldi r29,hi8(RX_TASK)
@@ -311,7 +307,7 @@
  502 0072 90E0      		ldi r25,hi8(gs(rx_task))
  503 0074 9E83      		std Y+6,r25
  504 0076 8D83      		std Y+5,r24
- 163:main.c        ****   nrk_task_set_stk( &RX_TASK, rx_task_stack, NRK_APP_STACKSIZE);
+ 159:main.c        ****   nrk_task_set_stk( &RX_TASK, rx_task_stack, NRK_APP_STACKSIZE);
  506               	.LM22:
  507 0078 40E0      		ldi r20,0
  508 007a 51E0      		ldi r21,lo8(1)
@@ -319,21 +315,21 @@
  510 007e 70E0      		ldi r23,hi8(rx_task_stack)
  511 0080 CE01      		movw r24,r28
  512 0082 0E94 0000 		call nrk_task_set_stk
- 164:main.c        ****   RX_TASK.prio = 2;
+ 160:main.c        ****   RX_TASK.prio = 2;
  514               	.LM23:
  515 0086 82E0      		ldi r24,lo8(2)
  516 0088 8887      		std Y+8,r24
- 165:main.c        ****   RX_TASK.FirstActivation = TRUE;
+ 161:main.c        ****   RX_TASK.FirstActivation = TRUE;
  518               	.LM24:
  519 008a 81E0      		ldi r24,lo8(1)
  520 008c 8F83      		std Y+7,r24
- 166:main.c        ****   RX_TASK.Type = BASIC_TASK;
+ 162:main.c        ****   RX_TASK.Type = BASIC_TASK;
  522               	.LM25:
  523 008e 8987      		std Y+9,r24
- 167:main.c        ****   RX_TASK.SchType = PREEMPTIVE;
+ 163:main.c        ****   RX_TASK.SchType = PREEMPTIVE;
  525               	.LM26:
  526 0090 8A87      		std Y+10,r24
- 168:main.c        ****   RX_TASK.period.secs = 1;
+ 164:main.c        ****   RX_TASK.period.secs = 1;
  528               	.LM27:
  529 0092 81E0      		ldi r24,lo8(1)
  530 0094 90E0      		ldi r25,0
@@ -343,45 +339,45 @@
  534 009c 9C87      		std Y+12,r25
  535 009e AD87      		std Y+13,r26
  536 00a0 BE87      		std Y+14,r27
- 169:main.c        ****   RX_TASK.period.nano_secs = 0;
+ 165:main.c        ****   RX_TASK.period.nano_secs = 0;
  538               	.LM28:
  539 00a2 1F86      		std Y+15,__zero_reg__
  540 00a4 188A      		std Y+16,__zero_reg__
  541 00a6 198A      		std Y+17,__zero_reg__
  542 00a8 1A8A      		std Y+18,__zero_reg__
- 170:main.c        ****   RX_TASK.cpu_reserve.secs = 0;
+ 166:main.c        ****   RX_TASK.cpu_reserve.secs = 0;
  544               	.LM29:
  545 00aa 1B8A      		std Y+19,__zero_reg__
  546 00ac 1C8A      		std Y+20,__zero_reg__
  547 00ae 1D8A      		std Y+21,__zero_reg__
  548 00b0 1E8A      		std Y+22,__zero_reg__
- 171:main.c        ****   RX_TASK.cpu_reserve.nano_secs = 0 * NANOS_PER_MS;
+ 167:main.c        ****   RX_TASK.cpu_reserve.nano_secs = 0 * NANOS_PER_MS;
  550               	.LM30:
  551 00b2 1F8A      		std Y+23,__zero_reg__
  552 00b4 188E      		std Y+24,__zero_reg__
  553 00b6 198E      		std Y+25,__zero_reg__
  554 00b8 1A8E      		std Y+26,__zero_reg__
- 172:main.c        ****   RX_TASK.offset.secs = 0;
+ 168:main.c        ****   RX_TASK.offset.secs = 0;
  556               	.LM31:
  557 00ba 1B8E      		std Y+27,__zero_reg__
  558 00bc 1C8E      		std Y+28,__zero_reg__
  559 00be 1D8E      		std Y+29,__zero_reg__
  560 00c0 1E8E      		std Y+30,__zero_reg__
- 173:main.c        ****   RX_TASK.offset.nano_secs = 0;
+ 169:main.c        ****   RX_TASK.offset.nano_secs = 0;
  562               	.LM32:
  563 00c2 1F8E      		std Y+31,__zero_reg__
  564 00c4 18A2      		std Y+32,__zero_reg__
  565 00c6 19A2      		std Y+33,__zero_reg__
  566 00c8 1AA2      		std Y+34,__zero_reg__
- 174:main.c        ****   nrk_activate_task (&RX_TASK);
+ 170:main.c        ****   nrk_activate_task (&RX_TASK);
  568               	.LM33:
  569 00ca CE01      		movw r24,r28
  570               	/* epilogue start */
- 175:main.c        **** }
+ 171:main.c        **** }
  572               	.LM34:
  573 00cc DF91      		pop r29
  574 00ce CF91      		pop r28
- 174:main.c        ****   nrk_activate_task (&RX_TASK);
+ 170:main.c        ****   nrk_activate_task (&RX_TASK);
  576               	.LM35:
  577 00d0 0C94 0000 		jmp nrk_activate_task
  579               	.Lscope5:
@@ -469,25 +465,25 @@
  684               	.global __do_clear_bss
 DEFINED SYMBOLS
                             *ABS*:0000000000000000 main.c
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:2      *ABS*:000000000000003e __SP_H__
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:3      *ABS*:000000000000003d __SP_L__
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:4      *ABS*:000000000000003f __SREG__
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:5      *ABS*:000000000000003b __RAMPZ__
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:6      *ABS*:0000000000000000 __tmp_reg__
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:7      *ABS*:0000000000000001 __zero_reg__
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:343    .text:0000000000000000 callback1
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:368    .text:0000000000000008 callback2
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:399    .text:0000000000000018 rx_task
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:5      *ABS*:000000000000003b __RAMPZ__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:6      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:7      *ABS*:0000000000000001 __zero_reg__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:343    .text:0000000000000000 callback1
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:368    .text:0000000000000008 callback2
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:399    .text:0000000000000018 rx_task
                             *COM*:0000000000000074 rx_buf
                             *COM*:000000000000000c rfRxInfo
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:467    .text:0000000000000066 rf_rx_callback
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:486    .text:0000000000000068 nrk_create_taskset
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:467    .text:0000000000000066 rf_rx_callback
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:486    .text:0000000000000068 nrk_create_taskset
                             *COM*:0000000000000023 RX_TASK
                             *COM*:0000000000000100 rx_task_stack
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:589    .text.startup:0000000000000000 main
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:589    .text.startup:0000000000000000 main
                             *COM*:0000000000000050 buf
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:643    .bss:0000000000000000 packet_ready
-/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccHTYP6v.s:648    .bss:0000000000000001 packet_len
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:643    .bss:0000000000000000 packet_ready
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//cccyf2sr.s:648    .bss:0000000000000001 packet_len
                             *COM*:0000000000000001 app_timer0_prescale
                             *COM*:0000000000000002 app_timer0_callback
                             *COM*:0000000000000001 _nrk_time_trigger
