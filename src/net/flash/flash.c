@@ -78,7 +78,7 @@ nrk_sig_t packetTxSignal;
 void rx_started_callback()
 {
 	//printf("received packet\r\n");
-	last_rx_time = flash_get_current_time();//nrk_full_time_get();
+	last_rx_time = flash_get_current_time();
 }
 
 /* this will be called whenver flash listening is on */
