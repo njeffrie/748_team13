@@ -271,7 +271,7 @@ flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf
 	rf_rx_off();
 
 	//get metadata about received packet
-	printf("received buffer %s of length %d\r\n", flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
+	//printf("received buffer %s of length %d\r\n", flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
 	flash_message_len = flash_rfRxInfo.length;
 	memcpy(flash_rx_buf, flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
 	memset(flash_rfRxInfo.pPayload, 0, flash_rfRxInfo.length);
