@@ -58,7 +58,7 @@
 // number of samples for regression line calculation
 #define MAX_SAMPLES 3
 
-// define this if you desire compensated forwarding in addition to simple
+/*// define this if you desire compensated forwarding in addition to simple
 #define COMPENSATED_FORWARDING
 
 #ifdef COMPENSATED_FORWARDING
@@ -67,7 +67,11 @@
 #else
 #define PKT_SIZE 8
 //#define PKT_SIZE 27
-#endif
+#endif*/
+#define PKT_SIZE 8
+
+// maximum skew values
+#define MAX_SKEW (float)(0.00005)
 
 // latency of physical transmission process
 /*#define TIME_STAMP_DELAY 585
@@ -79,19 +83,18 @@
 #define PSYNC_TX_DELAY ((uint32_t)TX_TICK_DELAY * 62L + (uint32_t)(TX_TICK_DELAY >> 1))
 #define RX_TICK_DELAY (5 + TS_EARLY_DELAY)
 #define PSYNC_RX_DELAY ((uint32_t)RX_TICK_DELAY * 62L + (uint32_t)(RX_TICK_DELAY >> 1))*/
-#define PSYNC_TX_DELAY 2260
+#define PSYNC_TX_DELAY 244
 #define PSYNC_RX_DELAY 4
 
-uint64_t loc_sq_sum;
-int64_t off_sq_sum;
-int64_t skew_inv;
-float skew;
+/*uint64_t _loc_sq_sum;
+int64_t _off_sq_sum;
+float _skew;*/
 
 // initiate/reset pulsesync
-void psync_init(uint8_t high_prio, uint8_t root, uint8_t chan);
+void psync_init(uint8_t high_prio, uint8_t comp_forw, uint8_t is_root, uint8_t chan);
 
 // set whether root or not
-void psync_set_root(uint8_t root);
+void psync_set_root(uint8_t is_root);
 
 // add a synchronization data point for regression line calculation
 void psync_add_point(uint64_t loc_time, uint64_t glob_time);
