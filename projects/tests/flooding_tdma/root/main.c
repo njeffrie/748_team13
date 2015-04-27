@@ -81,10 +81,17 @@ int main() {
 	return 0;
 }
 
-void node_data_callback(uint8_t *data, uint64_t time)
+void node_data_callb ack(uint8_t *data, uint64_t time)
 {
 	uint32_t time_32 = (uint32_t)time;
+	
 	printf("received packet [%d] time %lu\r\n", data[0], time_32);
+	// TODO: Parse to JSON
+	/*
+	printf("{\"mac\":%d;\"temp\":%d}\n",
+		data[0], *(uint16_t*)(data+1));
+	*/
+	
 	nrk_led_toggle(GREEN_LED);
 }
 
