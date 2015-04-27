@@ -62,7 +62,7 @@ int main() {
 	
 	nrk_time_set(0, 0);
 
-	psync_init(2, 1, 13);
+	psync_init(2, 1, 1, 13);
 
 	nrk_create_taskset();
 	nrk_start();
@@ -73,10 +73,14 @@ int main() {
 void test_task() {
 	//printf("starting PulseSync flood\r\n");
 	printf("S\r\n");
-	printf("TX_DELAY: %lu, RX_DELAY: %lu\r\n", PSYNC_TX_DELAY, PSYNC_RX_DELAY);
+	printf("TX_DELAY: %u, RX_DELAY: %u\r\n", PSYNC_TX_DELAY, PSYNC_RX_DELAY);
 
 	// send initial message
-	psync_flood_wait(NULL);
+	//uint8_t i;
+	//for (i = 0; i < 5; i++) {
+		//nrk_spin_wait_us(20000);
+		psync_flood_wait(NULL);
+	//}
 
 	// set to non-root node to propagate flood
 	psync_set_root(0);
