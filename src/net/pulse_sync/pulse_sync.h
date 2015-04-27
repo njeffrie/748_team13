@@ -79,7 +79,7 @@
 #define PSYNC_TX_DELAY ((uint32_t)TX_TICK_DELAY * 62L + (uint32_t)(TX_TICK_DELAY >> 1))
 #define RX_TICK_DELAY (5 + TS_EARLY_DELAY)
 #define PSYNC_RX_DELAY ((uint32_t)RX_TICK_DELAY * 62L + (uint32_t)(RX_TICK_DELAY >> 1))*/
-#define PSYNC_TX_DELAY 2260
+#define PSYNC_TX_DELAY 244
 #define PSYNC_RX_DELAY 4
 
 uint64_t loc_sq_sum;

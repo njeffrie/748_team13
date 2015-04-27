@@ -1,6 +1,6 @@
 # Platform name  cc2420DK, firefly, micaZ
 #PLATFORM = firefly2_2
-PLATFORM = firefly3
+PLATFORM = firefly3_usb
 #PLATFORM = firefly2_3
 
 
@@ -29,11 +29,14 @@ SRC = $(TARGET).c
 # Add extra source files. 
 # For example:
 SRC += $(ROOT_DIR)/src/net/flash/flash.c
+SRC += $(ROOT_DIR)/src/drivers/platform/$(PLATFORM_TYPE)/source/ff_basic_sensor.c 
+SRC += $(ROOT_DIR)/src/drivers/platform/$(PLATFORM_TYPE)/source/twi_base_calls.c 
 
 # Add extra includes files. 
 # For example:
 EXTRAINCDIRS =
 EXTRAINCDIRS += $(ROOT_DIR)/src/net/flash
+EXTRAINCDIRS += $(ROOT_DIR)/src/net/pulse_sync
 
 
 #  This is where the final compile and download happens
