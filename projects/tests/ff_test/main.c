@@ -37,6 +37,12 @@
 #define MAC_ADDR 2
 void flash_test_callback();
 
+volatile uint32_t rt_count;
+
+#define PACKET_LEN 48
+
+uint8_t tx_buf[PACKET_LEN];
+
 void main()
 {
 	nrk_setup_ports();
@@ -55,17 +61,18 @@ void main()
 	flash_timer_setup();
 	printf("configuring flash task\r\n");
 	
-	uint8_t tx_buf[5];
 	tx_buf[0] = MAC_ADDR;
 	nrk_spin_wait_us(10000);
 	printf("global time = %lu\r\n", (uint32_t)flash_get_current_time());
 	*(uint32_t *)(tx_buf + 1) = flash_get_current_time();
-	int max_msg_len = 5;//strlen(buf) + 1;
+	int max_msg_len = PACKET_LEN;//strlen(buf) + 1;
 	printf("transmitting packet [%d,%lu]\r\n", tx_buf[0], *(uint32_t *)(tx_buf + 1));
 	
 	printf("waiting to propagate flood\r\n");
-	flash_tx_pkt(tx_buf, 5);//(uint8_t)strlen(buf));
+	flash_tx_pkt(tx_buf, PACKET_LEN);//(uint8_t)strlen(buf));
 	
+	rt_count = 0;
+
 	flash_enable((uint8_t)max_msg_len, NULL, flash_test_callback);
 	
 	while (1){
@@ -73,20 +80,16 @@ void main()
 	}
 }
 
-int cnt = 0;
+uint32_t old_time = 0;
+uint32_t new_time = 0;
 
 void flash_test_callback(uint8_t *buf, uint64_t rx_time)
 {
 	//printf("calback received buffer %s with rx time %d seconds\r\n", (char *)buf, (int)rx_time);
-	//if (!(cnt % 100))
-		//printf("%d\r\n", cnt);
-	printf("received buffer: %s\r\n", buf);
-	sprintf(buf, "test");
-	
-	int i;
-	for (i=0; i<10; i++)
-		nrk_spin_wait_us(10000);
-	//cnt = *(int *)(buf);
-	//*(int *)(buf) = cnt ++;
-	//sprintf(buf, "%d", cnt ++ );
+	rt_count ++;
+	if (!(rt_count % 100)){
+		new_time = (uint32_t)flash_get_current_time();
+		printf("cycle %lu, diff %lu \r\n", rt_count, new_time - old_time);
+		old_time = new_time;
+	}
 }

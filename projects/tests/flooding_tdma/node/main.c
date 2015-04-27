@@ -38,7 +38,11 @@
 #include <hal.h>
 #include <string.h>
 #include <flash.h>
-//#include <pulse_sync.h>
+#include <nrk_timer.h>
+#include <nrk_driver_list.h>
+#include <nrk_driver.h>
+#include <ff_basic_sensor.h>
+#include <pulse_sync.h>
 
 #define UART_BUF_SIZE	16
 #define TDMA_SLOT_LEN 50000//us
@@ -81,30 +85,50 @@ int main() {
 
 void time_sync_callback(uint8_t *buf, uint64_t recv_time){
 	uint32_t global_time = *(uint32_t *)(buf + 1);
-	//printf("got sync time from node %d\r\n", buf[0]);
-	//printf("local time :%lu global time :%lu\r\n", (uint32_t)recv_time, global_time);
-	flash_set_time(global_time); 
+	flash_set_time(global_time + PSYNC_TX_DELAY); 
 	printf("local time :%lu global time :%lu\r\n", (uint32_t)flash_get_current_time(), global_time);
 }	
 
+#define PKT_LEN 5
+#define INTER_SYNC_CYCLES 10
+uint8_t msg[PKT_LEN];
+
 void test_task() {
-	char msg[10];
-	int i;
+	int i,cycles_since_sync;
+	int8_t fd, ret;
+	uint16_t temp;
 	volatile bool already_tx = false;
-	for (i=0; i<10; i++)
-		msg[i] = nodeID;
+
+	fd = nrk_open(FIREFLY_3_SENSOR_BASIC, READ);
 
 	printf("waiting for sync message\r\n");
+
 	flash_enable(5, NULL, time_sync_callback);
+	cycles_since_sync = 0;
 	while(1){
 		uint32_t cycle_start_time = flash_get_current_time();
-		int slot = ((flash_get_current_time()/TDMA_SLOT_LEN) % NUM_NODES);
-		if (slot != nodeID)
+		int slot = ((cycle_start_time/TDMA_SLOT_LEN) % NUM_NODES);
+		if (slot != nodeID){
 			already_tx = false;
+			ret = nrk_set_status(fd,SENSOR_SELECT,TEMP);
+			ret = nrk_read(fd,(uint8_t *)&temp,2);
+			nrk_spin_wait_us(TDMA_SLOT_LEN/10);
+		}
+		if (slot == 0){ //root's slot
+			cycles_since_sync ++;
+			if (cycles_since_sync >= INTER_SYNC_CYCLES){
+				printf("waiting for sync message\r\n");
+				flash_enable(5, NULL, time_sync_callback);
+			}
+		}
+		/* occurs only one time per full tdma cycle */
 		else if (!already_tx){
 			//it's my turn!
-			printf("transmitting slot=%d\r\n", slot);
+			printf("transmitting slot=%d node=%d temp=%d\r\n", slot, nodeID, temp);
 			nrk_led_toggle(RED_LED);
+			/* fill buffer with node id and sensor data */
+			msg[0] = nodeID;
+			*(uint16_t *)(msg + 1) = temp;
 			//add some redundancy
 			for (i=0; i<3; i++)
 				flash_tx_pkt(msg, 10);
@@ -126,6 +150,5 @@ void nrk_create_taskset() {
 	TEST_TASK.cpu_reserve.nano_secs = 0;
 	TEST_TASK.offset.secs = 0;
 	TEST_TASK.offset.nano_secs = 0;
-
 	nrk_activate_task(&TEST_TASK);
 }
