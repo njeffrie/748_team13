@@ -77,6 +77,8 @@ int main() {
 	flash_init(14);
 	flash_timer_setup();
 
+	nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
+
 	nrk_create_taskset();
 	nrk_start();
 	
