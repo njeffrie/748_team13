@@ -228,64 +228,65 @@ void flash_set_retransmit(uint8_t retransmit_flag){
 }
 
 void 
-flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf, uint64_t rcv_time))
+flash_enable(uint8_t msg_len, uint64_t *timeout, void (*edit_buf)(uint8_t *buf, uint64_t rcv_time))
 {
-	uint8_t flash_rx_buf[FLASH_MAX_PKT_LEN];
-    nrk_led_set(ORANGE_LED);
+	//uint8_t flash_rx_buf[FLASH_MAX_PKT_LEN];
+	uint64_t timeout_time;//0xFFFFFFFFFFFFFFFF;
+
+	nrk_led_set(ORANGE_LED);
 	is_enabled=1;
 	flash_pkt_received = 0;
 	flash_message_len = msg_len;
-	/*
-	if (timeout != NULL){
-		nrk_time_t current_time;
-		nrk_time_get(&current_time);
-		//calculate time
-		nrk_time_add(listen_timeout, *timeout, current_time);
-	}
-	*/
+
+
 	user_rx_callback = edit_buf;
 	nrk_int_enable();
 	rf_rx_on();
 	
 	//gets most recently received buffer and puts rx data into falsh_rfRxInfo
 	uint8_t resp;
-	//int count = 0;
-	//while ((resp = (rf_rx_packet_nonblock())) == 0){
-	while (!flash_pkt_received){
-		//count ++;
-		/*if (count > 10000){
-			count = 0;
-			printf("failed to receive packet... giving up!\r\n");
-			break;
-		}*/
+	if (timeout != NULL){
+		timeout_time = flash_get_current_time() + *timeout;
+		while (!flash_pkt_received){
+			if (flash_get_current_time() > timeout_time){
+				return;
+			}
+		}
+	}
+	else {
+		while(!flash_pkt_received);
 	}
 
 	/*if (!flash_pkt_received)
-		printf("failed to correctly receive nonblocking packet\r\n");
+	  printf("failed to correctly receive nonblocking packet\r\n");
 */
 	//ensure that rf rx if off after message has been received
 	resp = rf_rx_packet_nonblock();
+	/*
 	if (resp == 0)
 		printf("packet incorrectly received\r\n");
-
+*/
 	rf_rx_off();
-
+	nrk_int_disable();
+	
 	//get metadata about received packet
-	//printf("received buffer %s of length %d\r\n", flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
+	//printf("received buffer of length %d\r\n", flash_rfRxInfo.length);
+	//printf("buffer[0] = %d, buffer[1:5] = %u\r\n", flash_rx_buf[0], flash_rx_buf[4]);
 	flash_message_len = flash_rfRxInfo.length;
-	memcpy(flash_rx_buf, flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
-	memset(flash_rfRxInfo.pPayload, 0, flash_rfRxInfo.length);
+	//memcpy(flash_rx_buf, flash_rfRxInfo.pPayload, flash_rfRxInfo.length);
+	//memset(flash_rfRxInfo.pPayload, 0, flash_rfRxInfo.length);
 	//flash_buf = flash_rfRxInfo.pPayload;
 
 	//call user callback function on buffer
 	if (user_rx_callback != NULL)
-		user_rx_callback(flash_rx_buf, last_rx_time);
+		user_rx_callback(flash_buf, last_rx_time);
 	nrk_led_clr(ORANGE_LED);
 
 	if (auto_re_tx){
 		//re transmission of packet
 		nrk_led_set(BLUE_LED);
 
+		/*
 		//set packet to be transmitted
 		flash_rfTxInfo.pPayload = flash_rx_buf;
 
@@ -296,9 +297,11 @@ flash_enable(uint8_t msg_len, nrk_time_t* timeout, void (*edit_buf)(uint8_t *buf
 		//if (flash_tx_callback != NULL)
 		//flash_tx_callback(flash_message_len, flash_buf);
 		//rf_tx_packet(&flash_rfTxInfo);
-		flash_tx_pkt(flash_rx_buf, flash_message_len);
+		*/
+		flash_tx_pkt(flash_buf, flash_message_len);
 		nrk_led_clr(BLUE_LED);
 	}
+	nrk_int_enable();
 }
 
 #define TICKS_PER_MS 0x3F74

@@ -58,7 +58,7 @@
 nrk_sig_t flash_tx_pkt_done_signal;
 
 int8_t flash_init(uint8_t chan);
-void flash_enable(uint8_t msg_len, nrk_time_t* timeout, 
+void flash_enable(uint8_t msg_len, uint64_t* timeout, 
 		void (*edit_buf)(uint8_t* buf, uint64_t rcv_time));
 int8_t flash_rf_power_set(uint8_t power);
 void flash_err_count_reset();

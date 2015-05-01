@@ -39,9 +39,9 @@
 #include <string.h>
 #include <flash.h>
 //#include <pulse_sync.h>
+#include "../tdma_constants.h"
 
 #define UART_BUF_SIZE	16
-#define TDMA_SLOT_LEN 4000//us
 
 nrk_task_type TEST_TASK;
 NRK_STK test_task_stack[NRK_APP_STACKSIZE];
@@ -49,9 +49,7 @@ void test_task(void);
 
 RF_RX_INFO rfRxInfo;
 
-#define NUM_NODES 2
-
-uint8_t nodeID = 1;
+uint8_t nodeID = 0;
 
 uint8_t time_slots[NUM_NODES];
 
@@ -61,9 +59,11 @@ void nrk_register_drivers();
 
 int main() {
 	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_115K2);
+	nrk_setup_uart(UART_BAUDRATE_9K6);
 	
 	nrk_init();
+	
+	printf("nrk starting...\r\n");
 	
 	nrk_led_clr(0);
 	nrk_led_clr(1);
@@ -76,52 +76,71 @@ int main() {
 
 	nrk_create_taskset();
 	nrk_start();
-	
-	
 	return 0;
 }
 
+
+int32_t correct = 0;
+int32_t failed = 0;
 void node_data_callback(uint8_t *data, uint64_t time)
 {
 	uint32_t time_32 = (uint32_t)time;
-	printf("received packet [%d] time %lu\r\n", data[0], time_32);
+	uint16_t temp = *(uint16_t *)(data + 1);
+	int slot = (flash_get_current_time()/TDMA_SLOT_LEN)%NUM_NODES;
+	int sender_node = data[0];
+	if (sender_node != slot){
+		failed ++;
+		//printf("slot error[slot:%d,sender:%d]\r\n", slot, sender_node);
+	}
+	else{
+		correct ++;
+		//printf("slot correct\r\n");
+	}
+	printf("percentage correct:%ld, [c:%ld, f:%ld]\r\n", (correct * 100)/(correct + failed), correct, failed);
+
+		//printf("node:%d temp:%d\r\n", sender_node, temp);
+		//printf("received from node %d during slot %d with temp %d\r\n", sender_node, slot, temp);
 	nrk_led_toggle(GREEN_LED);
 }
 
 uint8_t rx_buf[RF_MAX_PAYLOAD_SIZE];
 
+
 void rx_task ()
 {
-	/*
-	rfRxInfo.pPayload = rx_buf;
-	rfRxInfo.max_length = RF_MAX_PAYLOAD_SIZE;
-	rfRxInfo.ackRequest= 0;
-	nrk_int_enable();
-	rf_init (&rfRxInfo, 13, 0xffff, 0x0);
-	printf( "Waiting for packet...\r\n" );
-
-	rx_end_callback(callback2);
-*/
-	uint8_t sync_buf[5];
+	uint8_t sync_buf[16];
 	sync_buf[0] = nodeID;
 	printf("sending synchronization buffer\r\n");
 	uint32_t timestamp = (uint32_t)flash_get_current_time();
 	*(uint32_t *)(sync_buf + 1) = timestamp;
-	
+		
 	printf("transmitting packet [%d,%lu]\r\n", sync_buf[0], *(uint32_t *)(sync_buf + 1));
 	printf("waiting to propagate flood\r\n");
 	
 	flash_tx_pkt(sync_buf, 5);
 	flash_set_retransmit(0);
-	
+
+	uint64_t timeout = TDMA_SLOT_LEN;
+
+	uint32_t num_sync_sent = 0;
 	while(1){
-		/*
-		 * //uint32_t cycle_start_time = flash_get_current_time();
-		for (i=0; i<100; i++)
-			nrk_spin_wait_us(1000);
-		printf("waiting for flash packet - retransmit off\r\n");
-		*/
-		flash_enable(10, NULL, node_data_callback);
+		volatile int slot = ((flash_get_current_time()) / TDMA_SLOT_LEN) % NUM_NODES;
+		//printf("slot = %d\r\n", slot);
+		if (slot == 0){ //perform time sync
+			num_sync_sent ++;
+			timestamp = (uint32_t)flash_get_current_time();
+			*(uint32_t *)(sync_buf + 1) = timestamp;
+			flash_tx_pkt(sync_buf, 5);
+		}
+		//else*/
+		if (slot != 0){
+			if (num_sync_sent > 0){
+				//printf("sent %lu sync messages\r\n",num_sync_sent);
+				num_sync_sent = 0;
+			}
+			flash_enable(10, &timeout, node_data_callback);
+	
+		}
 	}
 }
 

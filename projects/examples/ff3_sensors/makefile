@@ -1,5 +1,5 @@
 # Platform name  cc2420DK, firefly, micaZ, firefly2_2, firefly2_3
-PLATFORM = firefly3_x2
+PLATFORM = firefly3
 
 
 # Target file name (without extension).

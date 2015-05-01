@@ -42,10 +42,10 @@
 #include <nrk_driver_list.h>
 #include <nrk_driver.h>
 #include <ff_basic_sensor.h>
-#include <pulse_sync.h>
 
+#include "../tdma_constants.h"
+//#include <pulse_sync.h>
 #define UART_BUF_SIZE	16
-#define TDMA_SLOT_LEN 50000//us
 
 nrk_task_type TEST_TASK;
 NRK_STK test_task_stack[NRK_APP_STACKSIZE];
@@ -53,7 +53,7 @@ void test_task(void);
 
 #define NUM_NODES 10
 
-uint8_t nodeID = 1;
+uint8_t nodeID = 2;
 
 uint8_t time_slots[NUM_NODES];
 
@@ -63,7 +63,7 @@ void nrk_register_drivers();
 
 int main() {
 	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_115K2);
+	nrk_setup_uart(UART_BAUDRATE_9K6);
 	
 	nrk_init();
 	
@@ -84,13 +84,14 @@ int main() {
 }
 
 void time_sync_callback(uint8_t *buf, uint64_t recv_time){
+	uint32_t prev_local_time = (uint32_t)recv_time;//(uint32_t)flash_get_current_time();
 	uint32_t global_time = *(uint32_t *)(buf + 1);
-	flash_set_time(global_time + PSYNC_TX_DELAY); 
-	printf("local time :%lu global time :%lu\r\n", (uint32_t)flash_get_current_time(), global_time);
+	flash_set_time(global_time + 673); 
+
+	//printf("global time is %ld us ahead of local time\r\n", (int32_t)prev_local_time - (int32_t)global_time);
+	//printf("prev time :%lu global time :%lu\r\n", prev_local_time, global_time);
 }	
 
-#define PKT_LEN 5
-#define INTER_SYNC_CYCLES 10
 uint8_t msg[PKT_LEN];
 
 void test_task() {
@@ -104,34 +105,47 @@ void test_task() {
 	printf("waiting for sync message\r\n");
 
 	flash_enable(5, NULL, time_sync_callback);
+	//flash_set_retransmit(0);
 	cycles_since_sync = 0;
+	bool already_sync = false;
+	int cycle_count;
 	while(1){
+		cycle_count ++;
+		if (cycle_count > 1000){
+			cycle_count = 0;
+			printf("correctly working\r\n");
+		}
 		uint32_t cycle_start_time = flash_get_current_time();
 		int slot = ((cycle_start_time/TDMA_SLOT_LEN) % NUM_NODES);
 		if (slot != nodeID){
 			already_tx = false;
-			ret = nrk_set_status(fd,SENSOR_SELECT,TEMP);
+			ret = nrk_set_status(fd,SENSOR_SELECT,TEMP2);
 			ret = nrk_read(fd,(uint8_t *)&temp,2);
-			nrk_spin_wait_us(TDMA_SLOT_LEN/10);
+			//nrk_spin_wait_us(TDMA_SLOT_LEN/10);
 		}
-		if (slot == 0){ //root's slot
+		/* root node's synchronization slot */
+		if ((slot == 0) && (!already_sync)){ //root's slot
 			cycles_since_sync ++;
 			if (cycles_since_sync >= INTER_SYNC_CYCLES){
-				printf("waiting for sync message\r\n");
+				//printf("waiting for sync message\r\n");
 				flash_enable(5, NULL, time_sync_callback);
+				already_sync = true;
 			}
 		}
 		/* occurs only one time per full tdma cycle */
-		else if (!already_tx){
+		else if ((slot == nodeID) && (!already_tx)){
 			//it's my turn!
-			printf("transmitting slot=%d node=%d temp=%d\r\n", slot, nodeID, temp);
+			//nrk_spin_wait_us(TDMA_SLOT_LEN/5);
+			already_sync = false;
+			//printf("transmitting slot=%d node=%d temp=%d\r\n", slot, nodeID, temp);
 			nrk_led_toggle(RED_LED);
 			/* fill buffer with node id and sensor data */
 			msg[0] = nodeID;
 			*(uint16_t *)(msg + 1) = temp;
 			//add some redundancy
-			for (i=0; i<3; i++)
+			for (i=0; i<3; i++){
 				flash_tx_pkt(msg, 10);
+			}	
 			already_tx = true;
 		}
 	}
