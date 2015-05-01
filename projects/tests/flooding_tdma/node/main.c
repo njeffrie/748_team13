@@ -125,6 +125,9 @@ void test_task() {
 		else if (!already_tx){
 			//it's my turn!
 			printf("transmitting slot=%d node=%d temp=%d\r\n", slot, nodeID, temp);
+			//TODO: Send timestamp to master
+			//TODO: Send RSSI to master
+			
 			nrk_led_toggle(RED_LED);
 			/* fill buffer with node id and sensor data */
 			msg[0] = nodeID;
