@@ -37,9 +37,7 @@
 
 #include <hal.h>
 #include <string.h>
-#include <flash.h>
-//#include <pulse_sync.h>
-#include "../tdma_constants.h"
+#include <pulse_sync.h>
 
 #define UART_BUF_SIZE	16
 
@@ -47,23 +45,15 @@ nrk_task_type TEST_TASK;
 NRK_STK test_task_stack[NRK_APP_STACKSIZE];
 void test_task(void);
 
-RF_RX_INFO rfRxInfo;
-
-uint8_t nodeID = 0;
-
-uint8_t time_slots[NUM_NODES];
-
 void nrk_create_taskset();
 
 void nrk_register_drivers();
 
 int main() {
 	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_9K6);
+	nrk_setup_uart(UART_BAUDRATE_115K2);
 	
 	nrk_init();
-	
-	printf("nrk starting...\r\n");
 	
 	nrk_led_clr(0);
 	nrk_led_clr(1);
@@ -71,85 +61,56 @@ int main() {
 	nrk_led_clr(3);
 	
 	nrk_time_set(0, 0);
-	flash_init(14);
-	flash_timer_setup();
+
+	psync_init(2, 1, 0, 13);
 
 	nrk_create_taskset();
 	nrk_start();
+	
 	return 0;
 }
 
+void test_task() {
+	//printf("waiting to receive PulseSync flood\r\n");
+	printf("W\r\n");
 
-int32_t correct = 0;
-int32_t failed = 0;
-void node_data_callback(uint8_t *data, uint64_t time)
-{
-	uint32_t time_32 = (uint32_t)time;
-	uint16_t temp = *(uint16_t *)(data + 1);
-	int slot = (flash_get_current_time()/TDMA_SLOT_LEN)%NUM_NODES;
-	int sender_node = data[0];
-	if (sender_node != slot){
-		failed ++;
-		//printf("slot error[slot:%d,sender:%d]\r\n", slot, sender_node);
-	}
-	else{
-		correct ++;
-		//printf("slot correct\r\n");
-	}
-	printf("percentage correct:%ld, [c:%ld, f:%ld]\r\n", (correct * 100)/(correct + failed), correct, failed);
+	psync_flood_wait(NULL);
+	psync_flood_wait(NULL);
+	psync_flood_wait(NULL);
+	//psync_flood_wait(NULL);
+	//psync_flood_wait(NULL);
+	printf("S\r\n");
+	flash_tx_callback_set(NULL);
 
-	// TODO: Parse to JSON
-	/*
-	printf("{\"mac\":%d;\"temp\":%d}\n",
-		data[0], *(uint16_t*)(data+1));
-	*/
-	
-	nrk_led_toggle(GREEN_LED);
-}
-
-uint8_t rx_buf[RF_MAX_PAYLOAD_SIZE];
-
-
-void rx_task ()
-{
-	uint8_t sync_buf[16];
-	sync_buf[0] = nodeID;
-	printf("sending synchronization buffer\r\n");
-	uint32_t timestamp = (uint32_t)flash_get_current_time();
-	*(uint32_t *)(sync_buf + 1) = timestamp;
-		
-	printf("transmitting packet [%d,%lu]\r\n", sync_buf[0], *(uint32_t *)(sync_buf + 1));
-	printf("waiting to propagate flood\r\n");
-	
-	flash_tx_pkt(sync_buf, 5);
-	flash_set_retransmit(0);
-
-	uint64_t timeout = TDMA_SLOT_LEN;
-
-	uint32_t num_sync_sent = 0;
-	while(1){
-		volatile int slot = ((flash_get_current_time()) / TDMA_SLOT_LEN) % NUM_NODES;
-		//printf("slot = %d\r\n", slot);
-		if (slot == 0){ //perform time sync
-			num_sync_sent ++;
-			timestamp = (uint32_t)flash_get_current_time();
-			*(uint32_t *)(sync_buf + 1) = timestamp;
-			flash_tx_pkt(sync_buf, 5);
-		}
-		//else*/
-		if (slot != 0){
-			if (num_sync_sent > 0){
-				//printf("sent %lu sync messages\r\n",num_sync_sent);
-				num_sync_sent = 0;
-			}
-			flash_enable(10, &timeout, node_data_callback);
-	
-		}
+	// loop receiving to measure determinacy in sync floods
+	while (1) {
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);	
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		nrk_spin_wait_us(50000);
+		uint64_t time = psync_get_time();
+		flash_tx_pkt(&time, 8);
 	}
 }
 
 void nrk_create_taskset() {
-	TEST_TASK.task = rx_task;
+	TEST_TASK.task = test_task;
 	nrk_task_set_stk(&TEST_TASK, test_task_stack, NRK_APP_STACKSIZE);
 	TEST_TASK.prio = 2;
 	TEST_TASK.FirstActivation = TRUE;

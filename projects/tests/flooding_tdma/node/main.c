@@ -135,9 +135,10 @@ void test_task() {
 		/* occurs only one time per full tdma cycle */
 		else if ((slot == nodeID) && (!already_tx)){
 			//it's my turn!
-			//nrk_spin_wait_us(TDMA_SLOT_LEN/5);
 			already_sync = false;
-			//printf("transmitting slot=%d node=%d temp=%d\r\n", slot, nodeID, temp);
+			//TODO: Send timestamp to master
+			//TODO: Send RSSI to master
+			
 			nrk_led_toggle(RED_LED);
 			/* fill buffer with node id and sensor data */
 			msg[0] = nodeID;
