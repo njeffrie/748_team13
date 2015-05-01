@@ -21,6 +21,7 @@
 *
 *  Contributing Authors (specific to this file):
 *  Nat Jeffries
+*  Madhav Iyengar
 *******************************************************************************/
 
 #include "flash.h"
@@ -330,14 +331,20 @@ void timer_3_callback(){
 
 uint64_t flash_get_current_time(){
 	DISABLE_GLOBAL_INT();
+	uint32_t orig_ticks = TCNT3;
+	uint64_t orig_ms = current_time_ms;
+	uint8_t extra = 0;
 	while (TCNT3 > TICKS_PER_MS){
 		TCNT3 -= TICKS_PER_MS;
-		current_time_ms += 1;
+		//current_time_ms += 1;
+		extra++;
 	}
-	uint64_t ticks = current_time_ms;
-	uint32_t offset_ticks = TCNT3;
+	current_time_ms += extra;
+	//uint64_t ticks = current_time_ms;
+	//uint32_t offset_ticks = TCNT3;
 	ENABLE_GLOBAL_INT();
-	return (ticks * 1000) + (offset_ticks >> 4);
+	//return (ticks * 1000) + (offset_ticks >> 4);
+	return (orig_ms * 1000) + (orig_ticks >> 4);
 }
 
 void flash_set_time(uint64_t current_time){

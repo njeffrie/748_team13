@@ -47,7 +47,7 @@ struct _sync_point_info {
 };
 
 // testing variables
-uint64_t next_glob;
+//uint64_t next_glob;
 
 // values to be saved between synchronizations for faster regression line calculation
 uint64_t _loc_time_sum, _loc_time_avg;
@@ -168,9 +168,9 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	_loc_sq_sum += ((loc_time - prev_loc) >> _shift_val) * ((loc_time + prev_loc) >> _shift_val);
 
 	// remove terms in offset deviation squared sum containing old mean local time and offset
-	_off_sq_sum += (_off_time_avg >> 0) * ((int64_t)(_loc_time_sum - _samples * _loc_time_avg) >> _shift_val) + (_loc_time_avg >> _shift_val) * (_off_time_sum >> 0);
+	_off_sq_sum += _off_time_avg * ((int64_t)(_loc_time_sum - _samples * _loc_time_avg) >> _shift_val) + (_loc_time_avg >> _shift_val) * _off_time_sum;
 	// overwrite old local time and offset terms with new local time and offset terms
-	_off_sq_sum += (loc_time >> _shift_val) * (off_time >> 0) - (prev_loc >> _shift_val) * (prev_off >> 0);
+	_off_sq_sum += (loc_time >> _shift_val) * off_time - (prev_loc >> _shift_val) * prev_off;
 
 	//// calculate new mean local time and local time deviation squared
 	_loc_time_sum += loc_time - prev_loc;
@@ -193,7 +193,7 @@ void psync_add_point(uint64_t loc_time, uint64_t glob_time) {
 	_off_time_avg = tmp_avg + (tmp_rem + new_samples / 2) / new_samples;
 
 	// add terms to square containing new mean local time and offset
-	_off_sq_sum += (_off_time_avg >> 0) * ((int64_t)(new_samples * _loc_time_avg - _loc_time_sum) >> _shift_val) - (_loc_time_avg >> _shift_val) * (_off_time_sum >> 0);
+	_off_sq_sum += _off_time_avg * ((int64_t)(new_samples * _loc_time_avg - _loc_time_sum) >> _shift_val) - (_loc_time_avg >> _shift_val) * _off_time_sum;
 
 	//// save new data into next entry in circular buffer
 	_curr_ind = next_ind;
@@ -313,13 +313,15 @@ void psync_rx_callback(uint8_t* buf, uint64_t rcv_time) {
 void psync_tx_callback(uint16_t len, uint8_t* buf) {
 	uint64_t* buf64 = (uint64_t*)buf;
 	if (_is_root) { 
-		buf64[0] = flash_get_current_time() + PSYNC_TX_DELAY;
+		buf64[0] = PSYNC_TX_DELAY;
+		buf64[0] += flash_get_current_time();
 		/*#ifdef COMPENSATED_FORWARDING
 		buf64[1] = buf64[0];
 		#endif*/
 	}
 	else {
-		uint64_t diff = flash_get_current_time() - _new_loc + PSYNC_TX_DELAY;
+		uint64_t diff = /*flash_get_current_time()*/ ~_new_loc + 1 + PSYNC_TX_DELAY;
+		diff += flash_get_current_time();
 		if ((diff > 500000L) && (_samples >= 2 * MAX_SAMPLES - 1)) {
 			diff += PSYNC_COMP_FORW_DELAY;
 			uint8_t ind = (_curr_ind + 1) % MAX_SAMPLES;
@@ -336,7 +338,7 @@ void psync_tx_callback(uint16_t len, uint8_t* buf) {
 		#endif*/
 
 		buf64[0] += diff;
-		next_glob = buf64[0];
+		//next_glob = buf64[0];
 		_edit = 1;
 	}
 }
@@ -371,7 +373,7 @@ void psync_flood_wait(nrk_time_t* time) {
 		flash_enable(PKT_SIZE, time, psync_rx_callback);
 		if (_edit) {
 			//printf("loc: %lu << 32 + %lu, glob: %lu << 32 + %lu\r\n", ((uint32_t*)&_new_loc)[1], ((uint32_t*)&_new_loc)[0], ((uint32_t*)&_new_glob)[1], ((uint32_t*)&_new_glob)[0]);
-			//printf("loc: %luus, glob: %luus, next_glob: %luus\r\n", (uint32_t)(_new_loc), (uint32_t)(_new_glob), (uint32_t)(next_glob));
+			printf("loc: %luus, glob: %luus\r\n", (uint32_t)(_new_loc), (uint32_t)(_new_glob));
 			psync_add_point(_new_loc, _new_glob);
 			//printf("local: %luus, offsum: %ldus, offset: %ldus, skew * 10000000: %ld\r\n", (uint32_t)_loc_time_avg, (int32_t)_off_time_sum, (int32_t)_off_time_avg, (int32_t)(_skew * 10000000.0));
 			_edit = 0;
