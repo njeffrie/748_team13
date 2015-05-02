@@ -63,7 +63,7 @@ void nrk_register_drivers();
 
 uint8_t val;
 
-int main() {
+int main_disabled() {
 	nrk_setup_ports();
 	nrk_setup_uart(UART_BAUDRATE_9K6);
 	
@@ -82,7 +82,7 @@ int main() {
 	val = nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
 	if (val == NRK_ERROR) printf("failed to register drivers\r\n");
 
-	nrk_create_taskset();
+	//nrk_create_taskset();
 	nrk_start();
 	
 	return 0;
@@ -99,7 +99,27 @@ void time_sync_callback(uint8_t *buf, uint64_t recv_time){
 
 uint8_t msg[PKT_LEN];
 
-void test_task() {
+void main() {
+	nrk_setup_ports();
+	nrk_setup_uart(UART_BAUDRATE_9K6);
+	
+	//nrk_init();
+	
+	nrk_led_clr(0);
+	nrk_led_clr(1);
+	nrk_led_clr(2);
+	nrk_led_clr(3);
+	
+	nrk_time_set(0, 0);
+
+	flash_init(14);
+	flash_timer_setup();
+
+	val = nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
+	if (val == NRK_ERROR) printf("failed to register drivers\r\n");
+
+	//nrk_create_taskset();
+	//nrk_start();
 	int i,cycles_since_sync;
 	int8_t fd, ret;
 	uint32_t press;
@@ -114,6 +134,7 @@ void test_task() {
 	cycles_since_sync = 0;
 	bool already_sync = false;
 	int cycle_count;
+	uint8_t sensing_slot = (nodeID == NUM_NODES) ? 1 : nodeID + 1;
 	while(1){
 		cycle_count ++;
 		if (cycle_count > 1000){
@@ -122,7 +143,7 @@ void test_task() {
 		}
 		uint32_t cycle_start_time = flash_get_current_time();
 		int slot = ((cycle_start_time/TDMA_SLOT_LEN) % NUM_NODES);
-		if (slot == nodeID + 1){
+		if (slot == sensing_slot){
 		 	already_tx = false;
 		 	ret = nrk_set_status(fd,SENSOR_SELECT,PRESS);
 		 	ret = nrk_read(fd,(uint8_t *)&press,4);
@@ -156,7 +177,7 @@ void test_task() {
 		}
 	}
 }
-
+/*
 void nrk_create_taskset() {
 	TEST_TASK.task = test_task;
 	nrk_task_set_stk(&TEST_TASK, test_task_stack, NRK_APP_STACKSIZE);
@@ -171,4 +192,4 @@ void nrk_create_taskset() {
 	TEST_TASK.offset.secs = 0;
 	TEST_TASK.offset.nano_secs = 0;
 	nrk_activate_task(&TEST_TASK);
-}
+}*/
