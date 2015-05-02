@@ -53,13 +53,15 @@ void test_task(void);
 
 #define NUM_NODES 10
 
-uint8_t nodeID = 2;
+uint8_t nodeID = 1;
 
 uint8_t time_slots[NUM_NODES];
 
 void nrk_create_taskset();
 
 void nrk_register_drivers();
+
+uint8_t val;
 
 int main() {
 	nrk_setup_ports();
@@ -77,7 +79,8 @@ int main() {
 	flash_init(14);
 	flash_timer_setup();
 
-	nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
+	val = nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
+	if (val == NRK_ERROR) printf("failed to register drivers\r\n");
 
 	nrk_create_taskset();
 	nrk_start();
@@ -99,7 +102,7 @@ uint8_t msg[PKT_LEN];
 void test_task() {
 	int i,cycles_since_sync;
 	int8_t fd, ret;
-	uint16_t temp;
+	uint32_t press;
 	volatile bool already_tx = false;
 
 	fd = nrk_open(FIREFLY_3_SENSOR_BASIC, READ);
@@ -107,7 +110,7 @@ void test_task() {
 	printf("waiting for sync message\r\n");
 
 	flash_enable(5, NULL, time_sync_callback);
-	//flash_set_retransmit(0);
+	flash_set_retransmit(0);
 	cycles_since_sync = 0;
 	bool already_sync = false;
 	int cycle_count;
@@ -115,15 +118,15 @@ void test_task() {
 		cycle_count ++;
 		if (cycle_count > 1000){
 			cycle_count = 0;
-			printf("correctly working\r\n");
+			printf("press:%lu\r\n", press);
 		}
 		uint32_t cycle_start_time = flash_get_current_time();
 		int slot = ((cycle_start_time/TDMA_SLOT_LEN) % NUM_NODES);
-		if (slot != nodeID){
-			already_tx = false;
-			ret = nrk_set_status(fd,SENSOR_SELECT,TEMP2);
-			ret = nrk_read(fd,(uint8_t *)&temp,2);
-			//nrk_spin_wait_us(TDMA_SLOT_LEN/10);
+		if (slot == nodeID + 1){
+		 	already_tx = false;
+		 	ret = nrk_set_status(fd,SENSOR_SELECT,PRESS);
+		 	ret = nrk_read(fd,(uint8_t *)&press,4);
+			nrk_spin_wait_us(flash_get_current_time()%TDMA_SLOT_LEN);
 		}
 		/* root node's synchronization slot */
 		if ((slot == 0) && (!already_sync)){ //root's slot
@@ -144,9 +147,9 @@ void test_task() {
 			nrk_led_toggle(RED_LED);
 			/* fill buffer with node id and sensor data */
 			msg[0] = nodeID;
-			*(uint16_t *)(msg + 1) = temp;
+			*(uint32_t *)(msg + 1) = press;
 			//add some redundancy
-			for (i=0; i<3; i++){
+			for (i=0; i<1; i++){
 				flash_tx_pkt(msg, 10);
 			}	
 			already_tx = true;
