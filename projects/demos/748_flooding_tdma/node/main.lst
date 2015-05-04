@@ -1,0 +1,666 @@
+   1               		.file	"main.c"
+   2               	__SP_H__ = 0x3e
+   3               	__SP_L__ = 0x3d
+   4               	__SREG__ = 0x3f
+   5               	__RAMPZ__ = 0x3b
+   6               	__tmp_reg__ = 0
+   7               	__zero_reg__ = 1
+  10               		.text
+  11               	.Ltext0:
+ 345               	.global	time_sync_callback
+ 347               	time_sync_callback:
+ 348               		.stabd	46,0,0
+   1:main.c        **** /******************************************************************************
+   2:main.c        **** *	Lab 3 - Build Your Own Sensor Network (Gateway)
+   3:main.c        **** *	Madhav Iyengar
+   4:main.c        **** *	Miguel Sotolongo
+   5:main.c        **** *	Nathaniel Jeffries
+   6:main.c        **** -------------------------------------------------------------------------------
+   7:main.c        **** *
+   8:main.c        **** *Nano-RK, a real-time operating system for sensor networks.
+   9:main.c        **** *Copyright (C) 2007, Real-Time and Multimedia Lab, Carnegie Mellon University
+  10:main.c        **** *All rights reserved.
+  11:main.c        **** *
+  12:main.c        **** *This is the Open Source Version of Nano-RK included as part of a Dual
+  13:main.c        **** *Licensing Model. If you are unsure which license to use please refer to:
+  14:main.c        **** *http://www.nanork.org/nano-RK/wiki/Licensing
+  15:main.c        **** *
+  16:main.c        **** *This program is free software: you can redistribute it and/or modify
+  17:main.c        **** *it under the terms of the GNU General Public License as published by
+  18:main.c        **** *the Free Software Foundation, version 2.0 of the License.
+  19:main.c        **** *
+  20:main.c        **** *This program is distributed in the hope that it will be useful,
+  21:main.c        **** *but WITHOUT ANY WARRANTY; without even the implied warranty of
+  22:main.c        **** *MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+  23:main.c        **** *GNU General Public License for more details.
+  24:main.c        **** *
+  25:main.c        **** *You should have received a copy of the GNU General Public License
+  26:main.c        **** *along with this program.If not, see <http://www.gnu.org/licenses/>.
+  27:main.c        **** *
+  28:main.c        **** *******************************************************************************/
+  29:main.c        **** 
+  30:main.c        **** #include <include.h>
+  31:main.c        **** #include <ulib.h>
+  32:main.c        **** #include <stdio.h>
+  33:main.c        **** #include <avr/sleep.h>
+  34:main.c        **** 
+  35:main.c        **** #include <nrk.h>
+  36:main.c        **** #include <nrk_error.h>
+  37:main.c        **** 
+  38:main.c        **** #include <hal.h>
+  39:main.c        **** #include <string.h>
+  40:main.c        **** #include <flash.h>
+  41:main.c        **** #include <nrk_timer.h>
+  42:main.c        **** #include <nrk_driver_list.h>
+  43:main.c        **** #include <nrk_driver.h>
+  44:main.c        **** #include <ff_basic_sensor.h>
+  45:main.c        **** 
+  46:main.c        **** #include "../tdma_constants.h"
+  47:main.c        **** //#include <pulse_sync.h>
+  48:main.c        **** #define UART_BUF_SIZE	16
+  49:main.c        **** 
+  50:main.c        **** nrk_task_type TEST_TASK;
+  51:main.c        **** NRK_STK test_task_stack[NRK_APP_STACKSIZE];
+  52:main.c        **** void test_task(void);
+  53:main.c        **** 
+  54:main.c        **** #define NUM_NODES 10
+  55:main.c        **** 
+  56:main.c        **** uint8_t nodeID = 1;
+  57:main.c        **** 
+  58:main.c        **** uint8_t time_slots[NUM_NODES];
+  59:main.c        **** 
+  60:main.c        **** void nrk_create_taskset();
+  61:main.c        **** 
+  62:main.c        **** void nrk_register_drivers();
+  63:main.c        **** 
+  64:main.c        **** uint8_t val;
+  65:main.c        **** 
+  66:main.c        **** int main_disabled() {
+  67:main.c        **** 	nrk_setup_ports();
+  68:main.c        **** 	nrk_setup_uart(UART_BAUDRATE_9K6);
+  69:main.c        **** 	
+  70:main.c        **** 	nrk_init();
+  71:main.c        **** 	
+  72:main.c        **** 	nrk_led_clr(0);
+  73:main.c        **** 	nrk_led_clr(1);
+  74:main.c        **** 	nrk_led_clr(2);
+  75:main.c        **** 	nrk_led_clr(3);
+  76:main.c        **** 	
+  77:main.c        **** 	nrk_time_set(0, 0);
+  78:main.c        **** 
+  79:main.c        **** 	flash_init(14);
+  80:main.c        **** 	flash_timer_setup();
+  81:main.c        **** 
+  82:main.c        **** 	val = nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
+  83:main.c        **** 	if (val == NRK_ERROR) printf("failed to register drivers\r\n");
+  84:main.c        **** 
+  85:main.c        **** 	//nrk_create_taskset();
+  86:main.c        **** 	nrk_start();
+  87:main.c        **** 	
+  88:main.c        **** 	return 0;
+  89:main.c        **** }
+  90:main.c        **** 
+  91:main.c        **** void time_sync_callback(uint8_t *buf, uint64_t recv_time){
+ 350               	.LM0:
+ 351               	.LFBB1:
+ 352 0000 CF93      		push r28
+ 353 0002 DF93      		push r29
+ 354               	/* prologue: function */
+ 355               	/* frame size = 0 */
+ 356               	/* stack size = 2 */
+ 357               	.L__stack_usage = 2
+  92:main.c        **** 	uint32_t prev_local_time = (uint32_t)recv_time;//(uint32_t)flash_get_current_time();
+  93:main.c        **** 	uint32_t global_time = *(uint32_t *)(buf + 1);
+  94:main.c        **** 	flash_set_time(global_time + 673); 
+ 359               	.LM1:
+ 360 0004 FC01      		movw r30,r24
+ 361 0006 8181      		ldd r24,Z+1
+ 362 0008 9281      		ldd r25,Z+2
+ 363 000a A381      		ldd r26,Z+3
+ 364 000c B481      		ldd r27,Z+4
+ 365 000e 8F55      		subi r24,95
+ 366 0010 9D4F      		sbci r25,-3
+ 367 0012 AF4F      		sbci r26,-1
+ 368 0014 BF4F      		sbci r27,-1
+ 369 0016 9C01      		movw r18,r24
+ 370 0018 AD01      		movw r20,r26
+ 371 001a 60E0      		ldi r22,0
+ 372 001c 70E0      		ldi r23,0
+ 373 001e 80E0      		ldi r24,0
+ 374 0020 90E0      		ldi r25,0
+ 375               	/* epilogue start */
+  95:main.c        **** 
+  96:main.c        **** 	//printf("global time is %ld us ahead of local time\r\n", (int32_t)prev_local_time - (int32_t)glob
+  97:main.c        **** 	//printf("prev time :%lu global time :%lu\r\n", prev_local_time, global_time);
+  98:main.c        **** }	
+ 377               	.LM2:
+ 378 0022 DF91      		pop r29
+ 379 0024 CF91      		pop r28
+  94:main.c        **** 
+ 381               	.LM3:
+ 382 0026 0C94 0000 		jmp flash_set_time
+ 384               	.Lscope1:
+ 386               		.stabd	78,0,0
+ 388               	.global	main_disabled
+ 390               	main_disabled:
+ 391               		.stabd	46,0,0
+  66:main.c        **** 	nrk_setup_ports();
+ 393               	.LM4:
+ 394               	.LFBB2:
+ 395               	/* prologue: function */
+ 396               	/* frame size = 0 */
+ 397               	/* stack size = 0 */
+ 398               	.L__stack_usage = 0
+  67:main.c        **** 	nrk_setup_uart(UART_BAUDRATE_9K6);
+ 400               	.LM5:
+ 401 002a 0E94 0000 		call nrk_setup_ports
+  68:main.c        **** 	
+ 403               	.LM6:
+ 404 002e 8FEC      		ldi r24,lo8(-49)
+ 405 0030 90E0      		ldi r25,0
+ 406 0032 0E94 0000 		call nrk_setup_uart
+  70:main.c        **** 	
+ 408               	.LM7:
+ 409 0036 0E94 0000 		call nrk_init
+  72:main.c        **** 	nrk_led_clr(1);
+ 411               	.LM8:
+ 412 003a 80E0      		ldi r24,0
+ 413 003c 90E0      		ldi r25,0
+ 414 003e 0E94 0000 		call nrk_led_clr
+  73:main.c        **** 	nrk_led_clr(2);
+ 416               	.LM9:
+ 417 0042 81E0      		ldi r24,lo8(1)
+ 418 0044 90E0      		ldi r25,0
+ 419 0046 0E94 0000 		call nrk_led_clr
+  74:main.c        **** 	nrk_led_clr(3);
+ 421               	.LM10:
+ 422 004a 82E0      		ldi r24,lo8(2)
+ 423 004c 90E0      		ldi r25,0
+ 424 004e 0E94 0000 		call nrk_led_clr
+  75:main.c        **** 	
+ 426               	.LM11:
+ 427 0052 83E0      		ldi r24,lo8(3)
+ 428 0054 90E0      		ldi r25,0
+ 429 0056 0E94 0000 		call nrk_led_clr
+  77:main.c        **** 
+ 431               	.LM12:
+ 432 005a 20E0      		ldi r18,0
+ 433 005c 30E0      		ldi r19,0
+ 434 005e A901      		movw r20,r18
+ 435 0060 60E0      		ldi r22,0
+ 436 0062 70E0      		ldi r23,0
+ 437 0064 CB01      		movw r24,r22
+ 438 0066 0E94 0000 		call nrk_time_set
+  79:main.c        **** 	flash_timer_setup();
+ 440               	.LM13:
+ 441 006a 8EE0      		ldi r24,lo8(14)
+ 442 006c 0E94 0000 		call flash_init
+  80:main.c        **** 
+ 444               	.LM14:
+ 445 0070 0E94 0000 		call flash_timer_setup
+  82:main.c        **** 	if (val == NRK_ERROR) printf("failed to register drivers\r\n");
+ 447               	.LM15:
+ 448 0074 63E0      		ldi r22,lo8(3)
+ 449 0076 80E0      		ldi r24,lo8(gs(dev_manager_ff3_sensors))
+ 450 0078 90E0      		ldi r25,hi8(gs(dev_manager_ff3_sensors))
+ 451 007a 0E94 0000 		call nrk_register_driver
+ 452 007e 8093 0000 		sts val,r24
+  86:main.c        **** 	
+ 454               	.LM16:
+ 455 0082 0E94 0000 		call nrk_start
+  89:main.c        **** 
+ 457               	.LM17:
+ 458 0086 80E0      		ldi r24,0
+ 459 0088 90E0      		ldi r25,0
+ 460 008a 0895      		ret
+ 462               	.Lscope2:
+ 464               		.stabd	78,0,0
+ 465               		.section	.rodata.str1.1,"aMS",@progbits,1
+ 466               	.LC0:
+ 467 0000 7761 6974 		.string	"waiting for sync message\r"
+ 467      696E 6720 
+ 467      666F 7220 
+ 467      7379 6E63 
+ 467      206D 6573 
+ 468               	.LC1:
+ 469 001a 7072 6573 		.string	"press:%lu\r\n"
+ 469      733A 256C 
+ 469      750D 0A00 
+ 470               	.global	__umoddi3
+ 471               		.section	.text.startup,"ax",@progbits
+ 473               	.global	main
+ 475               	main:
+ 476               		.stabd	46,0,0
+  99:main.c        **** 
+ 100:main.c        **** uint8_t msg[PKT_LEN];
+ 101:main.c        **** 
+ 102:main.c        **** void main() {
+ 478               	.LM18:
+ 479               	.LFBB3:
+ 480 0000 CF93      		push r28
+ 481 0002 DF93      		push r29
+ 482 0004 CDB7      		in r28,__SP_L__
+ 483 0006 DEB7      		in r29,__SP_H__
+ 484 0008 2B97      		sbiw r28,11
+ 485 000a 0FB6      		in __tmp_reg__,__SREG__
+ 486 000c F894      		cli
+ 487 000e DEBF      		out __SP_H__,r29
+ 488 0010 0FBE      		out __SREG__,__tmp_reg__
+ 489 0012 CDBF      		out __SP_L__,r28
+ 490               	/* prologue: function */
+ 491               	/* frame size = 11 */
+ 492               	/* stack size = 13 */
+ 493               	.L__stack_usage = 13
+ 103:main.c        **** 	nrk_setup_ports();
+ 495               	.LM19:
+ 496 0014 0E94 0000 		call nrk_setup_ports
+ 104:main.c        **** 	nrk_setup_uart(UART_BAUDRATE_9K6);
+ 498               	.LM20:
+ 499 0018 8FEC      		ldi r24,lo8(-49)
+ 500 001a 90E0      		ldi r25,0
+ 501 001c 0E94 0000 		call nrk_setup_uart
+ 105:main.c        **** 	
+ 106:main.c        **** 	//nrk_init();
+ 107:main.c        **** 	
+ 108:main.c        **** 	nrk_led_clr(0);
+ 503               	.LM21:
+ 504 0020 80E0      		ldi r24,0
+ 505 0022 90E0      		ldi r25,0
+ 506 0024 0E94 0000 		call nrk_led_clr
+ 109:main.c        **** 	nrk_led_clr(1);
+ 508               	.LM22:
+ 509 0028 81E0      		ldi r24,lo8(1)
+ 510 002a 90E0      		ldi r25,0
+ 511 002c 0E94 0000 		call nrk_led_clr
+ 110:main.c        **** 	nrk_led_clr(2);
+ 513               	.LM23:
+ 514 0030 82E0      		ldi r24,lo8(2)
+ 515 0032 90E0      		ldi r25,0
+ 516 0034 0E94 0000 		call nrk_led_clr
+ 111:main.c        **** 	nrk_led_clr(3);
+ 518               	.LM24:
+ 519 0038 83E0      		ldi r24,lo8(3)
+ 520 003a 90E0      		ldi r25,0
+ 521 003c 0E94 0000 		call nrk_led_clr
+ 112:main.c        **** 	
+ 113:main.c        **** 	nrk_time_set(0, 0);
+ 523               	.LM25:
+ 524 0040 20E0      		ldi r18,0
+ 525 0042 30E0      		ldi r19,0
+ 526 0044 A901      		movw r20,r18
+ 527 0046 60E0      		ldi r22,0
+ 528 0048 70E0      		ldi r23,0
+ 529 004a CB01      		movw r24,r22
+ 530 004c 0E94 0000 		call nrk_time_set
+ 114:main.c        **** 
+ 115:main.c        **** 	flash_init(14);
+ 532               	.LM26:
+ 533 0050 8EE0      		ldi r24,lo8(14)
+ 534 0052 0E94 0000 		call flash_init
+ 116:main.c        **** 	flash_timer_setup();
+ 536               	.LM27:
+ 537 0056 0E94 0000 		call flash_timer_setup
+ 117:main.c        **** 
+ 118:main.c        **** 	val = nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
+ 539               	.LM28:
+ 540 005a 63E0      		ldi r22,lo8(3)
+ 541 005c 80E0      		ldi r24,lo8(gs(dev_manager_ff3_sensors))
+ 542 005e 90E0      		ldi r25,hi8(gs(dev_manager_ff3_sensors))
+ 543 0060 0E94 0000 		call nrk_register_driver
+ 544 0064 8093 0000 		sts val,r24
+ 119:main.c        **** 	if (val == NRK_ERROR) printf("failed to register drivers\r\n");
+ 120:main.c        **** 
+ 121:main.c        **** 	//nrk_create_taskset();
+ 122:main.c        **** 	//nrk_start();
+ 123:main.c        **** 	int i,cycles_since_sync;
+ 124:main.c        **** 	int8_t fd, ret;
+ 125:main.c        **** 	uint32_t press;
+ 126:main.c        **** 	volatile bool already_tx = false;
+ 546               	.LM29:
+ 547 0068 1D82      		std Y+5,__zero_reg__
+ 127:main.c        **** 
+ 128:main.c        **** 	fd = nrk_open(FIREFLY_3_SENSOR_BASIC, READ);
+ 549               	.LM30:
+ 550 006a 65E0      		ldi r22,lo8(5)
+ 551 006c 83E0      		ldi r24,lo8(3)
+ 552 006e 0E94 0000 		call nrk_open
+ 553 0072 8F83      		std Y+7,r24
+ 129:main.c        **** 
+ 130:main.c        **** 	printf("waiting for sync message\r\n");
+ 555               	.LM31:
+ 556 0074 80E0      		ldi r24,lo8(.LC0)
+ 557 0076 90E0      		ldi r25,hi8(.LC0)
+ 558 0078 0E94 0000 		call puts
+ 131:main.c        **** 
+ 132:main.c        **** 	flash_enable(5, NULL, time_sync_callback);
+ 560               	.LM32:
+ 561 007c 40E0      		ldi r20,lo8(gs(time_sync_callback))
+ 562 007e 50E0      		ldi r21,hi8(gs(time_sync_callback))
+ 563 0080 60E0      		ldi r22,0
+ 564 0082 70E0      		ldi r23,0
+ 565 0084 85E0      		ldi r24,lo8(5)
+ 566 0086 0E94 0000 		call flash_enable
+ 133:main.c        **** 	flash_set_retransmit(0);
+ 568               	.LM33:
+ 569 008a 80E0      		ldi r24,0
+ 570 008c 0E94 0000 		call flash_set_retransmit
+ 134:main.c        **** 	cycles_since_sync = 0;
+ 135:main.c        **** 	bool already_sync = false;
+ 136:main.c        **** 	int cycle_count;
+ 137:main.c        **** 	uint8_t sensing_slot = (nodeID == NUM_NODES) ? 1 : nodeID + 1;
+ 572               	.LM34:
+ 573 0090 8091 0000 		lds r24,nodeID
+ 574 0094 8A30      		cpi r24,lo8(10)
+ 575 0096 01F0      		breq .L10
+ 577               	.LM35:
+ 578 0098 8F5F      		subi r24,lo8(-(1))
+ 579 009a 00C0      		rjmp .L4
+ 580               	.L10:
+ 582               	.LM36:
+ 583 009c 81E0      		ldi r24,lo8(1)
+ 584               	.L4:
+ 135:main.c        **** 	int cycle_count;
+ 586               	.LM37:
+ 587 009e 1E82      		std Y+6,__zero_reg__
+ 134:main.c        **** 	cycles_since_sync = 0;
+ 589               	.LM38:
+ 590 00a0 812C      		mov r8,__zero_reg__
+ 591 00a2 912C      		mov r9,__zero_reg__
+ 592               	.LBB2:
+ 138:main.c        **** 	while(1){
+ 139:main.c        **** 		cycle_count ++;
+ 140:main.c        **** 		if (cycle_count > 1000){
+ 141:main.c        **** 			cycle_count = 0;
+ 142:main.c        **** 			printf("press:%lu\r\n", press);
+ 143:main.c        **** 		}
+ 144:main.c        **** 		uint32_t cycle_start_time = flash_get_current_time();
+ 145:main.c        **** 		int slot = ((cycle_start_time/TDMA_SLOT_LEN) % NUM_NODES);
+ 146:main.c        **** 		if (slot == sensing_slot){
+ 594               	.LM39:
+ 595 00a4 282F      		mov r18,r24
+ 596 00a6 30E0      		ldi r19,0
+ 597 00a8 3B87      		std Y+11,r19
+ 598 00aa 2A87      		std Y+10,r18
+ 599               	.L5:
+ 139:main.c        **** 		if (cycle_count > 1000){
+ 601               	.LM40:
+ 602 00ac 3FEF      		ldi r19,-1
+ 603 00ae 231A      		sub r2,r19
+ 604 00b0 330A      		sbc r3,r19
+ 140:main.c        **** 			cycle_count = 0;
+ 606               	.LM41:
+ 607 00b2 89EE      		ldi r24,-23
+ 608 00b4 2816      		cp r2,r24
+ 609 00b6 83E0      		ldi r24,3
+ 610 00b8 3806      		cpc r3,r24
+ 611 00ba 04F0      		brlt .L6
+ 142:main.c        **** 		}
+ 613               	.LM42:
+ 614 00bc 8C81      		ldd r24,Y+4
+ 615 00be 8F93      		push r24
+ 616 00c0 8B81      		ldd r24,Y+3
+ 617 00c2 8F93      		push r24
+ 618 00c4 8A81      		ldd r24,Y+2
+ 619 00c6 8F93      		push r24
+ 620 00c8 8981      		ldd r24,Y+1
+ 621 00ca 8F93      		push r24
+ 622 00cc A0E0      		ldi r26,lo8(.LC1)
+ 623 00ce B0E0      		ldi r27,hi8(.LC1)
+ 624 00d0 BF93      		push r27
+ 625 00d2 AF93      		push r26
+ 626 00d4 0E94 0000 		call printf
+ 627 00d8 0F90      		pop __tmp_reg__
+ 628 00da 0F90      		pop __tmp_reg__
+ 629 00dc 0F90      		pop __tmp_reg__
+ 630 00de 0F90      		pop __tmp_reg__
+ 631 00e0 0F90      		pop __tmp_reg__
+ 632 00e2 0F90      		pop __tmp_reg__
+ 141:main.c        **** 			printf("press:%lu\r\n", press);
+ 634               	.LM43:
+ 635 00e4 212C      		mov r2,__zero_reg__
+ 636 00e6 312C      		mov r3,__zero_reg__
+ 637               	.L6:
+ 144:main.c        **** 		int slot = ((cycle_start_time/TDMA_SLOT_LEN) % NUM_NODES);
+ 639               	.LM44:
+ 640 00e8 0E94 0000 		call flash_get_current_time
+ 145:main.c        **** 		if (slot == sensing_slot){
+ 642               	.LM45:
+ 643 00ec B901      		movw r22,r18
+ 644 00ee CA01      		movw r24,r20
+ 645 00f0 24E3      		ldi r18,lo8(52)
+ 646 00f2 38E0      		ldi r19,lo8(8)
+ 647 00f4 40E0      		ldi r20,0
+ 648 00f6 50E0      		ldi r21,0
+ 649 00f8 0E94 0000 		call __udivmodsi4
+ 650 00fc CA01      		movw r24,r20
+ 651 00fe B901      		movw r22,r18
+ 652 0100 2AE0      		ldi r18,lo8(10)
+ 653 0102 30E0      		ldi r19,0
+ 654 0104 40E0      		ldi r20,0
+ 655 0106 50E0      		ldi r21,0
+ 656 0108 0E94 0000 		call __udivmodsi4
+ 657 010c 2B01      		movw r4,r22
+ 658 010e 3C01      		movw r6,r24
+ 659 0110 7987      		std Y+9,r23
+ 660 0112 6887      		std Y+8,r22
+ 662               	.LM46:
+ 663 0114 AA85      		ldd r26,Y+10
+ 664 0116 BB85      		ldd r27,Y+11
+ 665 0118 6A17      		cp r22,r26
+ 666 011a 7B07      		cpc r23,r27
+ 667 011c 01F4      		brne .L7
+ 147:main.c        **** 		 	already_tx = false;
+ 669               	.LM47:
+ 670 011e 1D82      		std Y+5,__zero_reg__
+ 148:main.c        **** 		 	ret = nrk_set_status(fd,SENSOR_SELECT,PRESS);
+ 672               	.LM48:
+ 673 0120 49E0      		ldi r20,lo8(9)
+ 674 0122 61E0      		ldi r22,lo8(1)
+ 675 0124 8F81      		ldd r24,Y+7
+ 676 0126 0E94 0000 		call nrk_set_status
+ 149:main.c        **** 		 	ret = nrk_read(fd,(uint8_t *)&press,4);
+ 678               	.LM49:
+ 679 012a 44E0      		ldi r20,lo8(4)
+ 680 012c BE01      		movw r22,r28
+ 681 012e 6F5F      		subi r22,-1
+ 682 0130 7F4F      		sbci r23,-1
+ 683 0132 8F81      		ldd r24,Y+7
+ 684 0134 0E94 0000 		call nrk_read
+ 150:main.c        **** 			nrk_spin_wait_us(flash_get_current_time()%TDMA_SLOT_LEN);
+ 686               	.LM50:
+ 687 0138 0E94 0000 		call flash_get_current_time
+ 688 013c E4E3      		ldi r30,lo8(52)
+ 689 013e AE2E      		mov r10,r30
+ 690 0140 F8E0      		ldi r31,lo8(8)
+ 691 0142 BF2E      		mov r11,r31
+ 692 0144 C12C      		mov r12,__zero_reg__
+ 693 0146 D12C      		mov r13,__zero_reg__
+ 694 0148 E12C      		mov r14,__zero_reg__
+ 695 014a F12C      		mov r15,__zero_reg__
+ 696 014c 00E0      		ldi r16,0
+ 697 014e 10E0      		ldi r17,0
+ 698 0150 0E94 0000 		call __umoddi3
+ 699 0154 C901      		movw r24,r18
+ 700 0156 0E94 0000 		call nrk_spin_wait_us
+ 701               	.L7:
+ 151:main.c        **** 		}
+ 152:main.c        **** 		/* root node's synchronization slot */
+ 153:main.c        **** 		if ((slot == 0) && (!already_sync)){ //root's slot
+ 703               	.LM51:
+ 704 015a 4528      		or r4,r5
+ 705 015c 4628      		or r4,r6
+ 706 015e 4728      		or r4,r7
+ 707 0160 01F4      		brne .L8
+ 709               	.LM52:
+ 710 0162 BE81      		ldd r27,Y+6
+ 711 0164 B111      		cpse r27,__zero_reg__
+ 712 0166 00C0      		rjmp .L8
+ 154:main.c        **** 			cycles_since_sync ++;
+ 714               	.LM53:
+ 715 0168 2FEF      		ldi r18,-1
+ 716 016a 821A      		sub r8,r18
+ 717 016c 920A      		sbc r9,r18
+ 155:main.c        **** 			if (cycles_since_sync >= INTER_SYNC_CYCLES){
+ 719               	.LM54:
+ 720 016e 30E1      		ldi r19,16
+ 721 0170 8316      		cp r8,r19
+ 722 0172 37E2      		ldi r19,39
+ 723 0174 9306      		cpc r9,r19
+ 724 0176 04F4      		brge .+2
+ 725 0178 00C0      		rjmp .L5
+ 156:main.c        **** 				//printf("waiting for sync message\r\n");
+ 157:main.c        **** 				flash_enable(5, NULL, time_sync_callback);
+ 727               	.LM55:
+ 728 017a 40E0      		ldi r20,lo8(gs(time_sync_callback))
+ 729 017c 50E0      		ldi r21,hi8(gs(time_sync_callback))
+ 730 017e 60E0      		ldi r22,0
+ 731 0180 70E0      		ldi r23,0
+ 732 0182 85E0      		ldi r24,lo8(5)
+ 733 0184 0E94 0000 		call flash_enable
+ 158:main.c        **** 				already_sync = true;
+ 735               	.LM56:
+ 736 0188 81E0      		ldi r24,lo8(1)
+ 737 018a 8E83      		std Y+6,r24
+ 738 018c 00C0      		rjmp .L5
+ 739               	.L8:
+ 159:main.c        **** 			}
+ 160:main.c        **** 		}
+ 161:main.c        **** 		/* occurs only one time per full tdma cycle */
+ 162:main.c        **** 		else if ((slot == nodeID) && (!already_tx)){
+ 741               	.LM57:
+ 742 018e 8091 0000 		lds r24,nodeID
+ 743 0192 90E0      		ldi r25,0
+ 744 0194 A885      		ldd r26,Y+8
+ 745 0196 B985      		ldd r27,Y+9
+ 746 0198 A817      		cp r26,r24
+ 747 019a B907      		cpc r27,r25
+ 748 019c 01F0      		breq .+2
+ 749 019e 00C0      		rjmp .L5
+ 751               	.LM58:
+ 752 01a0 8D81      		ldd r24,Y+5
+ 753 01a2 8111      		cpse r24,__zero_reg__
+ 754 01a4 00C0      		rjmp .L5
+ 163:main.c        **** 			//it's my turn!
+ 164:main.c        **** 			already_sync = false;
+ 165:main.c        **** 			//TODO: Send timestamp to master
+ 166:main.c        **** 			//TODO: Send RSSI to master
+ 167:main.c        **** 			
+ 168:main.c        **** 			nrk_led_toggle(RED_LED);
+ 756               	.LM59:
+ 757 01a6 80E0      		ldi r24,0
+ 758 01a8 90E0      		ldi r25,0
+ 759 01aa 0E94 0000 		call nrk_led_toggle
+ 169:main.c        **** 			/* fill buffer with node id and sensor data */
+ 170:main.c        **** 			msg[0] = nodeID;
+ 761               	.LM60:
+ 762 01ae 8091 0000 		lds r24,nodeID
+ 763 01b2 8093 0000 		sts msg,r24
+ 171:main.c        **** 			*(uint32_t *)(msg + 1) = press;
+ 765               	.LM61:
+ 766 01b6 8981      		ldd r24,Y+1
+ 767 01b8 9A81      		ldd r25,Y+2
+ 768 01ba AB81      		ldd r26,Y+3
+ 769 01bc BC81      		ldd r27,Y+4
+ 770 01be 8093 0000 		sts msg+1,r24
+ 771 01c2 9093 0000 		sts msg+1+1,r25
+ 772 01c6 A093 0000 		sts msg+1+2,r26
+ 773 01ca B093 0000 		sts msg+1+3,r27
+ 172:main.c        **** 			//add some redundancy
+ 173:main.c        **** 			for (i=0; i<1; i++){
+ 174:main.c        **** 				flash_tx_pkt(msg, 10);
+ 775               	.LM62:
+ 776 01ce 6AE0      		ldi r22,lo8(10)
+ 777 01d0 80E0      		ldi r24,lo8(msg)
+ 778 01d2 90E0      		ldi r25,hi8(msg)
+ 779 01d4 0E94 0000 		call flash_tx_pkt
+ 175:main.c        **** 			}	
+ 176:main.c        **** 			already_tx = true;
+ 781               	.LM63:
+ 782 01d8 81E0      		ldi r24,lo8(1)
+ 783 01da 8D83      		std Y+5,r24
+ 164:main.c        **** 			//TODO: Send timestamp to master
+ 785               	.LM64:
+ 786 01dc 1E82      		std Y+6,__zero_reg__
+ 787 01de 00C0      		rjmp .L5
+ 788               	.LBE2:
+ 802               	.Lscope3:
+ 804               		.stabd	78,0,0
+ 805               		.comm	msg,5,1
+ 806               		.comm	val,1,1
+ 807               		.comm	time_slots,10,1
+ 808               	.global	nodeID
+ 809               		.data
+ 812               	nodeID:
+ 813 0000 01        		.byte	1
+ 814               		.comm	test_task_stack,256,1
+ 815               		.comm	TEST_TASK,35,1
+ 816               		.comm	flash_tx_pkt_done_signal,1,1
+ 817               		.comm	app_timer0_prescale,1,1
+ 818               		.comm	app_timer0_callback,2,1
+ 819               		.comm	_nrk_time_trigger,1,1
+ 820               		.comm	_nrk_prev_timer_val,1,1
+ 821               		.comm	error_num,1,1
+ 822               		.comm	error_task,1,1
+ 823               		.comm	nrk_kernel_stk_ptr,2,1
+ 824               		.comm	nrk_idle_task_stk,128,1
+ 825               		.comm	_nrk_signal_list,4,1
+ 842               		.text
+ 844               	.Letext0:
+ 845               		.ident	"GCC: (GNU) 4.9.2"
+ 846               	.global __do_copy_data
+ 847               	.global __do_clear_bss
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 main.c
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:2      *ABS*:000000000000003e __SP_H__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:3      *ABS*:000000000000003d __SP_L__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:4      *ABS*:000000000000003f __SREG__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:5      *ABS*:000000000000003b __RAMPZ__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:6      *ABS*:0000000000000000 __tmp_reg__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:7      *ABS*:0000000000000001 __zero_reg__
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:347    .text:0000000000000000 time_sync_callback
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:390    .text:000000000000002a main_disabled
+                            *COM*:0000000000000001 val
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:475    .text.startup:0000000000000000 main
+/var/folders/g6/tbq62m5x2cb4hdh54h_fbn3h0000gn/T//ccWCoGaF.s:812    .data:0000000000000000 nodeID
+                            *COM*:0000000000000005 msg
+                            *COM*:000000000000000a time_slots
+                            *COM*:0000000000000100 test_task_stack
+                            *COM*:0000000000000023 TEST_TASK
+                            *COM*:0000000000000001 flash_tx_pkt_done_signal
+                            *COM*:0000000000000001 app_timer0_prescale
+                            *COM*:0000000000000002 app_timer0_callback
+                            *COM*:0000000000000001 _nrk_time_trigger
+                            *COM*:0000000000000001 _nrk_prev_timer_val
+                            *COM*:0000000000000001 error_num
+                            *COM*:0000000000000001 error_task
+                            *COM*:0000000000000002 nrk_kernel_stk_ptr
+                            *COM*:0000000000000080 nrk_idle_task_stk
+                            *COM*:0000000000000004 _nrk_signal_list
+
+UNDEFINED SYMBOLS
+flash_set_time
+nrk_setup_ports
+nrk_setup_uart
+nrk_init
+nrk_led_clr
+nrk_time_set
+flash_init
+flash_timer_setup
+dev_manager_ff3_sensors
+nrk_register_driver
+nrk_start
+__umoddi3
+nrk_open
+puts
+flash_enable
+flash_set_retransmit
+printf
+flash_get_current_time
+__udivmodsi4
+nrk_set_status
+nrk_read
+nrk_spin_wait_us
+nrk_led_toggle
+flash_tx_pkt
+__do_copy_data
+__do_clear_bss
