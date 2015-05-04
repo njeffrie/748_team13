@@ -71,13 +71,8 @@ void test_task(void);
 #define NUM_NODES 10
 
 uint8_t nodeID = 1;
-
 uint8_t time_slots[NUM_NODES];
-
-void nrk_create_taskset();
-
-void nrk_register_drivers();
-
+uint8_t msg[PKT_LEN];
 uint8_t val;
 
 void time_sync_callback(uint8_t *buf, uint64_t recv_time){
@@ -86,7 +81,9 @@ void time_sync_callback(uint8_t *buf, uint64_t recv_time){
 	flash_set_time(global_time + 673); 
 }	
 
-uint8_t msg[PKT_LEN];
+void startup_callback(uint8_t *buf, uint64_t recv_time){
+	printf("received startup message\r\n");
+}
 
 void main() {
 	/* set up ports for LEDS etc. */
@@ -123,11 +120,15 @@ void main() {
 
 	/* perform first TDMA cycle of initialization */
 	uint8_t cycle = (flash_get_current_time() / TDMA_SLOT_LEN) % NUM_NODES;
+	uint64_t timeout = TDMA_SLOT_LEN;
 	while (cycle != nodeID){
+		flash_enable(PKT_LEN, &timeout, startup_callback);
 		cycle = (flash_get_current_time() / TDMA_SLOT_LEN) % NUM_NODES;
 	}
-	msg[0] =  
-	flash_tx_pkt()
+	if (cycle != nodeID) printf("Time slot error during startup\r\n");
+	msg[0] = 0;
+	msg[1] = nodeID;
+	flash_tx_pkt(msg, PKT_LEN);
 		
 	/* perform second TDMA cycle of initialization */
 
