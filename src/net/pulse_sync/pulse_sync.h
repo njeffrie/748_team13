@@ -96,7 +96,7 @@ uint64_t _loc_time_avg;
 float _skew;*/
 
 // initiate/reset pulsesync
-void psync_init(uint8_t high_prio, uint8_t comp_forw, uint8_t is_root, uint8_t chan);
+void psync_init(/*uint8_t high_prio, */uint8_t comp_forw, uint8_t is_root, uint8_t chan);
 
 // set whether root or not
 void psync_set_root(uint8_t is_root);
@@ -123,6 +123,6 @@ void psync_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time);
 void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff);
 
 // initiate a pulsesynce flood cycle
-void psync_flood_wait(nrk_time_t* time);
+void psync_flood_wait(nrk_time_t* time, uint8_t retransmit);
 
 #endif

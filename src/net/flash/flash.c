@@ -26,7 +26,7 @@
 
 #include "flash.h"
 
-#define DEBUG
+//#define DEBUG
 
 #ifndef MAC_ADDR
 #define MAC_ADDR 0
@@ -159,8 +159,12 @@ void flash_tx_pkt(uint8_t *buf, uint8_t len)
 
 void flash_tx_callback_set(void(*callback)(uint16_t, uint8_t *))
 {
-	//flash_tx_callback = callback;
+	flash_tx_callback = callback;
 	tx_start_callback(callback);
+}
+
+void* flash_tx_callback_get() {
+	return flash_tx_callback;
 }
 
 void flash_run_tests()

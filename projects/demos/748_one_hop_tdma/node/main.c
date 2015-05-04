@@ -44,7 +44,7 @@
 #include <ff_basic_sensor.h>
 
 #include "../tdma_constants.h"
-//#include <pulse_sync.h>
+#include <pulse_sync.h>
 #define UART_BUF_SIZE	16
 
 nrk_task_type TEST_TASK;
@@ -53,7 +53,7 @@ void test_task(void);
 
 #define NUM_NODES 10
 
-uint8_t nodeID = 1;
+uint8_t nodeID = 2;
 
 uint8_t time_slots[NUM_NODES];
 
@@ -65,7 +65,7 @@ uint8_t val;
 
 int main_disabled() {
 	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_9K6);
+	nrk_setup_uart(UART_BAUDRATE_115K2);
 	
 	nrk_init();
 	
@@ -88,20 +88,20 @@ int main_disabled() {
 	return 0;
 }
 
-void time_sync_callback(uint8_t *buf, uint64_t recv_time){
+/*void time_sync_callback(uint8_t *buf, uint64_t recv_time){
 	uint32_t prev_local_time = (uint32_t)recv_time;//(uint32_t)flash_get_current_time();
 	uint32_t global_time = *(uint32_t *)(buf + 1);
 	flash_set_time(global_time + 673); 
 
 	//printf("global time is %ld us ahead of local time\r\n", (int32_t)prev_local_time - (int32_t)global_time);
 	//printf("prev time :%lu global time :%lu\r\n", prev_local_time, global_time);
-}	
+}*/	
 
 uint8_t msg[PKT_LEN];
 
 void main() {
 	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_9K6);
+	nrk_setup_uart(UART_BAUDRATE_115K2);
 	
 	//nrk_init();
 	
@@ -112,64 +112,87 @@ void main() {
 	
 	nrk_time_set(0, 0);
 
-	flash_init(14);
+	flash_init(13);
 	flash_timer_setup();
+
+	psync_init(1, 0, 13);
 
 	val = nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
 	if (val == NRK_ERROR) printf("failed to register drivers\r\n");
 
 	//nrk_create_taskset();
 	//nrk_start();
-	int i,cycles_since_sync;
+	int i;
+	//uint32_t time_since_sync;
 	int8_t fd, ret;
 	uint32_t press;
 	volatile bool already_tx = false;
+	uint64_t sync_time = 0;
+
+	uint32_t num_sync = 0;
 
 	fd = nrk_open(FIREFLY_3_SENSOR_BASIC, READ);
 
 	printf("waiting for sync message\r\n");
 
-	flash_enable(5, NULL, time_sync_callback);
+	psync_flood_wait(NULL, 1);
+	num_sync++;
+	//flash_enable(5, NULL, time_sync_callback);
 	flash_set_retransmit(0);
-	cycles_since_sync = 0;
+	//time_sinc_sync = TRANS_SYNC_TIME;
 	bool already_sync = false;
 	int cycle_count;
-	uint8_t sensing_slot = (nodeID == NUM_NODES) ? 1 : nodeID + 1;
+	uint8_t sensing_slot = (nodeID == NUM_NODES - 1) ? 1 : nodeID + 1;
 	while(1){
 		cycle_count ++;
 		if (cycle_count > 1000){
 			cycle_count = 0;
 			printf("press:%lu\r\n", press);
 		}
-		uint32_t cycle_start_time = flash_get_current_time();
-		int slot = ((cycle_start_time/TDMA_SLOT_LEN) % NUM_NODES);
+		uint64_t cycle_start_time = psync_get_time();//flash_get_current_time();
+		uint8_t slot = (((cycle_start_time + 55) / TDMA_SLOT_LEN) % NUM_NODES);
 		if (slot == sensing_slot){
+			//printf("s");
 		 	already_tx = false;
 		 	ret = nrk_set_status(fd,SENSOR_SELECT,PRESS);
 		 	ret = nrk_read(fd,(uint8_t *)&press,4);
-			nrk_spin_wait_us(flash_get_current_time()%TDMA_SLOT_LEN);
+			nrk_spin_wait_us((psync_get_time() - 55) % TDMA_SLOT_LEN);
 		}
-		/* root node's synchronization slot */
+		// root node's synchronization slot 
 		if ((slot == 0) && (!already_sync)){ //root's slot
-			cycles_since_sync ++;
-			if (cycles_since_sync >= INTER_SYNC_CYCLES){
-				//printf("waiting for sync message\r\n");
-				flash_enable(5, NULL, time_sync_callback);
+			//time_sinc_sync ++;
+			uint64_t comp = psync_is_synced() ? STEADY_SYNC_TIME + sync_time : TRANS_SYNC_TIME + sync_time;
+			if (cycle_start_time > comp/*time_sinc_sync >= TRANS_SYNC_TIME*/){
+				//time_sinc_sync = 0;
+				//printf("\r\nwaiting for sync message\r\n");
+				//flash_enable(5, NULL, time_sync_callback);
+				//printf("slot_before: %lu\r\n", (psync_get_time()/TDMA_SLOT_LEN));
+				psync_flood_wait(NULL, 0);
+				//printf("slot_after: %lu\r\n", (psync_get_time()/TDMA_SLOT_LEN));
+				sync_time = cycle_start_time;
 				already_sync = true;
+				already_tx = true;
+				num_sync++;
+				printf("s: %lu\r\n", num_sync);
 			}
 		}
+
+		////TODO: add additional message to pulse sync????
+
 		/* occurs only one time per full tdma cycle */
 		else if ((slot == nodeID) && (!already_tx)){
 			//it's my turn!
+			//printf("t");
 			already_sync = false;
 			//TODO: Send timestamp to master
 			//TODO: Send RSSI to master
 			
 			nrk_led_toggle(RED_LED);
-			/* fill buffer with node id and sensor data */
+			// fill buffer with node id and sensor data 
 			msg[0] = nodeID;
 			*(uint32_t *)(msg + 1) = press;
 			//add some redundancy
+			//flash_tx_callback_set(NULL);
 			for (i=0; i<1; i++){
 				flash_tx_pkt(msg, 10);
 			}	
