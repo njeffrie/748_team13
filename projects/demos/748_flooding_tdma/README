@@ -1,0 +1,24 @@
+Flooding TDMA is a flash flooding based TDMA protocol which exploits the
+low latency of flash flooding across a multi-hop network.  Flooding TDMA
+assigns each leaf node a time slot, and calculates the minimum network 
+necessary to propagate sensor values from the leaf node to the root node.
+
+Setup for flooding TDMA requires each node in the network to have a unique ID
+counting from 1 to the number of nodes.  After a time reset followed by a 
+synchronization pulse, Each node floods the network during its time interval 
+based on node ID.  Packets forwarded across the network during this first 
+flood have the following structure:
+{ hop count, orig_sender, first_re-transmitter, second re-transmitter, ... } 
+By default the length of the packet is limited to 8 bytes, so network is 
+limited to 7 hops
+
+The second phase of startup has the root node transmit the shortest path
+to each leaf node during the leaf node's time slot.  In this way, nodes
+along the shortest path from root to leaf node (and therefore on the shortest
+path from leaf to root) know they must be listening and waitint to retransmit
+during that particular leaf node's time slot
+
+Once startup is over, each node will have a table with one entry per timeslot.
+Each entry indicated whether the node can be off, listening or transmitting.
+This structure allows for future modications and extensions to the network
+routing protocol.
