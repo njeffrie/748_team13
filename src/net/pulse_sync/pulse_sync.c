@@ -57,12 +57,11 @@ struct _sync_point_info line_data[MAX_SAMPLES];
 // whether or not this node is root, set on initialization
 uint8_t _is_root;
 
-// additional header message and size
-uint8_t _msg_head[8];
+// additional header message size
 uint8_t _msg_size;
 
 // rx check callback function
-uint8_t (*rx_check_callback)(uint8_t* buf, uint64_t rcv_time);
+uint8_t (*_rx_check_callback)(uint8_t* buf);
 
 /*
  * function for initializing/reseting pulsesync
@@ -246,9 +245,11 @@ void psync_global_diff(nrk_time_t* loc_diff, nrk_time_t* glob_diff) {
  * function to handle received PulseSync floods
  * saves values to be added to regression table
  */
-void psync_rx_callback(uint8_t* buf, uint64_t rcv_time) {
+void _psync_rx_callback(uint8_t* buf, uint64_t rcv_time) {
+	if (_rx_check_callback && !_rx_check_callback(buf))
+		return;
 	_new_loc = rcv_time - PSYNC_RX_DELAY;
-	_new_glob = *(uint64_t*)buf;
+	_new_glob = *(uint64_t*)(buf + _msg_size);
 	_edit = 1;
 }
 
@@ -256,8 +257,8 @@ void psync_rx_callback(uint8_t* buf, uint64_t rcv_time) {
  * function to handle (re)transmission of PulseSynce floods
  * sets/alters buffer for Rx-Tx time delta
  */
-void psync_tx_callback(uint16_t len, uint8_t* buf) {
-	uint64_t* buf64 = (uint64_t*)buf;
+void _psync_tx_callback(uint16_t len, uint8_t* buf) {
+	uint64_t* buf64 = (uint64_t*)(buf + _msg_size);
 	if (_is_root) { 
 		buf64[0] = PSYNC_TX_DELAY;
 		buf64[0] += flash_get_current_time();
@@ -278,20 +279,23 @@ void psync_tx_callback(uint16_t len, uint8_t* buf) {
 /*
  * function to block while listening for pulsesync flood
  */
-int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit) {
+int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit, uint8_t msg_size, uint8_t (*check_func)(uint8_t* buf)) {
 	// check if root
 	if (_is_root)
 		return NRK_ERROR;
 
+	_rx_check_callback = check_func;
+	_msg_size = msg_size;
+
 	// set forwarding adjustment callback and retransmission, saving previous values
 	void* prev_tx_callback = flash_tx_callback_get();
 	uint8_t prev_retransmit = flash_get_retransmit();
-	flash_tx_callback_set(psync_tx_callback);
+	flash_tx_callback_set(_psync_tx_callback);
 	flash_set_retransmit(retransmit);
 
 	int8_t ret_val = 0;
 	_edit = 0;
-	flash_enable(PKT_SIZE, time, psync_rx_callback);
+	flash_enable(PKT_SIZE + _msg_size, time, _psync_rx_callback);
 	if (_edit) {
 		ret_val = 1;
 		printf("loc: %luus, glob: %luus\r\n", (uint32_t)(_new_loc), (uint32_t)(_new_glob));
@@ -304,6 +308,8 @@ int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit) {
 	// revert tx callback and retransmission
 	flash_tx_callback_set(prev_tx_callback);
 	flash_set_retransmit(prev_retransmit);
+	_msg_size = 0;
+	_rx_check_callback = NULL;
 
 	return ret_val;
 }
@@ -311,20 +317,26 @@ int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit) {
 /*
  * function to initiate a pulsesync flood
  */
-int8_t psync_flood_tx() {
+int8_t psync_flood_tx(uint8_t msg_size, uint8_t* msg) {
 	// check if root
 	if (!_is_root)
 		return NRK_ERROR;
 
+	_msg_size = msg_size;
+
 	// set forwarding adjustment callback, saving previous function
 	void* prev_tx_callback = flash_tx_callback_get();
-	flash_tx_callback_set(psync_tx_callback);
+	flash_tx_callback_set(_psync_tx_callback);
 
-	uint64_t buf[1] = {0};
-	flash_tx_pkt((uint8_t*)buf, PKT_SIZE);
+	uint8_t buf[PKT_SIZE + _msg_size];
+	memcpy(buf, msg, _msg_size);
+
+	*(uint64_t*)(buf + _msg_size) = 0;
+	flash_tx_pkt(buf, PKT_SIZE + _msg_size);
 
 	// revert tx callback
 	flash_tx_callback_set(prev_tx_callback);
+	_msg_size = 0;
 
 	return NRK_OK;
 }

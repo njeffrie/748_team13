@@ -63,6 +63,10 @@ uint8_t val;
 
 uint8_t msg[PKT_LEN];
 
+uint8_t psync_rx_check_callback(uint8_t* buf) {
+	return *(uint16_t*)buf == 0;
+}
+
 void main() {
 	nrk_setup_ports();
 	nrk_setup_uart(UART_BAUDRATE_115K2);
@@ -88,15 +92,12 @@ void main() {
 	volatile bool already_tx = false;
 	uint64_t sync_time = 0;
 
-	uint32_t num_sync = 0;
-
 	fd = nrk_open(FIREFLY_3_SENSOR_BASIC, READ);
 
 	printf("waiting for sync message\r\n");
 
-	psync_flood_rx(NULL, 0);
-	//psync_flood_wait(NULL, 1);
-	num_sync++;
+	while (!psync_flood_rx(NULL, 0, 2, psync_rx_check_callback));
+
 	flash_set_retransmit(0);
 	bool already_sync = false;
 	uint8_t already_sense = 0;
@@ -121,12 +122,10 @@ void main() {
 		else if (!slot){ //root's slot
 			uint64_t comp = psync_is_synced() ? STEADY_SYNC_TIME + sync_time : TRANS_SYNC_TIME + sync_time;
 			if (cycle_start_time > comp){
-				psync_flood_rx(NULL, 0);
-				//psync_flood_wait(NULL, 0);
+				psync_flood_rx(NULL, 0, 2, NULL);
 				sync_time = cycle_start_time;
 				already_tx = true;
-				num_sync++;
-				printf("s: %lu\r\n", num_sync);
+				already_sense = 0;
 			}
 		}
 		/* occurs only one time per full tdma cycle */
