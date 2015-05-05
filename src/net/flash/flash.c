@@ -232,8 +232,11 @@ void flash_set_retransmit(uint8_t retransmit_flag){
 	auto_re_tx = retransmit_flag;
 }
 
-void 
-flash_enable(uint8_t msg_len, uint64_t *timeout, void (*edit_buf)(uint8_t *buf, uint64_t rcv_time))
+uint8_t flash_get_retransmit() {
+	return auto_re_tx;
+}
+
+void flash_enable(uint8_t msg_len, uint64_t *timeout, void (*edit_buf)(uint8_t *buf, uint64_t rcv_time))
 {
 	//uint8_t flash_rx_buf[FLASH_MAX_PKT_LEN];
 	uint64_t timeout_time;//0xFFFFFFFFFFFFFFFF;

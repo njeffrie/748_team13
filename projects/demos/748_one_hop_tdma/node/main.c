@@ -1,8 +1,8 @@
 /******************************************************************************
 *	Lab 3 - Build Your Own Sensor Network (Gateway)
 *	Madhav Iyengar
-*	Miguel Sotolongo
 *	Nathaniel Jeffries
+*	Miguel Sotolongo
 -------------------------------------------------------------------------------
 *
 *Nano-RK, a real-time operating system for sensor networks.
@@ -51,9 +51,9 @@ nrk_task_type TEST_TASK;
 NRK_STK test_task_stack[NRK_APP_STACKSIZE];
 void test_task(void);
 
-#define NUM_NODES 10
+//#define NUM_NODES 10
 
-uint8_t nodeID = 2;
+uint8_t nodeID = 4;
 
 uint8_t time_slots[NUM_NODES];
 
@@ -129,6 +129,9 @@ void main() {
 	volatile bool already_tx = false;
 	uint64_t sync_time = 0;
 
+	//////
+	//press = 0;
+
 	uint32_t num_sync = 0;
 
 	fd = nrk_open(FIREFLY_3_SENSOR_BASIC, READ);
@@ -141,25 +144,27 @@ void main() {
 	flash_set_retransmit(0);
 	//time_sinc_sync = TRANS_SYNC_TIME;
 	bool already_sync = false;
+	uint8_t already_sense = 0;
 	int cycle_count;
-	uint8_t sensing_slot = (nodeID == NUM_NODES - 1) ? 1 : nodeID + 1;
+	uint8_t sensing_slot = (nodeID >= NUM_NODES - 2) ? 1 : nodeID + 1;
 	while(1){
 		cycle_count ++;
-		if (cycle_count > 1000){
+		if (cycle_count > 10000){
 			cycle_count = 0;
 			printf("press:%lu\r\n", press);
 		}
 		uint64_t cycle_start_time = psync_get_time();//flash_get_current_time();
 		uint8_t slot = (((cycle_start_time + 55) / TDMA_SLOT_LEN) % NUM_NODES);
-		if (slot == sensing_slot){
+		if ((slot == sensing_slot) && !already_sense){
 			//printf("s");
 		 	already_tx = false;
 		 	ret = nrk_set_status(fd,SENSOR_SELECT,PRESS);
 		 	ret = nrk_read(fd,(uint8_t *)&press,4);
 			nrk_spin_wait_us((psync_get_time() - 55) % TDMA_SLOT_LEN);
+			already_sense = 1;
 		}
 		// root node's synchronization slot 
-		if ((slot == 0) && (!already_sync)){ //root's slot
+		else if ((slot == 0)/* && (!already_sync)*/){ //root's slot
 			//time_sinc_sync ++;
 			uint64_t comp = psync_is_synced() ? STEADY_SYNC_TIME + sync_time : TRANS_SYNC_TIME + sync_time;
 			if (cycle_start_time > comp/*time_sinc_sync >= TRANS_SYNC_TIME*/){
@@ -170,12 +175,16 @@ void main() {
 				psync_flood_wait(NULL, 0);
 				//printf("slot_after: %lu\r\n", (psync_get_time()/TDMA_SLOT_LEN));
 				sync_time = cycle_start_time;
-				already_sync = true;
+				//already_sync = true;
 				already_tx = true;
 				num_sync++;
 				printf("s: %lu\r\n", num_sync);
 			}
+			//else
+				//already_tx = false;
 		}
+		//else if (slot == 0)
+			//already_tx = false;
 
 		////TODO: add additional message to pulse sync????
 
@@ -183,7 +192,7 @@ void main() {
 		else if ((slot == nodeID) && (!already_tx)){
 			//it's my turn!
 			//printf("t");
-			already_sync = false;
+			//already_sync = false;
 			//TODO: Send timestamp to master
 			//TODO: Send RSSI to master
 			
@@ -194,9 +203,10 @@ void main() {
 			//add some redundancy
 			//flash_tx_callback_set(NULL);
 			for (i=0; i<1; i++){
-				flash_tx_pkt(msg, 10);
+				flash_tx_pkt(msg, 5);
 			}	
 			already_tx = true;
+			already_sense = 0;
 		}
 	}
 }

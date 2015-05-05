@@ -357,6 +357,7 @@ void psync_flood_wait(nrk_time_t* time, uint8_t retransmit) {
 
 	// set forwarding adjustment callback
 	void* prev_tx_callback = flash_tx_callback_get();
+	uint8_t prev_retransmit = flash_get_retransmit();
 	flash_tx_callback_set(psync_tx_callback);
 	flash_set_retransmit(retransmit);
 
@@ -377,6 +378,7 @@ void psync_flood_wait(nrk_time_t* time, uint8_t retransmit) {
 			//printf("loc: %lu << 32 + %lu, glob: %lu << 32 + %lu\r\n", ((uint32_t*)&_new_loc)[1], ((uint32_t*)&_new_loc)[0], ((uint32_t*)&_new_glob)[1], ((uint32_t*)&_new_glob)[0]);
 			printf("loc: %luus, glob: %luus\r\n", (uint32_t)(_new_loc), (uint32_t)(_new_glob));
 			psync_add_point(_new_loc, _new_glob);
+			printf("skew: %ld\r\n", (int32_t)(_skew * 1000000));
 			//printf("local: %luus, offsum: %ldus, offset: %ldus, skew * 10000000: %ld\r\n", (uint32_t)_loc_time_avg, (int32_t)_off_time_sum, (int32_t)_off_time_avg, (int32_t)(_skew * 10000000.0));
 			//uint32_t shit_time = flash_get_current_time();
 			//printf("loc_after: %lu\r\n", shit_time);
@@ -385,4 +387,5 @@ void psync_flood_wait(nrk_time_t* time, uint8_t retransmit) {
 	}
 
 	flash_tx_callback_set(prev_tx_callback);
+	flash_set_retransmit(prev_retransmit);
 }

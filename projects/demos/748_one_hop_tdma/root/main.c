@@ -151,20 +151,20 @@ void main ()
 
 	uint64_t timeout = TDMA_SLOT_LEN;
 
-	uint32_t num_sync_sent = 0;
-	uint8_t already_sync = 0;
+	//uint32_t num_sync_sent = 0;
+	uint8_t already_sync = 1;
 	while(1){
 		uint8_t slot = ((flash_get_current_time() + 30) / TDMA_SLOT_LEN) % NUM_NODES;
 		//printf("slot = %d\r\n", slot);
 		if (!slot && !already_sync) { //perform time sync
-			num_sync_sent ++;
+			//num_sync_sent ++;
 			//timestamp = (uint32_t)flash_get_current_time();
 			//*(uint32_t *)(sync_buf + 1) = timestamp;
 			//flash_tx_pkt(sync_buf, 5);
 			//uint32_t tt = flash_get_current_time();
 			//printf("time: %lu, slot: %lu\r\n", tt, (tt / TDMA_SLOT_LEN));
 			psync_flood_wait(NULL, 0);
-			printf("s: %lu\r\n", num_sync_sent);
+			//printf("s: %lu\r\n", num_sync_sent);
 			already_sync = 1;
 			nrk_spin_wait_us((flash_get_current_time() - 30) % TDMA_SLOT_LEN);
 		}
@@ -178,7 +178,7 @@ void main ()
 				//num_sync_sent = 0;
 			}*/
 			//flash_tx_callback_set(NULL);
-			flash_enable(10, &timeout, node_data_callback);
+			flash_enable(5, &timeout, node_data_callback);
 		}
 	}
 }
