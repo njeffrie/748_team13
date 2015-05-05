@@ -161,7 +161,7 @@ public class JGui extends JFrame  implements Runnable{
 			JGui gui = new JGui();
 			
 			// Begin Serial Read
-			// (new SerialComm()).connect(port, gui);
+			(new SerialComm()).connect(port, gui);
 	
 			//Schedule a job for the event-dispatching thread:
 			EventQueue.invokeLater(gui);
