@@ -22,3 +22,5 @@ Once startup is over, each node will have a table with one entry per timeslot.
 Each entry indicated whether the node can be off, listening or transmitting.
 This structure allows for future modications and extensions to the network
 routing protocol.
+
+Author: Nat Jeffries
