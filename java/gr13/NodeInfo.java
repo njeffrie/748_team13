@@ -23,6 +23,12 @@ public class NodeInfo {
 	final int oval_width = NetworkGraph.GRID_DIM/2;
 	final int oval_height = NetworkGraph.GRID_DIM/2;
 	
+	// Timing Constants
+	final long NEW_TIMEOUT  = 50; // Green color timeout
+	final long IDLE_TIMEOUT = 3000; // Yellow color timeour
+	final int DRIFT_MAX = 500; // Max drift allowed
+	final int DRIFT_GRAPH_MAX = 300; // Pixel limit of drift graph
+	
 	/***********************************************
 	 * 	Parameters							   
 	 ***********************************************/
@@ -99,12 +105,14 @@ public class NodeInfo {
 			mac, pres, lt, gt);
 	}
 	
-	//// Draw
+	/******************************************************
+	* 	Draw Functions
+	******************************************************/
 	public void draw(Graphics g, long timestamp) {
 		long elapse_time = timestamp - last_update;
-		if(elapse_time <= 1000)
+		if(elapse_time <= NEW_TIMEOUT)
 			g.setColor(Color.green);
-		else if(elapse_time > 1000 && elapse_time <= 4000)
+		else if(elapse_time > NEW_TIMEOUT && elapse_time <= IDLE_TIMEOUT)
 			g.setColor(Color.yellow);
 		else
 			g.setColor(Color.red);	
@@ -115,10 +123,13 @@ public class NodeInfo {
 			grid_y * NetworkGraph.GRID_DIM + 50, 
 			Integer.toString(mac)
 		);
+	}
+	
+	public void drawText(Graphics g) {
 		g.setColor(Color.black);
 		g.drawString(String.format("drift: %d", lt - gt), 
-			grid_x * NetworkGraph.GRID_DIM + 55,
-			grid_y * NetworkGraph.GRID_DIM + 85);
+		grid_x * NetworkGraph.GRID_DIM + 55,
+		grid_y * NetworkGraph.GRID_DIM + 85);
 	}
 	
 	public void drawLine(Graphics g, int x, int y) {
@@ -127,6 +138,64 @@ public class NodeInfo {
 				   grid_y * NetworkGraph.GRID_DIM + 50,
 				   x * NetworkGraph.GRID_DIM + 50, 
 				   y * NetworkGraph.GRID_DIM + 50);
+	}
+	
+	public void drawDrift(Graphics g) {
+		// Lots of assumptions are made for this method:
+		// 1. There is only one node in the NetworkGraph
+		// 2. It is located on coordinate (3,0)
+		Graphics2D g2 = (Graphics2D) g;
+		
+		// Calculate graph scale
+		long drift = lt - gt;
+		double ratio = (drift >= DRIFT_MAX) ? 1 : ((double) Math.abs(drift)) / DRIFT_MAX; 
+		int scaling_param = (int)(ratio * DRIFT_GRAPH_MAX);
+
+		int g_s_x, g_s_y; // Gradient P1
+		int g_e_x, g_e_y; // Gradient P2
+		int r_s_x, r_s_y; // Bar P1
+		int r_w, r_h; 	  // Bar width, height
+		int t_x, t_y;	  // Text P1
+		if(drift >= 0) {
+			g_s_x = grid_x * NetworkGraph.GRID_DIM + 50;
+			g_s_y = (grid_y + 1) * NetworkGraph.GRID_DIM + NetworkGraph.GRID_DIM/2;
+			g_e_x = grid_x * NetworkGraph.GRID_DIM + 50 + DRIFT_GRAPH_MAX;
+			g_e_y = (grid_y + 1) * NetworkGraph.GRID_DIM + NetworkGraph.GRID_DIM/2;
+			r_s_x = g_s_x;
+			r_s_y = g_s_y;
+			r_w   = scaling_param;
+			r_h   = NetworkGraph.GRID_DIM;
+			t_x   = grid_x * NetworkGraph.GRID_DIM - 25;
+			t_y   = (grid_y + 2) * NetworkGraph.GRID_DIM;
+		} else {
+			g_s_x = grid_x * NetworkGraph.GRID_DIM + 50;
+			g_s_y = (grid_y + 1) * NetworkGraph.GRID_DIM + NetworkGraph.GRID_DIM/2;
+			g_e_x = grid_x * NetworkGraph.GRID_DIM + 50 - DRIFT_GRAPH_MAX;
+			g_e_y = (grid_y + 1) * NetworkGraph.GRID_DIM + NetworkGraph.GRID_DIM/2;
+			r_s_x = grid_x * NetworkGraph.GRID_DIM + 50 - scaling_param;
+			r_s_y = g_s_y;
+			r_w   = scaling_param;
+			r_h   = NetworkGraph.GRID_DIM;
+			t_x   = grid_x * NetworkGraph.GRID_DIM + 75;
+			t_y   = (grid_y + 2) * NetworkGraph.GRID_DIM;
+		}
+		
+		// Draw
+		GradientPaint bluetored = new GradientPaint(
+			g_s_x, g_s_y, Color.yellow,
+			g_e_x, g_e_y, Color.red
+		);
+		g2.setPaint(bluetored);
+		g2.fill(new Rectangle(r_s_x, r_s_y, r_w, r_h));
+		g2.setPaint(Color.black);
+		
+		// Local Time
+		g2.setFont(new Font("TimesRoman", Font.PLAIN, 16)); 
+		g2.drawString(String.format("lt: %d", lt), t_x, t_y);
+		// Global Time
+		g2.drawString(String.format("gt: %d drift: %d", gt, lt-gt), 
+			grid_x * NetworkGraph.GRID_DIM + 75, 
+			(grid_y + 3) * NetworkGraph.GRID_DIM);
 	}
 	
 	private void drawOval(Graphics g, int centerX, 
