@@ -130,7 +130,10 @@ public class SerialComm {
 			try{
 				int c = -1;
 				while((c = System.in.read()) > -1)
+				{
+					System.out.println("Sending: " + c);
 					out.writeInt(c);
+				}	
 				
 				// Sleep for WRITE_PERIOD
 				Thread.sleep(WRITE_PERIOD);

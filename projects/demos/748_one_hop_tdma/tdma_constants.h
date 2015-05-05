@@ -5,6 +5,6 @@
 #define PKT_LEN 5
 #define TRANS_SYNC_TIME 10000000L
 #define STEADY_SYNC_TIME 1000000000L
-#define NUM_NODES 10
+#define NUM_NODES 5
 
 #endif

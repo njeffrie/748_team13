@@ -76,11 +76,7 @@ public class JGui extends JFrame  implements Runnable{
 		// Begin Canvas Draw Thread
 		(new Thread (graph)).start();
 		
-				
-		// TEST	
-		NodeInfo info = new NodeInfo(1, String.format("{\"mac\":%d; \"light\": 1000}", 1));
-		this.addNode(info.mac, info);
-		
+			/*
 		info = new NodeInfo(2, String.format("{\"mac\":%d; \"light\": 1020}", 2));
 		this.addNode(info.mac, info);
 		
@@ -92,6 +88,7 @@ public class JGui extends JFrame  implements Runnable{
 		
 		info = new NodeInfo(0, String.format("{\"mac\":%d;}", 3));
 		this.addNode(info.mac, info);
+			*/
 	}
 	
 	/// getMap
@@ -136,6 +133,10 @@ public class JGui extends JFrame  implements Runnable{
 	public void run() {
 		this.initGUI();
 		this.setVisible(true);
+		
+		// TEST	
+		//NodeInfo info = new NodeInfo(1, String.format("{\"mac\":%d; \"pres\": 1000;\"lt\":2300;\"gt\":2500}", 1));
+		//this.addNode(info.mac, info);
 	}
 	
 	/// Main
@@ -161,7 +162,7 @@ public class JGui extends JFrame  implements Runnable{
 			JGui gui = new JGui();
 			
 			// Begin Serial Read
-			// (new SerialComm()).connect(port, gui);
+			(new SerialComm()).connect(port, gui);
 	
 			//Schedule a job for the event-dispatching thread:
 			EventQueue.invokeLater(gui);
