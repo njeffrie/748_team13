@@ -61,7 +61,7 @@
 #include <hal.h>
 #include <string.h>
 #include <flash.h>
-#include "../tdma_constants.h"
+#include "../tdma.h"
 
 #define UART_BUF_SIZE	16
 
@@ -84,15 +84,15 @@ void node_data_callback(uint8_t *data, uint64_t time)
 	uint8_t slot = get_curr_tdma_cycle();
 	if (sender_node != slot){
 		failed ++;
-		//printf("slot error[slot:%d,sender:%d]\r\n", slot, sender_node);
+		printf("slot error[slot:%d,sender:%d]\r\n", slot, sender_node);
 	}
 	else{
 		correct ++;
-		//printf("slot correct\r\n");
+		printf("slot correct\r\n");
 	}
-	if (!((failed + correct)%10))
-		printf("percentage correct:%ld, [c:%ld, f:%ld] press:%lu\r\n", 
-				(correct * 100)/(correct + failed), correct, failed, press);
+	//if (!((failed + correct)%10))
+	//printf("percentage correct:%ld, [c:%ld, f:%ld] press:%lu\r\n", 
+	//			(correct * 100)/(correct + failed), correct, failed, press);
 
 	nrk_led_toggle(GREEN_LED);
 }
@@ -104,13 +104,20 @@ void startup_phase1_callback(uint8_t *buf, uint64_t recv_time)
 	if (orig_node != slot){
 		// will cause current node to fail to receive timeslot
 		// maybe we should signal error and restart?
-		printf("error: flood message overflowed tdma slot\r\n");
+		printf("error: flood message from %d overflowed to tdma slot %d\r\n", 
+				orig_node, slot);
 		return;
 	}
+	memcpy(shortest_paths[slot], buf, PKT_LEN);
+
+#ifdef DEBUG
 	uint8_t i;
+	printf("got pkt [");
 	for (i=0; i<PKT_LEN; i++){
-		shortest_paths[slot][i] = buf[i];
+		printf("%d ", buf[i]);
 	}
+	printf("]\r\n");
+#endif
 }
 
 /* get current tdma slot number, indication which node's turn it is */
@@ -142,37 +149,52 @@ void main ()
 	tx_buf[0] = 0; //indicate this is a time synchronization message
 	uint32_t timestamp = (uint32_t)flash_get_current_time();
 	*(uint32_t *)(tx_buf + 1) = timestamp;
-	printf("transmitting packet [%d,%lu]\r\n", tx_buf[0], 
-			*(uint32_t *)(tx_buf + 1));	
 	flash_tx_pkt(tx_buf, PKT_LEN);
 
 	/* wait for slot 0 to be done */
 	wait_remainder_of_tdma_period(0);
 	
 	/* listen for network topology messages flooding the network */
-	uint64_t timeout = TDMA_SLOT_LEN;
+	uint64_t timeout = TDMA_SLOT_LEN - 1000;
 	uint8_t cycle = get_curr_tdma_cycle();
 	while (cycle > 0){
 		flash_enable(PKT_LEN, &timeout, startup_phase1_callback);
-		wait_remainder_of_tdma_period(cycle);
-		cycle = get_curr_tdma_cycle();
-	}
-	
-	/* again wait for slot 0 to finish */
-	wait_remainder_of_tdma_period(0);
-	cycle = get_curr_tdma_cycle();
-	while (cycle > 0){
-		flash_tx_pkt(shortest_paths[cycle], PKT_LEN);
+		printf("phase1 cycle %d\r\n", cycle);
 		wait_remainder_of_tdma_period(cycle);
 		cycle = get_curr_tdma_cycle();
 	}
 
+	/* again wait for slot 0 to finish */
+	wait_remainder_of_tdma_period(0);
+	cycle = get_curr_tdma_cycle();
+	while (cycle > 0){
+		memcpy(tx_buf, shortest_paths[cycle], PKT_LEN);
+#ifdef DEBUG
+		printf("sending topology msg %d [%d, %d, %d, %d]\r\n", cycle, shortest_paths[cycle][0], 
+				shortest_paths[cycle][1], shortest_paths[cycle][2], shortest_paths[cycle][3]);
+		printf("phase2 cycle %d\r\n", cycle);
+#endif
+		flash_tx_pkt(tx_buf, PKT_LEN);
+		wait_remainder_of_tdma_period(cycle);
+		cycle = get_curr_tdma_cycle();
+	}
+
+#ifdef DEBUG
+	int i, j;
+	for (i=0; i<NUM_NODES; i++){
+		printf("paths[%d] = [", i);
+		for (j=0; j<PKT_LEN; j++)
+			printf("%d, ", shortest_paths[i][j]);
+		printf("]\r\n");
+	}
+#endif
+		
 	uint32_t cycles_since_sync = 0;
 	while(1){
-		cycle = get_curr_tdma_cycle();
+		//cycle = get_curr_tdma_cycle();
 		/* root node's timeslot - send sync message if INTER_SYNC_CYCLES
 		 * have elapsed */
-		if (cycle == 0){
+		/*if (cycle == 0){
 			if (cycles_since_sync >= INTER_SYNC_CYCLES){
 				timestamp = (uint32_t)flash_get_current_time();
 				tx_buf[0] = 0;
@@ -186,9 +208,10 @@ void main ()
 				cycles_since_sync ++;
 			}
 		}
-		else {
-			flash_enable(10, &timeout, node_data_callback);
-		}
-		wait_remainder_of_tdma_period(cycle);
+		else {*/
+		printf("waiting for data\r\n");
+		flash_enable(PKT_LEN, NULL, node_data_callback);//&timeout, node_data_callback);
+		//}
+		//wait_remainder_of_tdma_period(cycle);
 	}
 }

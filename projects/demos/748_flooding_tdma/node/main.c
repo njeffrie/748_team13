@@ -60,7 +60,7 @@
 #include <nrk_driver.h>
 #include <ff_basic_sensor.h>
 
-#include "../tdma_constants.h"
+#include "../tdma.h"
 
 #define UART_BUF_SIZE	16
 
@@ -81,24 +81,29 @@ void time_sync_callback(uint8_t *buf, uint64_t recv_time)
 	if (buf[0] == 0){
 		//uint32_t prev_local_time = (uint32_t)recv_time;
 		uint32_t global_time = *(uint32_t *)(buf + 1);
-		flash_set_time(global_time + 673); 
+		flash_set_time(global_time + 673);
+		printf("diff: %ld\r\n", (int32_t)(flash_get_current_time() - global_time));
+		/* update timestamp to account for tx delays */
+		uint32_t current_time = flash_get_current_time();
+		*(uint32_t *)(buf + 1) = current_time;
+		/* signal to mainloop that at least one time sync has occurred */
 		time_synchronized = true;
 	}
 	else{
 		//TODO: handle root node setup messages here
 	}
-}	
+}
 
 /* flash callback to handle phase where leaf nodes flood the network during
  * their TDMA slots to allow the root node to gather topology data */
 void startup_phase1_callback(uint8_t *buf, uint64_t recv_time)
 {
-	uint8_t num_retransmissions = buf[0];
+	uint8_t num_retransmissions = buf[1];
 	printf("rx pkt retx #=%d", num_retransmissions);
 	if (num_retransmissions >= 6) 
 		printf("too many retransmissions %d\r\n", num_retransmissions);
 	else{
-		buf[0] += 1;
+		buf[1] += 1;
 		buf[num_retransmissions + 2] = nodeID;
 	}
 #ifdef DEBUG
@@ -113,16 +118,15 @@ void startup_phase1_callback(uint8_t *buf, uint64_t recv_time)
 void startup_phase2_callback(uint8_t *buf, uint64_t recv_time)
 {
 	/* buffer organized as {num retransmissions, orign node, re-tx nodes} */
-	uint8_t num_retx = buf[0];
-	uint8_t slot = buf[1];
+	uint8_t num_retx = buf[1];
+	uint8_t slot = buf[0];
 	uint8_t i; 
 	time_slots[slot] = OFF;
-	for (i=0; i<num_retx; i++){
-		if (buf[i + 1] == nodeID)
+	/* check if this nodeID is in the list of retransmitters */
+	for (i=2; i<PKT_LEN; i++){
+		if (buf[i] == nodeID)
 			time_slots[slot] = LISTEN;
 	}
-	if (slot == nodeID)
-		time_slots[slot] = FLOOD;
 }
 
 /* get current tdma slot number, indication which node's turn it is */
@@ -163,7 +167,7 @@ void main()
 	/* wait for first synchronization message before initialization protocol */
 	time_synchronized = false;
 	while(!time_synchronized){
-		flash_enable(5, NULL, time_sync_callback);
+		flash_enable(PKT_LEN, NULL, time_sync_callback);
 	}
 
 	/* wait for root node timeslot to finish */
@@ -171,19 +175,20 @@ void main()
 		
 	flash_set_retransmit(1); //ensure we are propagating flood 
 	
-	uint64_t timeout = TDMA_SLOT_LEN;
+	uint64_t timeout = TDMA_SLOT_LEN - 1000;
 	uint8_t cycle = get_curr_tdma_cycle();
 	/* perform first TDMA cycle of initialization */
 	while (cycle > 0){
 		/* start network flood originating from this node during timeslot */
 		if (cycle == nodeID){
-			msg[0] = 0;
-			msg[1] = nodeID;
+			msg[0] = nodeID;
+			msg[1] = 0;
 			flash_tx_pkt(msg, PKT_LEN);
 		}
 		/* listen for other nodes' floods */
 		else
 			flash_enable(PKT_LEN, &timeout, startup_phase1_callback);
+		printf("init1 cycle %d\r\n", cycle);
 		wait_remainder_of_tdma_period(cycle);
 		cycle = get_curr_tdma_cycle();
 	}
@@ -194,11 +199,17 @@ void main()
 
 	/* listen during each timeslot.  flooded message during timeslot corresponds
 	 * to metadata about which nodes must be on during that node's slot */
+	cycle = get_curr_tdma_cycle();
 	while (cycle > 0){
+		printf("init2 cycle %d\r\n", cycle);
 		flash_enable(PKT_LEN, &timeout, startup_phase2_callback);
 		wait_remainder_of_tdma_period(cycle);
 		cycle = get_curr_tdma_cycle();
 	}
+
+	/* set slot 0 as always listen */
+	time_slots[0] = LISTEN;
+	time_slots[nodeID] = FLOOD;
 
 	int i, cycle_count;
 	uint32_t press;
@@ -211,36 +222,43 @@ void main()
 	/* do sensing during a convenient slot such that if sensor reading takes
 	 * longer than a TDMA slot we won't miss gateway's sync or our own slot */
 	uint8_t sensing_slot = (nodeID + 2 >= NUM_NODES) ? 1 : nodeID + 1;
+	uint8_t cycle_type;
 	cycle = get_curr_tdma_cycle();
 	while(1){
+		cycle = get_curr_tdma_cycle();
+		cycle_type = time_slots[cycle];
+
+		switch(cycle_type){
+			case OFF: //must be long enough tdma slot length for sensor read
+				nrk_set_status(fd, SENSOR_SELECT, PRESS);
+				nrk_read(fd, (uint8_t *)&press, 4);
+				last_sense_time = (uint32_t)flash_get_current_time();
+				break;
+			case LISTEN:
+				flash_enable(PKT_LEN, &timeout, time_sync_callback);
+				break;
+			case FLOOD:
+				msg[0] = nodeID;
+				*(uint32_t *)(msg + 1) = press;
+				*(uint32_t *)(msg + 5) = last_sense_time;
+				nrk_spin_wait_us(1000);
+				//add some redundancy (tunable)
+				for (i=0; i<FLOOD_PROP_REDUNDANCY; i++)
+					flash_tx_pkt(msg, PKT_LEN);
+				break;
+			default:
+				printf("incorrect time slot type\r\n");
+				break;
+		}
+	
 		/* debugging */ 
+		printf("cycle %d, action:%d, press:%lu\r\n", cycle, cycle_type, press);
+		/*
 		cycle_count ++;
 		if (cycle_count > 1000){
 			cycle_count = 0;
 			printf("press:%lu\r\n", press);
-		}
-		/* this slot can overflow into next one - hence selecting it carefully above */
-		if (cycle == sensing_slot){
-		 	nrk_set_status(fd,SENSOR_SELECT,PRESS);
-		 	nrk_read(fd,(uint8_t *)&press,4);
-			last_sense_time = (uint32_t)flash_get_current_time();
-		}
-		/* root node's synchronization slot */
-		if (cycle == 0){
-			flash_enable(5, &timeout, time_sync_callback);
-		}
-		/* this node's slot to send its sensor data */
-		else if (cycle == nodeID){
-			nrk_led_toggle(RED_LED);
-			/* fill buffer with node id and sensor data */
-			msg[0] = nodeID;
-			*(uint32_t *)(msg + 1) = press;
-			*(uint32_t *)(msg + 5) = last_sense_time;
-			//add some redundancy (tunable)
-			for (i=0; i<FLOOD_PROP_REDUNDANCY; i++){
-				flash_tx_pkt(msg, 10);
-			}
-		}
+		}*/
 		wait_remainder_of_tdma_period(cycle);
 	}
 }
