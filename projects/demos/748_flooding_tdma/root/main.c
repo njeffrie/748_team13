@@ -53,29 +53,6 @@ uint8_t nodeID = 0;
 
 uint8_t time_slots[NUM_NODES];
 
-void nrk_create_taskset();
-
-void nrk_register_drivers();
-
-int main_disabled() {
-	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_9K6);
-	
-	//nrk_init();
-	
-	printf("nrk starting...\r\n");
-	
-	nrk_led_clr(0);
-	nrk_led_clr(1);
-	nrk_led_clr(2);
-	nrk_led_clr(3);
-	
-	nrk_time_set(0, 0);
-	flash_init(14);
-	flash_timer_setup();
-	return 0;
-}
-
 int32_t correct = 0;
 int32_t failed = 0;
 void node_data_callback(uint8_t *data, uint64_t time)
@@ -107,9 +84,6 @@ void node_data_callback(uint8_t *data, uint64_t time)
 	nrk_led_toggle(GREEN_LED);
 }
 
-uint8_t rx_buf[RF_MAX_PAYLOAD_SIZE];
-
-
 void main ()
 {
 	nrk_setup_ports();
@@ -128,8 +102,6 @@ void main ()
 	flash_init(14);
 	flash_timer_setup();
 
-	//nrk_create_taskset();
-	//nrk_start();
 	uint8_t sync_buf[16];
 	sync_buf[0] = nodeID;
 	printf("sending synchronization buffer\r\n");
@@ -164,21 +136,4 @@ void main ()
 	
 		}
 	}
-}
-/*
-void nrk_create_taskset() {
-	TEST_TASK.task = rx_task;
-	nrk_task_set_stk(&TEST_TASK, test_task_stack, NRK_APP_STACKSIZE);
-	TEST_TASK.prio = 2;
-	TEST_TASK.FirstActivation = TRUE;
-	TEST_TASK.Type = BASIC_TASK;
-	TEST_TASK.SchType = PREEMPTIVE;
-	TEST_TASK.period.secs = 10;
-	TEST_TASK.period.nano_secs = 0;
-	TEST_TASK.cpu_reserve.secs = 0;
-	TEST_TASK.cpu_reserve.nano_secs = 0;
-	TEST_TASK.offset.secs = 0;
-	TEST_TASK.offset.nano_secs = 0;
 
-	nrk_activate_task(&TEST_TASK);
-}*/

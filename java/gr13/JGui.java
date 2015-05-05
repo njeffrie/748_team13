@@ -32,7 +32,7 @@ public class JGui extends JFrame  implements Runnable{
 	/***********************************************
 	 * 	Declarations							   
 	 ***********************************************/
-	private static String port = "/dev/tty.usbserial-AM017Y3D";
+	private static String port = "/dev/ttyUSB0";
 	private Map<Integer, NodeInfo> node_map;
 	
 	/***********************************************
@@ -53,11 +53,11 @@ public class JGui extends JFrame  implements Runnable{
 		// Layout
 		panel = new JPanel();
 		
-		NetworkGraph graph = new NetworkGraph();
-        graph.setPreferredSize(new Dimension(295, 390));
+		graph = new NetworkGraph(this);
+        graph.setPreferredSize(new Dimension(850, 850));
 
         info = new JTextArea("Are USB permissions set?");
-        info.setPreferredSize(new Dimension(295, 390));
+        info.setPreferredSize(new Dimension(200, 400));
 		
 		panel.add(graph);
 		panel.add(info);
@@ -68,17 +68,57 @@ public class JGui extends JFrame  implements Runnable{
 		// Frame Properties 
 		setLayout(new FlowLayout(FlowLayout.LEADING, PADDING, PADDING));
 		setTitle("Group 13 - Gateway");
-        setSize(600, 400);
+        setSize(1250, 880);
         setLocationRelativeTo(null);
-		setResizable(false);
+		//setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+		
+		// Begin Canvas Draw Thread
+		(new Thread (graph)).start();
+		
+				
+		// TEST	
+		NodeInfo info = new NodeInfo(1, String.format("{\"mac\":%d; \"light\": 1000}", 1));
+		this.addNode(info.mac, info);
+		
+		info = new NodeInfo(2, String.format("{\"mac\":%d; \"light\": 1020}", 2));
+		this.addNode(info.mac, info);
+		
+		info = new NodeInfo(3, String.format("{\"mac\":%d; \"light\": 947}", 3));
+		this.addNode(info.mac, info);
+		
+		info = new NodeInfo(4, String.format("{\"mac\":%d; \"light\": 950}", 3));
+		this.addNode(info.mac, info);
+		
+		info = new NodeInfo(0, String.format("{\"mac\":%d;}", 3));
+		this.addNode(info.mac, info);
+	}
+	
+	/// getMap
+	//  Retrieves map of nodes from JGUI
+	public NodeInfo[] getNodes() {
+		return node_map.values().toArray(new NodeInfo[node_map.size()]);
 	}
 	
 	/// addNode
 	//  Adds or updates NodeInformation on GUI
 	public void addNode(Integer mac, NodeInfo info) {
-		node_map.put(mac, info);
-		updateInformation();
+		if(node_map.containsKey(mac))
+		{
+			// Old Node
+			// Update information
+			NodeInfo old = node_map.get(mac);
+			old.update(info.json);
+		}
+		else 
+		{
+			// New Node
+			// Add to NetworkGraph and map.
+			graph.addNode(info);
+			info.update();
+			node_map.put(mac, info);
+			//updateInformation();
+		}
 	}
 	
 	/// updateInformation
@@ -122,7 +162,7 @@ public class JGui extends JFrame  implements Runnable{
 			
 			// Begin Serial Read
 			(new SerialComm()).connect(port, gui);
-			
+	
 			//Schedule a job for the event-dispatching thread:
 			EventQueue.invokeLater(gui);
 		} catch (Exception e) {

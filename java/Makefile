@@ -7,7 +7,7 @@ JC = javac
 JVM = java
 JLOC = -sourcepath gr13
 
-#   Macro for each of the java source files.
+# Macro for each of the java source files.
 CLASSES = \
 	$(DIR)/NetworkGraph.java \
 	$(DIR)/JGui.java \
@@ -27,7 +27,7 @@ classes:
 	$(JC) $(JFLAGS) $(JLOC) -cp .:$(JDEP) $(CLASSES)
 
 run: classes
-	$(JVM) -classpath  .:$(JDEP) $(MAIN) -p /dev/tty.usbserial-AM017Y3D 
+	$(JVM) -classpath  .:$(JDEP) $(MAIN) 
 
 clean:
 	$(RM) $(DIR)/*.class
