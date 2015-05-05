@@ -23,7 +23,7 @@
 *GNU General Public License for more details.
 *
 *You should have received a copy of the GNU General Public License
-*along with this program.If not, see <http://www.gnu.org/licenses/>.
+*along with this program. If not, see <http://www.gnu.org/licenses/>.
 *
 *******************************************************************************/
 
@@ -56,28 +56,6 @@ uint8_t time_slots[NUM_NODES];
 void nrk_create_taskset();
 
 void nrk_register_drivers();
-
-int main_disabled() {
-	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_115K2);
-	
-	//nrk_init();
-	
-	printf("nrk starting...\r\n");
-	
-	nrk_led_clr(0);
-	nrk_led_clr(1);
-	nrk_led_clr(2);
-	nrk_led_clr(3);
-	
-	nrk_time_set(0, 0);
-	flash_init(14);
-	flash_timer_setup();
-
-	//nrk_create_taskset();
-	//nrk_start();
-	return 0;
-}
 
 int32_t correct = 0;
 int32_t failed = 0;
@@ -118,10 +96,6 @@ void main ()
 	nrk_setup_ports();
 	nrk_setup_uart(UART_BAUDRATE_115K2);
 	
-	nrk_init();
-	
-	printf("nrk starting...\r\n");
-	
 	nrk_led_clr(0);
 	nrk_led_clr(1);
 	nrk_led_clr(2);
@@ -133,69 +107,31 @@ void main ()
 
 	psync_init(1, 1, 13);
 
-	//nrk_create_taskset();
-	//nrk_start();
 	uint8_t sync_buf[16];
 	sync_buf[0] = nodeID;
 	printf("sending synchronization buffer\r\n");
-	//uint32_t timestamp = (uint32_t)flash_get_current_time();
-	//*(uint32_t *)(sync_buf + 1) = timestamp;
 		
-	//printf("transmitting packet [%d,%lu]\r\n", sync_buf[0], *(uint32_t *)(sync_buf + 1));
 	printf("waiting to propagate flood\r\n");
 	
-	//flash_tx_pkt(sync_buf, 5);
-	psync_flood_wait(NULL, 0);
+	//psync_flood_wait(NULL, 0);
+	psync_flood_tx();
 
 	flash_set_retransmit(0);
 
 	uint64_t timeout = TDMA_SLOT_LEN;
 
-	//uint32_t num_sync_sent = 0;
 	uint8_t already_sync = 1;
 	while(1){
 		uint8_t slot = ((flash_get_current_time() + 30) / TDMA_SLOT_LEN) % NUM_NODES;
-		//printf("slot = %d\r\n", slot);
 		if (!slot && !already_sync) { //perform time sync
-			//num_sync_sent ++;
-			//timestamp = (uint32_t)flash_get_current_time();
-			//*(uint32_t *)(sync_buf + 1) = timestamp;
-			//flash_tx_pkt(sync_buf, 5);
-			//uint32_t tt = flash_get_current_time();
-			//printf("time: %lu, slot: %lu\r\n", tt, (tt / TDMA_SLOT_LEN));
-			psync_flood_wait(NULL, 0);
-			//printf("s: %lu\r\n", num_sync_sent);
+			psync_flood_tx();
+			//psync_flood_wait(NULL, 0);
 			already_sync = 1;
 			nrk_spin_wait_us((flash_get_current_time() - 30) % TDMA_SLOT_LEN);
 		}
-		//else*/
 		else if (slot) {
 			already_sync = 0;
-			//printf("s: %d\r\n", slot);
-			//nrk_spin_wait_us((flash_get_current_time() - 25)%TDMA_SLOT_LEN);
-			/*if (num_sync_sent > 0){
-				//printf("sent %lu sync messages\r\n",num_sync_sent);
-				//num_sync_sent = 0;
-			}*/
-			//flash_tx_callback_set(NULL);
 			flash_enable(5, &timeout, node_data_callback);
 		}
 	}
 }
-/*
-void nrk_create_taskset() {
-	TEST_TASK.task = rx_task;
-	nrk_task_set_stk(&TEST_TASK, test_task_stack, NRK_APP_STACKSIZE);
-	TEST_TASK.prio = 2;
-	TEST_TASK.FirstActivation = TRUE;
-	TEST_TASK.Type = BASIC_TASK;
-	TEST_TASK.SchType = PREEMPTIVE;
-	TEST_TASK.period.secs = 10;
-	TEST_TASK.period.nano_secs = 0;
-	TEST_TASK.cpu_reserve.secs = 0;
-	TEST_TASK.cpu_reserve.nano_secs = 0;
-	TEST_TASK.offset.secs = 0;
-	TEST_TASK.offset.nano_secs = 0;
-
-	nrk_activate_task(&TEST_TASK);
-}*/
