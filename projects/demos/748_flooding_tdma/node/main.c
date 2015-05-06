@@ -64,6 +64,7 @@
 
 #define UART_BUF_SIZE	16
 
+
 /* slot types in time slots array */
 #define OFF 	0
 #define LISTEN 	1
@@ -78,16 +79,16 @@ bool time_synchronized;
 /* general purpose callback for doing time synchronizations during root slot */
 void time_sync_callback(uint8_t *buf, uint64_t recv_time)
 {
-	if (buf[0] == 0){
+	if ((buf[0] == 0) ||  (buf[0] == 255)){
 		//uint32_t prev_local_time = (uint32_t)recv_time;
 		uint32_t global_time = *(uint32_t *)(buf + 1);
 		flash_set_time(global_time + 673);
-		printf("diff: %ld\r\n", (int32_t)(flash_get_current_time() - global_time));
 		/* update timestamp to account for tx delays */
 		uint32_t current_time = flash_get_current_time();
 		*(uint32_t *)(buf + 1) = current_time;
 		/* signal to mainloop that at least one time sync has occurred */
-		time_synchronized = true;
+		if (buf[0] == 255) //first startup message
+			time_synchronized = true;
 	}
 	else{
 		//TODO: handle root node setup messages here
@@ -98,17 +99,16 @@ void time_sync_callback(uint8_t *buf, uint64_t recv_time)
  * their TDMA slots to allow the root node to gather topology data */
 void startup_phase1_callback(uint8_t *buf, uint64_t recv_time)
 {
-	uint8_t num_retransmissions = buf[1];
-	printf("rx pkt retx #=%d", num_retransmissions);
-	if (num_retransmissions >= 6) 
-		printf("too many retransmissions %d\r\n", num_retransmissions);
+	uint8_t num_retransmissions = buf[PKT_LEN - 1];
+	if (buf[PKT_LEN - 1] >= PKT_LEN - 2)
+		printf("too many retransmissions\r\n");
 	else{
-		buf[1] += 1;
-		buf[num_retransmissions + 2] = nodeID;
+		buf[PKT_LEN - 1] += 1;
+		buf[num_retransmissions + 1] = nodeID;
 	}
 #ifdef DEBUG
 	int8_t i;
-	for (i=0; i<8; i++)
+	for (i=0; i<PKT_LEN; i++)
 		printf("buf[%d] = %d\r\n", i, buf[i]);
 #endif
 }
@@ -118,12 +118,16 @@ void startup_phase1_callback(uint8_t *buf, uint64_t recv_time)
 void startup_phase2_callback(uint8_t *buf, uint64_t recv_time)
 {
 	/* buffer organized as {num retransmissions, orign node, re-tx nodes} */
+	printf("received phase 2 for slot %d\r\n", buf[0]);
 	uint8_t num_retx = buf[1];
 	uint8_t slot = buf[0];
 	uint8_t i; 
 	time_slots[slot] = OFF;
 	/* check if this nodeID is in the list of retransmitters */
-	for (i=2; i<PKT_LEN; i++){
+	if (buf[0] == nodeID)
+		time_slots[slot] = FLOOD;
+
+	for (i=1; i<PKT_LEN-1; i++){
 		if (buf[i] == nodeID)
 			time_slots[slot] = LISTEN;
 	}
@@ -138,9 +142,21 @@ inline uint8_t get_curr_tdma_cycle()
 /* waits for the end of TDMA slot slot_old */
 void wait_remainder_of_tdma_period(uint8_t slot_old)
 {
+	if (get_curr_tdma_cycle() != slot_old)
+		return;
+	uint32_t slot_len = TDMA_SLOT_LEN;
+	uint32_t remainder = slot_len - ((uint32_t)flash_get_current_time() % slot_len);
+	//printf("remainder: %lums\r\n", remainder/1000);
+	int i;
+	remainder -= 100;
+	for (i=0; i<remainder/50000; i++)
+		nrk_spin_wait_us(50000);
+	nrk_spin_wait_us(remainder%50000);
+	/*
 	uint8_t slot_new = get_curr_tdma_cycle();
 	while(slot_new == slot_old)
 		slot_new = get_curr_tdma_cycle();
+	*/
 }
 
 void main() 
@@ -154,6 +170,7 @@ void main()
 	/* initialized timer 3 interrupt and counters in flash */
 	flash_timer_setup();
 	nrk_int_enable();
+	flash_rf_power_set(RF_POWER);
 
 	/* register firefly basic sensors */
 	val = nrk_register_driver(&dev_manager_ff3_sensors, FIREFLY_3_SENSOR_BASIC);
@@ -182,17 +199,19 @@ void main()
 		/* start network flood originating from this node during timeslot */
 		if (cycle == nodeID){
 			msg[0] = nodeID;
-			msg[1] = 0;
+			msg[PKT_LEN - 1] = 0;
+			nrk_spin_wait_us(IN_SLOT_TX_DELAY);
 			flash_tx_pkt(msg, PKT_LEN);
 		}
 		/* listen for other nodes' floods */
 		else
 			flash_enable(PKT_LEN, &timeout, startup_phase1_callback);
-		printf("init1 cycle %d\r\n", cycle);
+		//printf("init1 cycle %d\r\n", cycle);
 		wait_remainder_of_tdma_period(cycle);
 		cycle = get_curr_tdma_cycle();
 	}
 	
+	printf("first init cycle done \r\n");
 	/* perform second TDMA cycle of initialization */
 	/* wait for root node timeslot to finish */
 	wait_remainder_of_tdma_period(0);
@@ -201,8 +220,8 @@ void main()
 	 * to metadata about which nodes must be on during that node's slot */
 	cycle = get_curr_tdma_cycle();
 	while (cycle > 0){
-		printf("init2 cycle %d\r\n", cycle);
 		flash_enable(PKT_LEN, &timeout, startup_phase2_callback);
+		//printf("init2 cycle %d\r\n", cycle);
 		wait_remainder_of_tdma_period(cycle);
 		cycle = get_curr_tdma_cycle();
 	}
@@ -244,6 +263,7 @@ void main()
 				*(uint32_t *)(msg + 5) = last_sense_time;
 				//nrk_spin_wait_us(1000);
 				//add some redundancy (tunable)
+				//nrk_spin_wait_us(IN_SLOT_TX_DELAY);
 				for (i=0; i<FLOOD_PROP_REDUNDANCY; i++)
 					flash_tx_pkt(msg, PKT_LEN);
 				break;
@@ -251,9 +271,8 @@ void main()
 				printf("incorrect time slot type\r\n");
 				break;
 		}
-		//printf("time:%lu\r\n", (uint32_t)flash_get_current_time());
 		/* debugging */ 
-		//printf("cycle %d, action:%d, press:%lu\r\n", cycle, cycle_type, press);
+		printf("cycle %d, action:%d, press:%lu\r\n", cycle, cycle_type, press);
 		/*
 		cycle_count ++;
 		if (cycle_count > 1000){
@@ -261,5 +280,6 @@ void main()
 			printf("press:%lu\r\n", press);
 		}*/
 		wait_remainder_of_tdma_period(cycle);
+		printf("%lu\r\n", flash_get_current_time()%TDMA_SLOT_LEN);
 	}
 }
