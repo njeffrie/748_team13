@@ -130,13 +130,16 @@ inline uint8_t get_curr_tdma_cycle()
 /* waits for the end of TDMA slot slot_old */
 void wait_remainder_of_tdma_period(uint8_t slot_old)
 {
-	printf("cycle:%d, old slot:%d\r\n", get_curr_tdma_cycle(), slot_old);
+	//printf("cycle:%d, old slot:%d\r\n", get_curr_tdma_cycle(), slot_old);
 	if (get_curr_tdma_cycle() != slot_old)
 		return;
 	uint32_t slot_len = TDMA_SLOT_LEN;
 	uint32_t remainder = slot_len - ((uint32_t)flash_get_current_time() % slot_len);
-	printf("remainder: %lums\r\n", remainder/1000);
-	nrk_spin_wait_us(remainder);
+	//printf("remainder: %lums\r\n", remainder/1000);
+	int i;
+	for (i=0; i<remainder/50000; i++)
+		nrk_spin_wait_us(50000);
+	nrk_spin_wait_us(remainder%50000);
 	/*
 	uint8_t slot_new = get_curr_tdma_cycle();
 	while(slot_new == slot_old)
@@ -167,7 +170,7 @@ void main ()
 	wait_remainder_of_tdma_period(0);
 	
 	/* listen for network topology messages flooding the network */
-	uint64_t timeout = TDMA_SLOT_LEN - 1000;
+	uint64_t timeout = TDMA_SLOT_LEN - 5000;
 	uint8_t cycle = get_curr_tdma_cycle();
 	while (cycle > 0){
 		flash_enable(PKT_LEN, &timeout, startup_phase1_callback);
@@ -206,6 +209,7 @@ void main ()
 		cycle = get_curr_tdma_cycle();
 		/* root node's timeslot - send sync message if INTER_SYNC_CYCLES
 		 * have elapsed */
+		if (cycle == 1) printf("waiting for msg\r\n");
 		if (cycle == 0){
 			if (cycles_since_sync >= INTER_SYNC_CYCLES){
 				timestamp = (uint32_t)flash_get_current_time();
@@ -223,11 +227,11 @@ void main ()
 		}
 		else {
 			//printf("waiting for data\r\n");
-			nrk_int_enable();
+			//nrk_int_enable();
 			flash_enable(PKT_LEN, &timeout, node_data_callback);
 		}
-		printf("time:%lu\r\n", (uint32_t)flash_get_current_time());
-		
+		//printf("time:%lu\r\n", (uint32_t)flash_get_current_time());
+
 		wait_remainder_of_tdma_period(cycle);
 	}
 }

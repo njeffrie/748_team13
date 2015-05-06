@@ -1,7 +1,7 @@
 #ifndef _TDMA_CONSTANTS_H
 #define _TDMA_CONSTANTS_H
 
-#define TDMA_SLOT_LEN 1000000//us
+#define TDMA_SLOT_LEN 50000//us
 #define PKT_LEN 9
 #define INTER_SYNC_CYCLES 100
 #define NUM_NODES 5

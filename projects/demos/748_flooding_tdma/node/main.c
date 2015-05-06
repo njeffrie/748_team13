@@ -251,7 +251,7 @@ void main()
 				printf("incorrect time slot type\r\n");
 				break;
 		}
-		printf("time:%lu\r\n", (uint32_t)flash_get_current_time());
+		//printf("time:%lu\r\n", (uint32_t)flash_get_current_time());
 		/* debugging */ 
 		//printf("cycle %d, action:%d, press:%lu\r\n", cycle, cycle_type, press);
 		/*
