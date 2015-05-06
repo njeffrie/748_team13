@@ -136,7 +136,10 @@ public class NodeInfo {
 	
 	public void drawText(Graphics g) {
 		g.setColor(Color.black);
-		g.drawString(String.format("drift: %d", lt - gt), 
+		g.drawString(String.format("pressure: %d", pres), 
+		grid_x * NetworkGraph.GRID_DIM + 55,
+		grid_y * NetworkGraph.GRID_DIM + 85);
+		g.drawString(String.format("timestamp: %d", lt), 
 		grid_x * NetworkGraph.GRID_DIM + 55,
 		grid_y * NetworkGraph.GRID_DIM + 85);
 	}
