@@ -48,6 +48,8 @@ public class NodeInfo {
 	public long lt = 0; // Local Time
 	public long gt = 0; // Global Time
 	public long last_update;
+	long avg_drift = 0;
+	int avg_count = 1;
 	
 	// Graph Info
 	public int grid_x;
@@ -85,6 +87,10 @@ public class NodeInfo {
 				lt = json.getLong("lt");
 			if(json.has("gt"))
 				gt = json.getLong("gt");
+			if(json.has("lt") && json.has("gt")) {
+				avg_count++;
+				avg_drift += lt - gt;
+			}
 		} catch (JSONException e) {
 			System.err.println("Error: Failed to parse JSON");
 			e.printStackTrace();
@@ -199,6 +205,10 @@ public class NodeInfo {
 		g2.drawString(String.format("gt: %d drift: %d", gt, lt-gt), 
 			grid_x * NetworkGraph.GRID_DIM + 75, 
 			(grid_y + 3) * NetworkGraph.GRID_DIM);
+		g2.drawString(
+			String.format("average drift: %d", avg_drift/avg_count), 
+			grid_x * NetworkGraph.GRID_DIM + 75, 
+			(grid_y + 3) * NetworkGraph.GRID_DIM + 15);
 	}
 	
 	private void drawOval(Graphics g, int centerX, 

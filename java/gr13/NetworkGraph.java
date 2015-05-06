@@ -117,11 +117,12 @@ public class NetworkGraph extends JPanel implements Runnable {
 			nodes[0].draw(g, time);
 		} else {
 			// Draw the Grid
-			for(int i = 0; i <= GRID_WIDTH+1; i++)
-				g.drawLine(0,i*GRID_DIM, 800,i*GRID_DIM);
+			//g.setColor(Color.gray);
+			//for(int i = 0; i <= GRID_WIDTH+1; i++)
+			//	g.drawLine(0,i*GRID_DIM, 800,i*GRID_DIM);
 			
-			for(int j = 0; j <= GRID_HEIGHT+1; j++)
-				g.drawLine(j*GRID_DIM, 0, j*GRID_DIM, 800);
+			//for(int j = 0; j <= GRID_HEIGHT+1; j++)
+			//	g.drawLine(j*GRID_DIM, 0, j*GRID_DIM, 800);
 			
 			// Draw all connections and nodes
 			for(NodeInfo node : nodes) 
