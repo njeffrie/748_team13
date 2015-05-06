@@ -49,7 +49,7 @@ public class NodeInfo {
 	public long gt = 0; // Global Time
 	public long last_update;
 	long avg_drift = 0;
-	int avg_count = 1;
+	int avg_count = 0;
 	
 	// Graph Info
 	public int grid_x;
