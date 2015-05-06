@@ -121,7 +121,26 @@ void main ()
 	uint8_t change_slot = 0; 
 
 	uint8_t already_sync = 1;
-
+	
+	/*
+	//// UART
+	//   Wait for user input
+	nrk_sig_t uart_rx_signal;
+	int8_t val;
+	// Get the signal for UART RX
+	uart_rx_signal=nrk_uart_rx_signal_get();
+	// Register task to wait on signal
+	nrk_led_set(BLUE_LED);
+	nrk_signal_register(uart_rx_signal); 
+	do{
+	if(nrk_uart_data_ready(NRK_DEFAULT_UART)){
+		val = getchar();
+		printf("%c\r\n", (char)val);
+	}else nrk_event_wait(SIG(uart_rx_signal));
+	} while(val != 115);
+	nrk_led_clr(BLUE_LED);
+	*/
+	
 	while(1){
 		if (count == 0x3ff) {
 			//sync_msg[2] = sync_msg[2] ? 0 : 32;
