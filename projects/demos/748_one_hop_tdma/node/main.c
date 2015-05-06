@@ -195,7 +195,8 @@ void main() {
 			// fill buffer with node id and sensor data 
 			msg[0] = nodeID;
 			*(uint32_t *)(msg + 1) = press;
-			flash_tx_pkt(msg, 5);
+			*(uint32_t *)(msg + 5) = (uint32_t) psync_get_time();
+			flash_tx_pkt(msg, 9);
 			already_tx = true;
 			already_sense = 0;
 		}

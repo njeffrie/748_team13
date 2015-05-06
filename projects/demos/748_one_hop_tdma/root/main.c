@@ -65,6 +65,7 @@ void node_data_callback(uint8_t *data, uint64_t time)
 {
 	uint32_t time_32 = (uint32_t)time;
 	uint32_t press = *(uint32_t *)(data + 1);
+	uint32_t lt32 = *(uint32_t*)(data + 5);
 	int slot = (flash_get_current_time()/tdma_slot_len)%NUM_NODES;
 	int sender_node = data[0];
 	if (sender_node != slot){
@@ -75,18 +76,10 @@ void node_data_callback(uint8_t *data, uint64_t time)
 		correct ++;
 		//printf("slot correct\r\n");
 	}
-	if (!((failed + correct)%10))
-		printf("percentage correct:%ld, [c:%ld, f:%ld] press:%lu\r\n", 
-				(correct * 100)/(correct + failed), correct, failed, press);
-
-	// TODO: Parse to JSON
-	
-	//printf("mac:%d;slot:%d;temp:%d;\r\n", sender_node, slot, temp);
-
-	//printf("{\"mac\":%d;\"temp\":%d}\r\n",
-	//	data[0], *(uint16_t*)(data+1));
-	
-	
+	//if (!((failed + correct)%10))
+	//	printf("percentage correct:%ld, [c:%ld, f:%ld] press:%lu\r\n", 
+	//			(correct * 100)/(correct + failed), correct, failed, press);
+	printf("{\"mac\":%d;\"slot\":%d;\"lt\":%lu;\"gt\":%lu;\"pres\":%lu}\r\n", sender_node, slot, lt32, time_32, press);	
 	nrk_led_toggle(GREEN_LED);
 }
 
@@ -128,7 +121,26 @@ void main ()
 	uint8_t change_slot = 0; 
 
 	uint8_t already_sync = 1;
-
+	
+	/*
+	//// UART
+	//   Wait for user input
+	nrk_sig_t uart_rx_signal;
+	int8_t val;
+	// Get the signal for UART RX
+	uart_rx_signal=nrk_uart_rx_signal_get();
+	// Register task to wait on signal
+	nrk_led_set(BLUE_LED);
+	nrk_signal_register(uart_rx_signal); 
+	do{
+	if(nrk_uart_data_ready(NRK_DEFAULT_UART)){
+		val = getchar();
+		printf("%c\r\n", (char)val);
+	}else nrk_event_wait(SIG(uart_rx_signal));
+	} while(val != 115);
+	nrk_led_clr(BLUE_LED);
+	*/
+	
 	while(1){
 		if (count == 0x3ff) {
 			//sync_msg[2] = sync_msg[2] ? 0 : 32;
