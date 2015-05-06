@@ -82,6 +82,7 @@ void node_data_callback(uint8_t *data, uint64_t time)
 	uint32_t press = *(uint32_t *)(data + 1);
 	uint32_t sense_time = *(uint32_t *)(data + 5);
 	uint8_t slot = get_curr_tdma_cycle();
+	printf("got sender %d press %lu sense time %lu\r\n", sender_node, press, sense_time);
 	if (sender_node != slot){
 		failed ++;
 		printf("slot error[slot:%d,sender:%d]\r\n", slot, sender_node);
@@ -129,9 +130,18 @@ inline uint8_t get_curr_tdma_cycle()
 /* waits for the end of TDMA slot slot_old */
 void wait_remainder_of_tdma_period(uint8_t slot_old)
 {
+	printf("cycle:%d, old slot:%d\r\n", get_curr_tdma_cycle(), slot_old);
+	if (get_curr_tdma_cycle() != slot_old)
+		return;
+	uint32_t slot_len = TDMA_SLOT_LEN;
+	uint32_t remainder = slot_len - ((uint32_t)flash_get_current_time() % slot_len);
+	printf("remainder: %lums\r\n", remainder/1000);
+	nrk_spin_wait_us(remainder);
+	/*
 	uint8_t slot_new = get_curr_tdma_cycle();
 	while(slot_new == slot_old)
 		slot_new = get_curr_tdma_cycle();
+	*/
 }
 
 void main ()
@@ -144,6 +154,8 @@ void main ()
 	
 	/* root node should act as a sink - should never propagate flood */
 	flash_set_retransmit(0);
+	
+	nrk_int_enable();
 
 	/* send synchronization buffer to start initialization protocol */
 	tx_buf[0] = 0; //indicate this is a time synchronization message
@@ -191,27 +203,31 @@ void main ()
 		
 	uint32_t cycles_since_sync = 0;
 	while(1){
-		//cycle = get_curr_tdma_cycle();
+		cycle = get_curr_tdma_cycle();
 		/* root node's timeslot - send sync message if INTER_SYNC_CYCLES
 		 * have elapsed */
-		/*if (cycle == 0){
+		if (cycle == 0){
 			if (cycles_since_sync >= INTER_SYNC_CYCLES){
 				timestamp = (uint32_t)flash_get_current_time();
 				tx_buf[0] = 0;
 				*(uint32_t *)(tx_buf + 1) = timestamp;
-				flash_tx_pkt(tx_buf, 5);
+				flash_tx_pkt(tx_buf, PKT_LEN);
 				cycles_since_sync = 0;
 			}
 			else {
 				memset(tx_buf, 0, PKT_LEN);
 				tx_buf[0] = 1; //indicate this is not timestamp message
+				flash_tx_pkt(tx_buf, PKT_LEN);
 				cycles_since_sync ++;
 			}
 		}
-		else {*/
-		printf("waiting for data\r\n");
-		flash_enable(PKT_LEN, NULL, node_data_callback);//&timeout, node_data_callback);
-		//}
-		//wait_remainder_of_tdma_period(cycle);
+		else {
+			//printf("waiting for data\r\n");
+			nrk_int_enable();
+			flash_enable(PKT_LEN, &timeout, node_data_callback);
+		}
+		printf("time:%lu\r\n", (uint32_t)flash_get_current_time());
+		
+		wait_remainder_of_tdma_period(cycle);
 	}
 }

@@ -227,7 +227,7 @@ void main()
 	while(1){
 		cycle = get_curr_tdma_cycle();
 		cycle_type = time_slots[cycle];
-
+		
 		switch(cycle_type){
 			case OFF: //must be long enough tdma slot length for sensor read
 				nrk_set_status(fd, SENSOR_SELECT, PRESS);
@@ -238,10 +238,11 @@ void main()
 				flash_enable(PKT_LEN, &timeout, time_sync_callback);
 				break;
 			case FLOOD:
+				printf("transmitting pkt\r\n");
 				msg[0] = nodeID;
 				*(uint32_t *)(msg + 1) = press;
 				*(uint32_t *)(msg + 5) = last_sense_time;
-				nrk_spin_wait_us(1000);
+				//nrk_spin_wait_us(1000);
 				//add some redundancy (tunable)
 				for (i=0; i<FLOOD_PROP_REDUNDANCY; i++)
 					flash_tx_pkt(msg, PKT_LEN);
@@ -250,9 +251,9 @@ void main()
 				printf("incorrect time slot type\r\n");
 				break;
 		}
-	
+		printf("time:%lu\r\n", (uint32_t)flash_get_current_time());
 		/* debugging */ 
-		printf("cycle %d, action:%d, press:%lu\r\n", cycle, cycle_type, press);
+		//printf("cycle %d, action:%d, press:%lu\r\n", cycle, cycle_type, press);
 		/*
 		cycle_count ++;
 		if (cycle_count > 1000){
