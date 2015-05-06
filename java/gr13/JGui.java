@@ -86,6 +86,7 @@ public class JGui extends JFrame  implements Runnable{
 	/// addNode
 	//  Adds or updates NodeInformation on GUI
 	public void addNode(Integer mac, NodeInfo info) {
+		//System.err.println("Update Mac: " + mac);
 		if(node_map.containsKey(mac))
 		{
 			// Old Node

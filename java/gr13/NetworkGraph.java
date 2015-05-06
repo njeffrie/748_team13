@@ -16,7 +16,7 @@ public class NetworkGraph extends JPanel implements Runnable {
 	public static final int GATEWAY_Y = 3;
 	final int GRID_WIDTH = 8; // Grid squares 
 	final int GRID_HEIGHT = 8;
-	final int FPS = 60;
+	final int FPS = 100;
 	
 	boolean grid[][];
 	boolean isFirst; // Special case - 2 node compare

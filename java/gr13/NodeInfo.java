@@ -19,7 +19,7 @@ public class NodeInfo {
 	 * 	Final							   
 	 ***********************************************/
 	final String format = "--- MAC %d---\n" + 
-	"pres=%d\nlt=%d\ngt=%d\n\n";
+	"pres=%d\nlt=%d\ngt=%d tdma_slot=%d\n\n";
 	final int oval_width = NetworkGraph.GRID_DIM/2;
 	final int oval_height = NetworkGraph.GRID_DIM/2;
 	
@@ -42,6 +42,7 @@ public class NodeInfo {
 	public int acc_y;
 	public int acc_z;
 	public int pres;
+	public int tdma_slot;
 	
 	// TimeStamps
 	public long lt = 0; // Local Time
@@ -76,6 +77,8 @@ public class NodeInfo {
 				acc_z = json.getInt("acc_z");
 			if(json.has("pres"))
 				pres = json.getInt("pres");
+			if(json.has("slot"))
+				tdma_slot = json.getInt("slot");
 			
 			// Parse Time Stamps
 			if(json.has("lt"))
@@ -102,7 +105,7 @@ public class NodeInfo {
 	
 	public String toString(){
 		return String.format(format, 
-			mac, pres, lt, gt);
+			mac, pres, lt, gt, tdma_slot);
 	}
 	
 	/******************************************************
@@ -165,7 +168,7 @@ public class NodeInfo {
 			r_s_y = g_s_y;
 			r_w   = scaling_param;
 			r_h   = NetworkGraph.GRID_DIM;
-			t_x   = grid_x * NetworkGraph.GRID_DIM - 25;
+			t_x   = grid_x * NetworkGraph.GRID_DIM - 75;
 			t_y   = (grid_y + 2) * NetworkGraph.GRID_DIM;
 		} else {
 			g_s_x = grid_x * NetworkGraph.GRID_DIM + 50;
@@ -176,7 +179,7 @@ public class NodeInfo {
 			r_s_y = g_s_y;
 			r_w   = scaling_param;
 			r_h   = NetworkGraph.GRID_DIM;
-			t_x   = grid_x * NetworkGraph.GRID_DIM + 75;
+			t_x   = grid_x * NetworkGraph.GRID_DIM + 125;
 			t_y   = (grid_y + 2) * NetworkGraph.GRID_DIM;
 		}
 		
