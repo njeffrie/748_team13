@@ -61,7 +61,7 @@ uint8_t _is_root;
 uint8_t _msg_size;
 
 // rx check callback function
-uint8_t (*_rx_check_callback)(uint8_t* buf);
+uint8_t (*_rx_check_callback)(uint8_t* buf, uint64_t rcv_time);
 
 /*
  * function for initializing/reseting pulsesync
@@ -246,7 +246,7 @@ void psync_global_diff(nrk_time_t* loc_diff, nrk_time_t* glob_diff) {
  * saves values to be added to regression table
  */
 void _psync_rx_callback(uint8_t* buf, uint64_t rcv_time) {
-	if (_rx_check_callback && !_rx_check_callback(buf))
+	if (_rx_check_callback && !_rx_check_callback(buf, rcv_time))
 		return;
 	_new_loc = rcv_time - PSYNC_RX_DELAY;
 	_new_glob = *(uint64_t*)(buf + _msg_size);
@@ -279,7 +279,7 @@ void _psync_tx_callback(uint16_t len, uint8_t* buf) {
 /*
  * function to block while listening for pulsesync flood
  */
-int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit, uint8_t msg_size, uint8_t (*check_func)(uint8_t* buf)) {
+int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit, uint8_t msg_size, uint8_t (*check_func)(uint8_t* buf, uint64_t rcv_time)) {
 	// check if root
 	if (_is_root)
 		return NRK_ERROR;
@@ -300,7 +300,7 @@ int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit, uint8_t msg_size, uint
 		ret_val = 1;
 		printf("loc: %luus, glob: %luus\r\n", (uint32_t)(_new_loc), (uint32_t)(_new_glob));
 		psync_add_point(_new_loc, _new_glob);
-		printf("skew: %ld\r\n", (int32_t)(_skew * 1000000));
+		//printf("skew: %ld\r\n", (int32_t)(_skew * 1000000));
 		_edit = 0;
 		ret_val = NRK_OK;
 	}

@@ -49,6 +49,8 @@ void test_task(void);
 
 RF_RX_INFO rfRxInfo;
 
+uint32_t tdma_slot_len = TDMA_SLOT_LEN, next_slot_len = TDMA_SLOT_LEN;
+
 uint8_t nodeID = 0;
 
 uint8_t time_slots[NUM_NODES];
@@ -63,11 +65,11 @@ void node_data_callback(uint8_t *data, uint64_t time)
 {
 	uint32_t time_32 = (uint32_t)time;
 	uint32_t press = *(uint32_t *)(data + 1);
-	int slot = (flash_get_current_time()/TDMA_SLOT_LEN)%NUM_NODES;
+	int slot = (flash_get_current_time()/tdma_slot_len)%NUM_NODES;
 	int sender_node = data[0];
 	if (sender_node != slot){
 		failed ++;
-		printf("slot error[slot:%d,sender:%d]\r\n", slot, sender_node);
+		//printf("slot error[slot:%d,sender:%d]\r\n", slot, sender_node);
 	}
 	else{
 		correct ++;
@@ -113,25 +115,58 @@ void main ()
 		
 	printf("waiting to propagate flood\r\n");
 
-	uint8_t sync_msg[2] = {0, 0};
+	uint8_t sync_msg[3] = {0, 0, 0};
 	
-	psync_flood_tx(2, sync_msg);
+	psync_flood_tx(3, sync_msg);
 
 	flash_set_retransmit(0);
 
-	uint64_t timeout = TDMA_SLOT_LEN;
+	uint64_t timeout = tdma_slot_len;
+
+	uint16_t count = 0;
+
+	uint8_t change_slot = 0; 
 
 	uint8_t already_sync = 1;
+
 	while(1){
-		uint8_t slot = ((flash_get_current_time() + 30) / TDMA_SLOT_LEN) % NUM_NODES;
+		if (count == 0x3ff) {
+			//sync_msg[2] = sync_msg[2] ? 0 : 32;
+			if (sync_msg[2]) {
+				sync_msg[2] = 0;
+				next_slot_len = TDMA_SLOT_LEN;
+			}
+			else {
+				sync_msg[2] = 32;
+				next_slot_len = TDMA_SLOT_LEN + 32 * 64;
+			}
+			count = 0;
+			printf("sm: %u\r\n", sync_msg[2]);
+		}
+		uint8_t slot = ((flash_get_current_time() + 30) / tdma_slot_len) % NUM_NODES;
 		if (!slot && !already_sync) { //perform time sync
-			psync_flood_tx(2, sync_msg);
+			if (change_slot)
+				change_slot = 0;
+			count++;
+			psync_flood_tx(3, sync_msg);
 			already_sync = 1;
-			nrk_spin_wait_us((flash_get_current_time() - 30) % TDMA_SLOT_LEN);
+			/*if (next_slot_len != tdma_slot_len) {
+				tdma_slot_len = next_slot_len;
+				while ((((flash_get_current_time() + 30) / tdma_slot_len) % NUM_NODES) );
+			}
+			else*/
+			if (next_slot_len != tdma_slot_len) {
+				tdma_slot_len = next_slot_len;
+				timeout = tdma_slot_len;
+				change_slot = 1;
+			}
+			else
+				nrk_spin_wait_us((flash_get_current_time() - 30) % tdma_slot_len);
 		}
 		else if (slot) {
 			already_sync = 0;
-			flash_enable(5, &timeout, node_data_callback);
+			if (!change_slot)
+				flash_enable(5, &timeout, node_data_callback);
 		}
 	}
 }

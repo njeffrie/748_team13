@@ -2,9 +2,9 @@
 #define _TDMA_CONSTANTS_H
 
 #define TDMA_SLOT_LEN 2048//us
-#define PKT_LEN 5
+//#define PKT_LEN 5
 #define TRANS_SYNC_TIME 10000000L
-#define STEADY_SYNC_TIME 1000000000L
+#define STEADY_SYNC_TIME 250000000L
 #define NUM_NODES 5
 
 #endif

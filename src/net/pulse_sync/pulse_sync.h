@@ -43,12 +43,12 @@
 #include <flash.h>
 
 // number of samples for regression line calculation
-#define MAX_SAMPLES 8
+#define MAX_SAMPLES 10
 
 #define PKT_SIZE 8
 
 // maximum skew values
-#define MAX_SKEW ((float)(0.000002))
+#define MAX_SKEW ((float)(0.0000015))
 
 // latency of physical transmission process
 #define PSYNC_TX_DELAY 247
@@ -83,7 +83,7 @@ void psync_global_to_local(nrk_time_t* global_time, nrk_time_t* local_time);
 void psync_local_diff(nrk_time_t* glob_diff, nrk_time_t* loc_diff);
 
 // function to block while listening for pulsesync flood
-int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit, uint8_t msg_size, uint8_t (*check_func)(uint8_t* buf));
+int8_t psync_flood_rx(uint64_t* time, uint8_t retransmit, uint8_t msg_size, uint8_t (*check_func)(uint8_t* buf, uint64_t rcv_time));
 
 // function to initiate a pulsesync flood
 int8_t psync_flood_tx(uint8_t msg_size, uint8_t* msg);

@@ -51,7 +51,15 @@ nrk_task_type TEST_TASK;
 NRK_STK test_task_stack[NRK_APP_STACKSIZE];
 void test_task(void);
 
-uint8_t nodeID = 1;
+uint16_t tdma_slot_len = TDMA_SLOT_LEN, next_slot_len = TDMA_SLOT_LEN;
+
+uint32_t steady_sync_time = STEADY_SYNC_TIME;
+
+uint8_t nodeID = 4;
+
+uint8_t initiate = 0;
+
+//uint8_t rx_called = 0;
 
 uint8_t time_slots[NUM_NODES];
 
@@ -61,9 +69,38 @@ void nrk_register_drivers();
 
 uint8_t val;
 
-uint8_t msg[PKT_LEN];
+uint8_t msg[16];
 
-uint8_t psync_rx_check_callback(uint8_t* buf) {
+void rx_callback(uint8_t* buf, uint64_t rcv_time) {
+	if (buf[0])
+		return 0;
+
+	// set next tdma slot length
+	int temp = next_slot_len;
+	next_slot_len = TDMA_SLOT_LEN + 64 * (uint16_t)buf[2];
+
+	//rx_called = 1;
+
+	if ((initiate == 1) && (temp == next_slot_len))
+		initiate = 2;
+	else if (!initiate)
+		initiate = 1;
+
+	switch (buf[1]) {
+		case 1:
+			steady_sync_time = *(uint32_t*)(buf + 3); 
+			break;
+		default: 
+			break;
+	}
+}
+
+uint8_t psync_rx_check_callback(uint8_t* buf, uint64_t rcv_time) {
+	if (buf[0])
+		return 0;
+
+	rx_callback(buf, rcv_time);
+
 	return *(uint16_t*)buf == 0;
 }
 
@@ -96,36 +133,60 @@ void main() {
 
 	printf("waiting for sync message\r\n");
 
-	while (!psync_flood_rx(NULL, 0, 2, psync_rx_check_callback));
+	// initiate synchronization waiting followed by tdma slot detection waiting
+	while (!psync_flood_rx(NULL, 0, 3, psync_rx_check_callback));
+	while (initiate != 2)
+		flash_enable(7, NULL, rx_callback);//(NULL, 0, 3, psync_rx_check_callback);
+	tdma_slot_len = next_slot_len;
 
+	sync_time = psync_get_time();
 	flash_set_retransmit(0);
-	bool already_sync = false;
 	uint8_t already_sense = 0;
+	uint8_t already_slot0 = 0;
 	int cycle_count;
+	uint64_t timeout = tdma_slot_len;
 	uint8_t sensing_slot = (nodeID >= NUM_NODES - 2) ? 1 : nodeID + 1;
-	while(1){
+	while(1) {
 		cycle_count ++;
 		if (cycle_count > 10000){
 			cycle_count = 0;
-			printf("press:%lu\r\n", press);
+			//printf("press:%lu\r\n", press);
 		}
 		uint64_t cycle_start_time = psync_get_time();
-		uint8_t slot = (((cycle_start_time + 55) / TDMA_SLOT_LEN) % NUM_NODES);
+		uint8_t slot = (((cycle_start_time + 55) / tdma_slot_len) % NUM_NODES);
 		if ((slot == sensing_slot) && !already_sense){
-		 	already_tx = false;
+		 	//already_tx = false;
 		 	ret = nrk_set_status(fd,SENSOR_SELECT,PRESS);
 		 	ret = nrk_read(fd,(uint8_t *)&press,4);
-			nrk_spin_wait_us((psync_get_time() - 55) % TDMA_SLOT_LEN);
+			nrk_spin_wait_us((psync_get_time() - 55) % tdma_slot_len);
 			already_sense = 1;
+			already_slot0 = 0;
 		}
 		// root node's synchronization slot 
-		else if (!slot){ //root's slot
-			uint64_t comp = psync_is_synced() ? STEADY_SYNC_TIME + sync_time : TRANS_SYNC_TIME + sync_time;
-			if (cycle_start_time > comp){
-				psync_flood_rx(NULL, 0, 2, NULL);
+		else if (!slot && !already_slot0) { //root's slot
+			uint64_t comp = psync_is_synced() ? steady_sync_time + sync_time : TRANS_SYNC_TIME + sync_time;
+			already_slot0 = 1;
+			//rx_called = 0;
+			already_tx = 0;
+			if ((cycle_start_time > comp) && psync_flood_rx(&timeout, 0, 3, psync_rx_check_callback)) {
 				sync_time = cycle_start_time;
 				already_tx = true;
 				already_sense = 0;
+			}
+			else
+				flash_enable(7, NULL, rx_callback);
+
+			if (next_slot_len != tdma_slot_len) {
+				printf("waiting to change slot len\r\n");
+				initiate = 1;
+				while (initiate != 2)
+					flash_enable(7, NULL, rx_callback);
+					//psync_flood_rx(NULL, 0, 3, psync_rx_check_callback);
+				tdma_slot_len = next_slot_len;
+				timeout = tdma_slot_len;
+				printf("new slot_len: %hu\r\n", tdma_slot_len);
+				//already_tx = true;
+				//already_sense = 0;
 			}
 		}
 		/* occurs only one time per full tdma cycle */
@@ -138,5 +199,10 @@ void main() {
 			already_tx = true;
 			already_sense = 0;
 		}
+
+		/*if ((slot == NUM_NODES - 1) && (next_slot_len != tdma_slot_len)) {
+			tdma_slot_len = next_slot_len;
+			while (((psync_get_time() + 55) / tdma_slot_len) % NUM_NODES);
+		}*/
 	}
 }
