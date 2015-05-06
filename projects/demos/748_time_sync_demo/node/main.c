@@ -45,7 +45,7 @@
 
 //#include <pulse_sync.h>
 #define UART_BUF_SIZE	16
-#define PKT_SIZE 8
+#define PKT_SIZE 5 
 #define CYCLE_PERIOD 100000
 
 uint8_t nodeID = 1;
@@ -57,28 +57,29 @@ uint32_t current_time;
 
 void time_sync_callback(uint8_t *buf, uint64_t recv_time)
 {
-	/* only set time when root node indicates it is a time sync cycle */
-	if (buf[0] == 1){
-		uint32_t prev_local_time = (uint32_t)recv_time;//(uint32_t)flash_get_current_time();
-		uint32_t global_time = *(uint32_t *)(buf + 1);
-		flash_set_time(global_time + 673); 
-	}
+	uint32_t global_time = *(uint32_t *)(buf);
+	//printf("l:%lu g:%lu\r\n", prev_local_time, global_time);
+	int32_t old_time = flash_get_current_time();
+	int32_t new_time = global_time + 1860;
+	int diff = new_time - old_time;
+	flash_set_time(new_time); 
+	printf("new time %d ahead of old\r\n", diff); 
 }	
 
 void main() 
 {
 	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_9K6);
+	nrk_setup_uart(UART_BAUDRATE_115K2);
 	
 	/* setup flash to not retransmit */
-	flash_init(14);
+	flash_init(15);
 	flash_timer_setup();
 	flash_set_retransmit(0);
 
-	timeout = CYCLE_PERIOD;
+	uint64_t timeout = CYCLE_PERIOD;
 
 	while(1){
-		printf("receiving data..\r\n");
+		//printf("receiving data..\r\n");
 		flash_enable(PKT_SIZE, &timeout, time_sync_callback);
 		current_time = flash_get_current_time();
 		*(uint32_t *)(msg) = current_time;

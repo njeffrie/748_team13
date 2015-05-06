@@ -40,9 +40,9 @@
 #include <flash.h>
 
 #define UART_BUF_SIZE	16
-#define PKT_SIZE 8
+#define PKT_SIZE 5
 #define CYCLE_PERIOD 100000
-#define CYCLES_PER_SYNC 100
+#define CYCLES_PER_SYNC 10000
 
 uint8_t nodeID = 1;
 uint8_t msg[PKT_SIZE];
@@ -54,16 +54,21 @@ int sync_cycle_count;
 
 void time_report_callback(uint8_t *buf, uint64_t recv_time)
 {
-	printf("l %lu g %lu\r\n", (uint32_t)recv_time, *(uint32_t *)(buf));
+	int32_t local_time = *(uint32_t *)(buf);
+	uint32_t global_time = (uint32_t)flash_get_current_time();
+	//int32_t time_diff = remote_time - (int32_t)flash_get_current_time();
+	printf("{\"mac\":%d;\"lt\":%lu;\"gt\":%lu;}\r\n", nodeID, local_time, global_time);
+	//printf("l %ldms ahead\r\n", time_diff);
+	//printf("l %lu g %lu\r\n", (uint32_t)recv_time, *(uint32_t *)(buf));
 }	
 
 void main() 
 {
 	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_9K6);
+	nrk_setup_uart(UART_BAUDRATE_115K2);
 	
 	/* setup flash to not retransmit */
-	flash_init(14);
+	flash_init(15);
 	flash_timer_setup();
 	flash_set_retransmit(0);
 
@@ -71,17 +76,17 @@ void main()
 	sync_cycle_count = 0;
 
 	/* start by sending time sync */
-	msg[0] = 1;
-	*(uint32_t *)(msg + 1) = flash_get_current_time();
+	*(uint32_t *)(msg) = flash_get_current_time();
 	flash_tx_pkt(msg, PKT_SIZE);
 	
 	while(1){
 		sync_cycle_count ++;
-		printf("cycle\r\n");
+		//printf("cycle\r\n");
 		if (sync_cycle_count > CYCLES_PER_SYNC){
-			msg[0] = 1;
-			*(uint32_t *)(msg + 1) = flash_get_current_time();
+			printf("sent time sync\r\n");
+			*(uint32_t *)(msg) = (uint32_t)flash_get_current_time();
 			flash_tx_pkt(msg, PKT_SIZE);
+			sync_cycle_count = 0;
 		}
 		/* listen to node for time info */
 		flash_enable(PKT_SIZE, &timeout, time_report_callback);

@@ -11,8 +11,8 @@ TARGET = main
 #PROGRAMMING_PORT = /dev/ttyUSB0 # Default FireFly port 
 #PROGRAMMING_PORT = /dev/tty.usbserial-AE00BULD # Default micaZ port 
 #PROGRAMMING_PORT = /dev/tty.usbserial-AE00BUMF # Default micaZ port 
-#PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y3D
-PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y3E
+PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y3D
+#PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y3E
 #PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y4H
 
 # Set this such that the nano-RK directory is the base path
