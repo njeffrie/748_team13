@@ -1,12 +1,16 @@
 #ifndef _TDMA_CONSTANTS_H
 #define _TDMA_CONSTANTS_H
 
-#define TDMA_SLOT_LEN 50000//us
+#define TDMA_SLOT_LEN 200000//us
 #define PKT_LEN 9
 #define INTER_SYNC_CYCLES 100
 #define NUM_NODES 5
 /* we are group 13 */
 #define CHAN 16
+
+#define RF_POWER 10
+
+#define IN_SLOT_TX_DELAY 2000
 
 #define DEBUG
 
