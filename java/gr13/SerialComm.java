@@ -87,7 +87,6 @@ public class SerialComm {
 					for(String r : read) {
 						if(r != null && isJSONValid(r)){	
 							parser = new JSONObject(r);		
-							
 							// Extract NodeInfo
 							NodeInfo info = new NodeInfo( 
 								parser.getInt("mac"),
