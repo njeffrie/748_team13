@@ -112,9 +112,10 @@ void main ()
 	printf("sending synchronization buffer\r\n");
 		
 	printf("waiting to propagate flood\r\n");
+
+	uint8_t sync_msg[2] = {0, 0};
 	
-	//psync_flood_wait(NULL, 0);
-	psync_flood_tx();
+	psync_flood_tx(2, sync_msg);
 
 	flash_set_retransmit(0);
 
@@ -124,8 +125,7 @@ void main ()
 	while(1){
 		uint8_t slot = ((flash_get_current_time() + 30) / TDMA_SLOT_LEN) % NUM_NODES;
 		if (!slot && !already_sync) { //perform time sync
-			psync_flood_tx();
-			//psync_flood_wait(NULL, 0);
+			psync_flood_tx(2, sync_msg);
 			already_sync = 1;
 			nrk_spin_wait_us((flash_get_current_time() - 30) % TDMA_SLOT_LEN);
 		}

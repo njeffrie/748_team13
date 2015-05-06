@@ -27,9 +27,9 @@ public class SerialComm {
 	/***********************************************
 	 * 	Constants							   
 	 ***********************************************/
-	private final int READ_PERIOD = 1000;
+	private final int READ_PERIOD = 50;
 	private final int WRITE_PERIOD = 10;
-	private final int BUFFER_SIZE = 1024;
+	private final int BUFFER_SIZE = 2048;
 	
 	JGui gui;
 	
@@ -82,7 +82,8 @@ public class SerialComm {
 						
 				// Display and interpret input 
 				if(buf != null){
-					read = new String(buf).split("\n");		
+					System.out.print("Read: " + new String(buf));
+					read = new String(buf).split("\r\n");	
 					for(String r : read) {
 						if(r != null && isJSONValid(r)){	
 							parser = new JSONObject(r);		

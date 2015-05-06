@@ -57,7 +57,7 @@ public class JGui extends JFrame  implements Runnable{
         graph.setPreferredSize(new Dimension(850, 850));
 
         info = new JTextArea("Are USB permissions set?");
-        info.setPreferredSize(new Dimension(200, 400));
+        info.setPreferredSize(new Dimension(200, 800));
 		
 		panel.add(graph);
 		panel.add(info);
@@ -68,27 +68,13 @@ public class JGui extends JFrame  implements Runnable{
 		// Frame Properties 
 		setLayout(new FlowLayout(FlowLayout.LEADING, PADDING, PADDING));
 		setTitle("Group 13 - Gateway");
-        setSize(1250, 880);
+        setSize(1050, 880);
         setLocationRelativeTo(null);
 		//setResizable(false);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		// Begin Canvas Draw Thread
 		(new Thread (graph)).start();
-		
-			/*
-		info = new NodeInfo(2, String.format("{\"mac\":%d; \"light\": 1020}", 2));
-		this.addNode(info.mac, info);
-		
-		info = new NodeInfo(3, String.format("{\"mac\":%d; \"light\": 947}", 3));
-		this.addNode(info.mac, info);
-		
-		info = new NodeInfo(4, String.format("{\"mac\":%d; \"light\": 950}", 3));
-		this.addNode(info.mac, info);
-		
-		info = new NodeInfo(0, String.format("{\"mac\":%d;}", 3));
-		this.addNode(info.mac, info);
-			*/
 	}
 	
 	/// getMap
@@ -100,6 +86,7 @@ public class JGui extends JFrame  implements Runnable{
 	/// addNode
 	//  Adds or updates NodeInformation on GUI
 	public void addNode(Integer mac, NodeInfo info) {
+		//System.err.println("Update Mac: " + mac);
 		if(node_map.containsKey(mac))
 		{
 			// Old Node
