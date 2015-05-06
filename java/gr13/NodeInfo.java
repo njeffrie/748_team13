@@ -1,8 +1,8 @@
 package gr13;
 /**********************************************************
  *	18748 - Spring 2015 - Group 13 
- *	Madhav Iyengar
  *	Miguel Sotolongo
+ *  Madhav Iyengar
  *	Nathaniel Jeffries
  **********************************************************/
 // JSON Parsing
