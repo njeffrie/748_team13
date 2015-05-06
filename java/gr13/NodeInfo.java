@@ -141,7 +141,7 @@ public class NodeInfo {
 		grid_y * NetworkGraph.GRID_DIM + 85);
 		g.drawString(String.format("timestamp: %d", lt), 
 		grid_x * NetworkGraph.GRID_DIM + 55,
-		grid_y * NetworkGraph.GRID_DIM + 85);
+		grid_y * NetworkGraph.GRID_DIM + 95);
 	}
 	
 	public void drawLine(Graphics g, int x, int y) {
