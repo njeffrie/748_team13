@@ -65,6 +65,7 @@ void node_data_callback(uint8_t *data, uint64_t time)
 {
 	uint32_t time_32 = (uint32_t)time;
 	uint32_t press = *(uint32_t *)(data + 1);
+	uint32_t lt32 = *(uint32_t*)(data + 5);
 	int slot = (flash_get_current_time()/tdma_slot_len)%NUM_NODES;
 	int sender_node = data[0];
 	if (sender_node != slot){
@@ -75,18 +76,10 @@ void node_data_callback(uint8_t *data, uint64_t time)
 		correct ++;
 		//printf("slot correct\r\n");
 	}
-	if (!((failed + correct)%10))
-		printf("percentage correct:%ld, [c:%ld, f:%ld] press:%lu\r\n", 
-				(correct * 100)/(correct + failed), correct, failed, press);
-
-	// TODO: Parse to JSON
-	
-	//printf("mac:%d;slot:%d;temp:%d;\r\n", sender_node, slot, temp);
-
-	//printf("{\"mac\":%d;\"temp\":%d}\r\n",
-	//	data[0], *(uint16_t*)(data+1));
-	
-	
+	//if (!((failed + correct)%10))
+	//	printf("percentage correct:%ld, [c:%ld, f:%ld] press:%lu\r\n", 
+	//			(correct * 100)/(correct + failed), correct, failed, press);
+	printf("{\"mac\":%d;\"slot\":%d;\"lt\":%lu;\"gt\":%lu;\"pres\":%lu}\r\n", sender_node, slot, lt32, time_32, press);	
 	nrk_led_toggle(GREEN_LED);
 }
 

@@ -8,8 +8,8 @@ PLATFORM = firefly3
 TARGET = main
 
 # Set the Port that you programmer is connected to 
-#PROGRAMMING_PORT = /dev/ttyUSB0 # Default FireFly port 
-PROGRAMMING_PORT = /dev/tty.usbserial-AE00BULD # Default micaZ port 
+PROGRAMMING_PORT = /dev/ttyUSB0 # Default FireFly port 
+#PROGRAMMING_PORT = /dev/tty.usbserial-AE00BULD # Default micaZ port 
 #PROGRAMMING_PORT = /dev/tty.usbserial-AE00BUMF # Default micaZ port 
 #PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y3D
 #PROGRAMMING_PORT = /dev/tty.usbserial-AM017Y4H
@@ -30,11 +30,13 @@ SRC = $(TARGET).c
 # Add extra source files. 
 # For example:
 SRC += $(ROOT_DIR)/src/net/flash/flash.c
+SRC += $(ROOT_DIR)/src/net/pulse_sync/pulse_sync.c
 
 # Add extra includes files. 
 # For example:
 EXTRAINCDIRS =
 EXTRAINCDIRS += $(ROOT_DIR)/src/net/flash
+EXTRAINCDIRS += $(ROOT_DIR)/src/net/pulse_sync
 
 
 #  This is where the final compile and download happens
