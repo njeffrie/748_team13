@@ -65,7 +65,7 @@ uint8_t val;
 
 int main_disabled() {
 	nrk_setup_ports();
-	nrk_setup_uart(UART_BAUDRATE_9K6);
+	nrk_setup_uart(UART_BAUDRATE_115K2);
 	
 	nrk_init();
 	

@@ -70,7 +70,7 @@
 #define LISTEN 	1
 #define FLOOD 	2 
 
-uint8_t nodeID = 1;
+uint8_t nodeID = 2;
 uint8_t time_slots[NUM_NODES];
 uint8_t msg[PKT_LEN];
 uint8_t val;
@@ -222,7 +222,7 @@ void main()
 	while (cycle > 0){
 		flash_enable(PKT_LEN, &timeout, startup_phase2_callback);
 		//printf("init2 cycle %d\r\n", cycle);
-		wait_remainder_of_tdma_period(cycle);
+		//wait_remainder_of_tdma_period(cycle);
 		cycle = get_curr_tdma_cycle();
 	}
 

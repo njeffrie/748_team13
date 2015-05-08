@@ -27,7 +27,7 @@ classes:
 	$(JC) $(JFLAGS) $(JLOC) -cp .:$(JDEP) $(CLASSES)
 
 run: classes
-	$(JVM) -classpath  .:$(JDEP) $(MAIN)
+	$(JVM) -classpath  .:$(JDEP) $(MAIN) -p /dev/tty.usbserial-AM017Y3E
 
 clean:
 	$(RM) $(DIR)/*.class

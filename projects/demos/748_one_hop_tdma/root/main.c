@@ -142,7 +142,7 @@ void main ()
 	*/
 	
 	while(1){
-		if (count == 0x3ff) {
+		/*if (count == 0x3ff) {
 			//sync_msg[2] = sync_msg[2] ? 0 : 32;
 			if (sync_msg[2]) {
 				sync_msg[2] = 0;
@@ -154,7 +154,7 @@ void main ()
 			}
 			count = 0;
 			printf("sm: %u\r\n", sync_msg[2]);
-		}
+		}*/
 		uint8_t slot = ((flash_get_current_time() + 30) / tdma_slot_len) % NUM_NODES;
 		if (!slot && !already_sync) { //perform time sync
 			if (change_slot)

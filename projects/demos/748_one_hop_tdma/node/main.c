@@ -55,7 +55,7 @@ uint16_t tdma_slot_len = TDMA_SLOT_LEN, next_slot_len = TDMA_SLOT_LEN;
 
 uint32_t steady_sync_time = STEADY_SYNC_TIME;
 
-uint8_t nodeID = 4;
+uint8_t nodeID = 2;
 
 uint8_t initiate = 0;
 

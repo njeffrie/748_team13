@@ -75,6 +75,8 @@ void main()
 	timeout = CYCLE_PERIOD;
 	sync_cycle_count = 0;
 
+	printf("starting\r\n");
+
 	/* start by sending time sync */
 	*(uint32_t *)(msg) = flash_get_current_time();
 	flash_tx_pkt(msg, PKT_SIZE);
